@@ -1,0 +1,15 @@
+#General Properties
+#==================
+groupId: ^project.groupId^
+artifactId: ^project.artifactId^
+version: ^project.version^
+server.port: 8082
+
+# Kafka properties
+spring.kafka.bootstrap-servers: ${BOOTSTRAP_SERVER:localhost:9092}
+spring.kafka.consumer.group-id: jpo-mec-deposit
+
+logging.level:
+  root: INFO
+  org.springframework.kafka: WARN
+  org.apache.kafka: WARN

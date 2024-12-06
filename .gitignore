@@ -1,0 +1,17 @@
+target/
+
+.DS_Store
+
+idea/
+/.idea
+/.classpath
+/.project
+/.settings/*
+/bin
+/*.log
+
+.env
+
+*.pem
+config.json
+*.lck
