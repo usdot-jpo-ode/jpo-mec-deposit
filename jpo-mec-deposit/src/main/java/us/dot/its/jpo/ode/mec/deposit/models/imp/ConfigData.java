@@ -5,6 +5,8 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Objects;
 
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.NetworkType;
+
 public class ConfigData implements Serializable {
 
     private String configFilePath;

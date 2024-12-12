@@ -131,10 +131,10 @@ public class ImpMqttService {
         return sslSocketFactory;
     }
 
-    public void publish(String topic, GeoRoutedMsg geoRoutedMsg, boolean retain) throws MqttException {
+    public void publishAsn1Bytes(String topic, byte[] asn1Bytes, boolean retain) throws MqttException {
         try {
             log.debug("Publishing message to topic: {}", topic);
-            client.publish(topic, geoRoutedMsg.toByteArray(), 0, retain);
+            client.publish(topic, asn1Bytes, 0, retain);
         } catch (MqttException e) {
             log.error("Error while publishing message. Reason Code: {}, Message: {}", e.getReasonCode(), e.getMessage(),
                     e);

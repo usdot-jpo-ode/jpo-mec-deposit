@@ -4,10 +4,15 @@ import com.google.protobuf.ByteString;
 
 import us.dot.its.jpo.ode.mec.deposit.GeoRoutedMsg;
 import us.dot.its.jpo.ode.mec.deposit.DepositorProperties;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.MessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.models.ode.*;
+import us.dot.its.jpo.ode.model.OdeTimData;
+import us.dot.its.jpo.ode.plugin.j2735.timstorage.Anchor;
 import us.dot.its.jpo.ode.mec.deposit.*;
 
 import com.google.protobuf.Timestamp;
+
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -156,6 +161,8 @@ public class ImpUtil {
         return pathCoordinates;
     }
 
+    // public static String getTopic()
+
     public static List<String> getRegionalTimTopicList(OdeTimData timMsg, DepositorProperties properties) {
         List<String> topicList = new ArrayList<>();
         List<double[]> timPathCoordList = ImpUtil.getTimPathCoordList(timMsg);
@@ -171,14 +178,17 @@ public class ImpUtil {
 
     }
 
-    public static List<String> getGenericTopic(Double lat, Double lon, Integer precision, String msgType,
-            DepositorProperties properties) {
+    public static List<String> getGenericTopic(BigDecimal lat, BigDecimal lon, Integer precision, String msgType,
+            DepositorProperties properties, MessageFormat messageFormat) {
         List<String> topicList = new ArrayList<>();
-        Set<String> geohashes = ImpUtil.getTopicGeohashList(List.of(new double[] { lon, lat }), precision, "-");
+        // truncating the BigDecimal to double as it doesn't matter for the geohash
+        Set<String> geohashes = ImpUtil
+                .getTopicGeohashList(List.of(new double[] { lon.doubleValue(), lat.doubleValue() }), precision, "-");
 
         for (String geohash : geohashes) {
-            String pubTopic = String.format("vzimp/1/Regional/%s/%s/%s/%s/j2735_gr/%s", geohash,
-                    properties.getImpClientType(), properties.getImpClientSubType(), "Public", msgType.toUpperCase());
+            String pubTopic = String.format("vzimp/1/Regional/%s/%s/%s/%s/%s/%s", geohash,
+                    properties.getImpClientType(), properties.getImpClientSubType(), "Public", messageFormat.name(),
+                    msgType.toUpperCase());
             topicList.add(pubTopic);
         }
 

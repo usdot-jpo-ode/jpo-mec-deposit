@@ -31,7 +31,7 @@
 		<java.version>21</java.version>
 		<protobuf.version>4.28.3</protobuf.version>
 		<jpo-ode.version>3.0.0-SNAPSHOT</jpo-ode.version>
-		<springdoc.version>1.6.14</springdoc.version>
+		<springdoc.version>2.3.0</springdoc.version>
 		<swagger-ui.version>5.3.1</swagger-ui.version>
 	</properties>
 	<dependencies>
@@ -67,6 +67,10 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-xml</artifactId>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
 		<dependency>
@@ -133,8 +137,8 @@
 
 		<dependency>
 			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-ui</artifactId>
-			<version>${springdoc.version}</version>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.openapitools</groupId>

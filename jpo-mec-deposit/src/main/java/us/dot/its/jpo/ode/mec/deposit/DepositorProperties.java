@@ -22,7 +22,9 @@ import org.slf4j.LoggerFactory;
 import lombok.Getter;
 import lombok.Setter;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.ConfigData;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.NetworkType;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ClientSubType;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ClientType;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.NetworkType;
 import us.dot.its.jpo.ode.mec.deposit.utils.CommonUtils;
 import lombok.AccessLevel;
 
@@ -103,13 +105,14 @@ public class DepositorProperties implements EnvironmentAware {
 	private String impPartnerApiBaseUri;
 	private String impPartnerUser;
 	private String impPartnerPass;
-	private String impClientType = "Software";
-	private String impClientSubType = "Application";
+	private ClientType impClientType;
+	private ClientSubType impClientSubType;
 	private String impTopicType;
 	private Boolean impCacheRegistration;
 	private BigDecimal impMecLatitude;
 	private BigDecimal impMecLongitude;
 	private String impCertPath;
+	private String impMqttVendor;
 
 	@Setter(AccessLevel.NONE)
 	@Autowired
@@ -200,6 +203,9 @@ public class DepositorProperties implements EnvironmentAware {
 			impCertPath = CommonUtils.getEnvironmentVariable("IMP_CERT_PATH");
 			impCacheRegistration = CommonUtils.getEnvironmentVariable("IMP_CACHE_REGISTRATION", "false")
 					.equalsIgnoreCase("true");
+			impMqttVendor = CommonUtils.getEnvironmentVariable("IMP_MQTT_VENDOR");
+			impClientType = ClientType.fromValue(CommonUtils.getEnvironmentVariable("IMP_CLIENT_TYPE"));
+			impClientSubType = ClientSubType.fromValue(CommonUtils.getEnvironmentVariable("IMP_CLIENT_SUB_TYPE"));
 		} else {
 			logger.info("IMP is disabled");
 		}

@@ -3,15 +3,15 @@ package us.dot.its.jpo.ode.mec.deposit.imp;
 import us.dot.its.jpo.ode.mec.deposit.DateJsonMapper;
 import us.dot.its.jpo.ode.mec.deposit.DepositorProperties;
 import us.dot.its.jpo.ode.mec.deposit.utils.CommonUtils;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.AuthToken;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.AuthTokenRequest;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.ClientCompleteResponse;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.ClientConnectionPostRequest;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.ClientConnectionResponse;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.ClientRegistrationConnectionPostRequest;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.ClientRegistrationPostRequest;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.ClientRegistrationResponse;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.ConfigData;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.AuthToken;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.AuthTokenRequest;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientCompleteResponse;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientConnectionPostRequest;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientConnectionResponse;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationConnectionPostRequest;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationPostRequest;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -117,15 +117,20 @@ public class ImpRegistration {
     public String getToken() {
         var request = new AuthTokenRequest(properties.getImpPartnerUser(), properties.getImpPartnerPass());
 
-        AuthToken response = restTemplate.postForObject(properties.getImpPartnerApiBaseUri() + "/auth/token", request,
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "application/json");
+
+        HttpEntity<AuthTokenRequest> entity = new HttpEntity<>(request, headers);
+
+        AuthToken response = restTemplate.postForObject(properties.getImpPartnerApiBaseUri() + "/auth/token", entity,
                 AuthToken.class);
 
         return response.getAccessToken();
     }
 
     public ClientRegistrationResponse register(String token) {
-        ClientRegistrationPostRequest request = new ClientRegistrationPostRequest(properties.getImpClientType(),
-                properties.getImpClientSubType());
+        ClientRegistrationPostRequest request = new ClientRegistrationPostRequest(
+                properties.getImpClientType().getValue(), properties.getImpClientSubType().getValue());
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
@@ -135,7 +140,7 @@ public class ImpRegistration {
 
         try {
             ResponseEntity<ClientRegistrationResponse> response = restTemplate.exchange(
-                    properties.getImpPartnerApiBaseUri() + "/prd/v1/registration", HttpMethod.POST, entity,
+                    properties.getImpPartnerApiBaseUri() + "/prd/v2/registration", HttpMethod.POST, entity,
                     ClientRegistrationResponse.class);
 
             return response.getBody();
@@ -157,7 +162,7 @@ public class ImpRegistration {
 
         try {
             ResponseEntity<ClientConnectionResponse> response = restTemplate.exchange(
-                    properties.getImpPartnerApiBaseUri() + "/prd/v1/connection", HttpMethod.POST, entity,
+                    properties.getImpPartnerApiBaseUri() + "/prd/v2/connection", HttpMethod.POST, entity,
                     ClientConnectionResponse.class);
 
             return response.getBody();
