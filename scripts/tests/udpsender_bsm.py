@@ -5,7 +5,7 @@ import os
 # Currently set to oim-dev environment's ODE
 UDP_IP = os.getenv('DOCKER_HOST_IP')
 UDP_PORT = 46800
-MESSAGE = "00142500600ce734cd21266e861c1ea6e0c780007ffffffff0007080fdfa1fa1007fff8000000000"
+MESSAGE = "00142500616f47534d21266e861c1ea6e0c780007ffffffff0007080fdfa1fa1007fff80005f11d0"
 
 print("UDP target IP:", UDP_IP)
 print("UDP target port:", UDP_PORT)
