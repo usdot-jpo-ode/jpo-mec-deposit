@@ -6,10 +6,17 @@ version: ^project.version^
 server.port: 8082
 
 # Kafka properties
-spring.kafka.bootstrap-servers: ${BOOTSTRAP_SERVER:localhost:9092}
-spring.kafka.consumer.group-id: jpo-mec-deposit
+spring:
+  kafka:
+    consumer:
+      group-id: jpo-mec-deposit
+    bootstrap-servers: ${BOOTSTRAP_SERVER:localhost:9092}
 
-logging.level:
-  root: INFO
-  org.springframework.kafka: WARN
-  org.apache.kafka: WARN
+logging:
+  level:
+    root: INFO
+    org.springframework.web: WARN
+    guru.springframework.controllers: WARN
+    org.springframework.kafka: WARN
+    org.apache.kafka: WARN
+    us.dot.its.jpo.ode.mec.deposit: ${LOGGING_LEVEL:DEBUG}

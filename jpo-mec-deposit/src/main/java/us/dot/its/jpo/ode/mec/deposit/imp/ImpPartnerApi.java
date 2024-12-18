@@ -35,13 +35,13 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 @Slf4j
-public class ImpRegistration {
+public class ImpPartnerApi {
 
     private DepositorProperties properties;
     private ObjectMapper objectMapper;
     private RestTemplate restTemplate;
 
-    public ImpRegistration(DepositorProperties depositorProperties) {
+    public ImpPartnerApi(DepositorProperties depositorProperties) {
         this.properties = depositorProperties;
         this.restTemplate = new RestTemplate();
         this.objectMapper = DateJsonMapper.getInstance();

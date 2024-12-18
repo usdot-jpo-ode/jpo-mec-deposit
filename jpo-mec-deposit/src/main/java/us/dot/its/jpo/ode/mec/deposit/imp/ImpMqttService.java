@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 import nl.altindag.ssl.SSLFactory;
 import nl.altindag.ssl.pem.util.PemUtils;
-import us.dot.its.jpo.ode.mec.deposit.GeoRoutedMsg;
 import us.dot.its.jpo.ode.mec.deposit.DepositorProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.ConfigData;
 import us.dot.its.jpo.ode.mec.deposit.utils.CommonUtils;

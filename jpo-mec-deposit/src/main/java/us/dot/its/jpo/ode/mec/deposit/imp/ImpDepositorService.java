@@ -19,20 +19,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-import us.dot.its.jpo.ode.mec.deposit.GeoRoutedMsg;
 import us.dot.its.jpo.ode.mec.deposit.common.MapDataCollector;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.MessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.MessageType;
 import us.dot.its.jpo.ode.model.OdeBsmData;
-import us.dot.its.jpo.ode.model.OdeMapData;
 import us.dot.its.jpo.ode.model.OdeSpatData;
 import us.dot.its.jpo.ode.model.OdeTimData;
 import us.dot.its.jpo.ode.plugin.j2735.J2735Bsm;
-import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionGeometry;
-import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionGeometryList;
 import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionState;
-import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionStateList;
-import us.dot.its.jpo.ode.plugin.j2735.J2735MAP;
 import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
 import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
 
@@ -49,7 +43,7 @@ public class ImpDepositorService {
     public ImpDepositorService(DepositorProperties properties) {
         this.properties = properties;
 
-        var registration = new ImpRegistration(properties);
+        var registration = new ImpPartnerApi(properties);
         var response = registration.registerClientPartner();
 
         if (response != null) {
@@ -68,7 +62,7 @@ public class ImpDepositorService {
     // // You can add any initialization logic here if needed
     // }
 
-    // @KafkaListener(topics = "topic.OdeTimJsonTMCFiltered", groupId =
+    // @KafkaListener(topics = "topic.OdeTimJson", groupId =
     // "${spring.kafka.consumer.group-id}-tim", concurrency =
     // "${listen.concurrency:1}")
     // public void tmcTimListener(String message) {
@@ -77,18 +71,7 @@ public class ImpDepositorService {
     // OdeTimData timMsg = mapper.readValue(message, OdeTimData.class);
     // String asn1String = timMsg.getMetadata().getAsn1();
     // String odeReceivedAt = timMsg.getMetadata().getOdeReceivedAt();
-    // GeoRoutedMsg geoRoutedMsg = ImpUtil.getGeoRoutedMsg(asn1String,
-    // odeReceivedAt, 0.0, 0.0);
-    // List<String> topicList = ImpUtil.getRegionalTimTopicList(timMsg, properties);
 
-    // log.info("Received TIM message: {}", geoRoutedMsg);
-    // log.info("Sending TIM message to MQTT topics: {}", topicList);
-
-    // for (String topic : topicList) {
-    // mqttService.publish(topic, geoRoutedMsg, retain);
-    // }
-
-    // List<double[]> pathCoords = ImpUtil.getTimPathCoordList(timMsg);
     // List<double[]> geofence = ImpUtil.generateGeofence(pathCoords, 50.0); // 50
 
     // } catch (Exception e) {
@@ -118,9 +101,8 @@ public class ImpDepositorService {
                     continue;
                 }
 
-                // TODO: change to SPAT after VZ updates ACL permissions!!!
                 String topic = ImpMqttTopicBuilder.buildRegionalTopic(refPoint, 7, properties, MessageFormat.J2735,
-                        MessageType.TIM);
+                        MessageType.SPAT);
 
                 topicList.add(topic);
             }
@@ -156,9 +138,8 @@ public class ImpDepositorService {
             J2735Bsm bsm = (J2735Bsm) msg.getPayload().getData();
             OdePosition3D coreData = bsm.getCoreData().getPosition();
 
-            // TODO: change to BSM after VZ updates ACL permissions!!!
             String topic = ImpMqttTopicBuilder.buildRegionalTopic(coreData, 7, properties, MessageFormat.J2735,
-                    MessageType.TIM);
+                    MessageType.BSM);
 
             // convert a string of hex asn1 to a byte array
             byte[] asn1Bytes = Hex.decode(asn1String);

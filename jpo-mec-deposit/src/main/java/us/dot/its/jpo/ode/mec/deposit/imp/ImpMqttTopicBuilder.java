@@ -56,7 +56,7 @@ public class ImpMqttTopicBuilder {
             MessageFormat messageFormat, MessageType messageType) {
         String geoHash = getPubGeoHash(refPoint.getLatitude().doubleValue(), refPoint.getLongitude().doubleValue(),
                 precision);
-        RegionalTopic topic = RegionalTopic.builder().mqttGeohash(geoHash).vendorId(properties.getImpVendor())
+        RegionalTopic topic = RegionalTopic.builder().mqttGeohash(geoHash).vendorId(properties.getImpMqttVendor())
                 .messageFormat(messageFormat).messageType(messageType).clientType(properties.getImpClientType())
                 .clientSubType(properties.getImpClientSubType()).build();
         return getRegionalTopic(topic);

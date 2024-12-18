@@ -30,7 +30,7 @@
 	<properties>
 		<java.version>21</java.version>
 		<protobuf.version>4.28.3</protobuf.version>
-		<jpo-ode.version>3.0.0-SNAPSHOT</jpo-ode.version>
+		<jpo-ode.version>4.0.0</jpo-ode.version>
 		<springdoc.version>2.3.0</springdoc.version>
 		<swagger-ui.version>5.3.1</swagger-ui.version>
 	</properties>
@@ -159,6 +159,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>${project.artifactId}</finalName>
 		<extensions>
 			<extension>
 				<groupId>kr.motd.maven</groupId>
@@ -234,6 +235,12 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<includeSystemScope>true</includeSystemScope>
+					<layers>
+						<enabled>true</enabled>
+					</layers>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>

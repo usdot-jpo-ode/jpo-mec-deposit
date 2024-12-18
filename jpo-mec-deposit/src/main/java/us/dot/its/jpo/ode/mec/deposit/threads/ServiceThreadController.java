@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import us.dot.its.jpo.ode.mec.deposit.DepositorProperties;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpDepositorService;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpMqttService;
-import us.dot.its.jpo.ode.mec.deposit.imp.ImpRegistration;
+import us.dot.its.jpo.ode.mec.deposit.imp.ImpPartnerApi;
 
 import java.util.HashMap;
 import java.util.Map;
