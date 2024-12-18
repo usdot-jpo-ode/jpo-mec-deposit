@@ -5,6 +5,15 @@ artifactId: ^project.artifactId^
 version: ^project.version^
 server.port: 8082
 
+# microservice actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  server:
+    port: 8082
+
 # Kafka properties
 spring:
   kafka:
