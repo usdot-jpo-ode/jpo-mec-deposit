@@ -87,13 +87,15 @@ public class ImpDepositorService {
     // }
     // }
 
-    @KafkaListener(topics = "topic.OdeSpatJson", groupId = "${spring.kafka.consumer.group-id}-spat", concurrency = "${listen.concurrency:1}")
+    @Async("kafkaListenerExecutor")
+    @KafkaListener(topics = "topic.OdeSpatJson", groupId = "${spring.kafka.consumer.group-id}-spat", concurrency = "${listen.concurrency:1}", containerFactory = "fastKafkaListenerContainerFactory")
     public void spatDepositListener(String message) {
         boolean retain = false;
         try {
+            LocalDateTime startTime = LocalDateTime.now(ZoneOffset.UTC);
+
             OdeSpatData msg = mapper.readValue(message, OdeSpatData.class);
             String asn1String = msg.getMetadata().getAsn1();
-            String odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
 
             J2735SPAT spatMsg = (J2735SPAT) msg.getPayload().getData();
             List<J2735IntersectionState> intersections = spatMsg.getIntersectionStateList()
@@ -105,7 +107,8 @@ public class ImpDepositorService {
                 String intersectionId = intersection.getId().getId().toString();
                 OdePosition3D refPoint = mapDataCollector.getIntersectionRefPoint(intersectionId);
                 if (refPoint == null) {
-                    log.debug("No refPoint found for intersectionId: {}", intersectionId);
+                    log.warn("No refPoint found for intersectionId: {} skipping IMP deposit",
+                            intersectionId);
                     continue;
                 }
 
@@ -123,12 +126,16 @@ public class ImpDepositorService {
                 log.debug("Sending SPAT message to MQTT topics: {}", topic);
             }
 
-            LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
-            LocalDateTime receivedAt = LocalDateTime.parse(odeReceivedAt,
+            LocalDateTime receivedAt = LocalDateTime.parse(msg.getMetadata().getOdeReceivedAt(),
                     DateTimeFormatter.ISO_DATE_TIME);
+            Duration latency = Duration.between(receivedAt, startTime);
 
-            Duration latency = Duration.between(receivedAt, now);
-            log.debug("topic.OdeSpatJson Latency: {} milliseconds", latency.toMillis());
+            log.debug("Kafka processing latency: {} milliseconds", latency.toMillis());
+
+            if (latency.toMillis() > 25) {
+                log.warn("High SPaT Kafka processing latency of: {} milliseconds",
+                        latency.toMillis());
+            }
 
         } catch (Exception e) {
             log.error("Error processing SPaT message", e);
@@ -137,8 +144,7 @@ public class ImpDepositorService {
     }
 
     @Async("kafkaListenerExecutor")
-    @KafkaListener(topics = "topic.OdeBsmJson", groupId = "${spring.kafka.consumer.group-id}-bsm", concurrency = "3", properties = {
-            "max.poll.records:100" }, containerFactory = "bsmKafkaListenerContainerFactory")
+    @KafkaListener(topics = "topic.OdeBsmJson", groupId = "${spring.kafka.consumer.group-id}-bsm", concurrency = "${listen.concurrency:1}", containerFactory = "fastKafkaListenerContainerFactory")
     public void bsmDepositListener(String message) {
         try {
             LocalDateTime startTime = LocalDateTime.now(ZoneOffset.UTC);
@@ -155,16 +161,16 @@ public class ImpDepositorService {
                 return null;
             });
 
-            // Move latency logging here to measure Kafka
-            // processing time only
-            LocalDateTime endTime = LocalDateTime.now(ZoneOffset.UTC);
             LocalDateTime receivedAt = LocalDateTime.parse(msg.getMetadata().getOdeReceivedAt(),
                     DateTimeFormatter.ISO_DATE_TIME);
-            Duration kakfa_latency = Duration.between(receivedAt, startTime);
-            Duration mqtt_latency = Duration.between(startTime, endTime);
-            log.debug("Kafka processing latency: {} milliseconds", kakfa_latency.toMillis());
-            log.debug("MQTT processing latency: {} milliseconds", mqtt_latency.toMillis());
+            Duration latency = Duration.between(receivedAt, startTime);
 
+            log.debug("Kafka processing latency: {} milliseconds", latency.toMillis());
+
+            if (latency.toMillis() > 25) {
+                log.warn("High BSM Kafka processing latency of: {} milliseconds",
+                        latency.toMillis());
+            }
         } catch (Exception e) {
             log.error("Error processing BSM message", e);
         }
