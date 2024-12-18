@@ -15,5 +15,5 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 
 print(f"Sending BSM at 10 Hz")
 while True:
-  time.sleep(0.1)
   sock.sendto(bytes.fromhex(MESSAGE), (UDP_IP, UDP_PORT))
+  time.sleep(.1)

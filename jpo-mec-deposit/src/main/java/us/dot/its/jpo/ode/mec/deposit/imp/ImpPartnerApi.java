@@ -59,21 +59,23 @@ public class ImpPartnerApi {
             String certPath = properties.getImpCertPath() + "/imp-cert.pem";
             String keyPath = properties.getImpCertPath() + "/imp-key.pem";
 
-            long startTime = System.currentTimeMillis();
-            String token = getToken();
-            long endtime = System.currentTimeMillis();
-            log.info("Time to get token: " + (endtime - startTime) + " ms");
-
             if (!validRegistration(configPath) || !cacheRegistration) {
                 log.info("Registering client partner");
+
+                long startTime = System.currentTimeMillis();
+                String token = getToken();
+                long endtime = System.currentTimeMillis();
+                log.info("Time to get token: " + (endtime - startTime) + " ms");
 
                 startTime = System.currentTimeMillis();
                 ClientRegistrationResponse registrationResponse = register(token);
                 endtime = System.currentTimeMillis();
                 log.info("Time to register: " + (endtime - startTime) + " ms");
 
-                CommonUtils.writeToFile(caCertPath, registrationResponse.getCertificate().getCaPem());
-                CommonUtils.writeToFile(certPath, registrationResponse.getCertificate().getCertPem());
+                CommonUtils.writeToFile(caCertPath,
+                        registrationResponse.getCertificate().getCaPem());
+                CommonUtils.writeToFile(certPath,
+                        registrationResponse.getCertificate().getCertPem());
                 CommonUtils.writeToFile(keyPath, registrationResponse.getCertificate().getKeyPem());
 
                 deviceID = registrationResponse.getDeviceID();
@@ -84,26 +86,26 @@ public class ImpPartnerApi {
                 log.info("Time to connect: " + (endtime - startTime) + " ms");
 
                 URI uri = new URI(connectionResponse.getMqttURL());
-                configData = new ConfigData(configPath, caCertPath, certPath, keyPath, properties.getImpVendor(),
-                        properties.getImpNetworkType(), uri, deviceID);
+                configData = new ConfigData(configPath, caCertPath, certPath, keyPath,
+                        properties.getImpVendor(), properties.getImpNetworkType(), uri, deviceID);
 
                 String configDataJson = objectMapper.writeValueAsString(configData);
 
                 CommonUtils.writeToFile(configPath, configDataJson);
             } else {
-                log.info("Client partner already registered, obtaining latest connection string");
+                log.info("Client partner already registered, obtaining config data");
 
                 String configDataJson = Files.readString(Paths.get(configPath));
                 configData = objectMapper.readValue(configDataJson, ConfigData.class);
                 deviceID = configData.getDeviceID();
 
-                startTime = System.currentTimeMillis();
-                ClientConnectionResponse connectionResponse = connection(token, deviceID);
-                endtime = System.currentTimeMillis();
-                log.info("Time to connect: " + (endtime - startTime) + " ms");
+                // startTime = System.currentTimeMillis();
+                // ClientConnectionResponse connectionResponse = connection(token, deviceID);
+                // endtime = System.currentTimeMillis();
+                // log.info("Time to connect: " + (endtime - startTime) + " ms");
 
-                URI uri = new URI(connectionResponse.getMqttURL());
-                configData.setImpMqttUri(uri);
+                // URI uri = new URI(connectionResponse.getMqttURL());
+                // configData.setImpMqttUri(uri);
             }
 
             return configData;
@@ -115,22 +117,24 @@ public class ImpPartnerApi {
     }
 
     public String getToken() {
-        var request = new AuthTokenRequest(properties.getImpPartnerUser(), properties.getImpPartnerPass());
+        var request = new AuthTokenRequest(properties.getImpPartnerUser(),
+                properties.getImpPartnerPass());
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
 
         HttpEntity<AuthTokenRequest> entity = new HttpEntity<>(request, headers);
 
-        AuthToken response = restTemplate.postForObject(properties.getImpPartnerApiBaseUri() + "/auth/token", entity,
-                AuthToken.class);
+        AuthToken response = restTemplate.postForObject(
+                properties.getImpPartnerApiBaseUri() + "/auth/token", entity, AuthToken.class);
 
         return response.getAccessToken();
     }
 
     public ClientRegistrationResponse register(String token) {
         ClientRegistrationPostRequest request = new ClientRegistrationPostRequest(
-                properties.getImpClientType().getValue(), properties.getImpClientSubType().getValue());
+                properties.getImpClientType().getValue(),
+                properties.getImpClientSubType().getValue());
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
@@ -140,8 +144,8 @@ public class ImpPartnerApi {
 
         try {
             ResponseEntity<ClientRegistrationResponse> response = restTemplate.exchange(
-                    properties.getImpPartnerApiBaseUri() + "/prd/v2/registration", HttpMethod.POST, entity,
-                    ClientRegistrationResponse.class);
+                    properties.getImpPartnerApiBaseUri() + "/prd/v2/registration", HttpMethod.POST,
+                    entity, ClientRegistrationResponse.class);
 
             return response.getBody();
         } catch (HttpClientErrorException.Unauthorized e) {
@@ -151,8 +155,9 @@ public class ImpPartnerApi {
     }
 
     public ClientConnectionResponse connection(String token, String deviceID) {
-        ClientConnectionPostRequest request = new ClientConnectionPostRequest(deviceID, properties.getImpMecLatitude(),
-                properties.getImpMecLongitude(), properties.getImpNetworkType());
+        ClientConnectionPostRequest request = new ClientConnectionPostRequest(deviceID,
+                properties.getImpMecLatitude(), properties.getImpMecLongitude(),
+                properties.getImpNetworkType());
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
@@ -162,8 +167,8 @@ public class ImpPartnerApi {
 
         try {
             ResponseEntity<ClientConnectionResponse> response = restTemplate.exchange(
-                    properties.getImpPartnerApiBaseUri() + "/prd/v2/connection", HttpMethod.POST, entity,
-                    ClientConnectionResponse.class);
+                    properties.getImpPartnerApiBaseUri() + "/prd/v2/connection", HttpMethod.POST,
+                    entity, ClientConnectionResponse.class);
 
             return response.getBody();
         } catch (HttpClientErrorException.Unauthorized e) {
@@ -180,7 +185,8 @@ public class ImpPartnerApi {
                 String configDataJson = Files.readString(Paths.get(configPath));
                 ConfigData configData = objectMapper.readValue(configDataJson, ConfigData.class);
 
-                if (configData.getDeviceID() != null && configData.getNetworkType() == properties.getImpNetworkType()) {
+                if (configData.getDeviceID() != null
+                        && configData.getNetworkType() == properties.getImpNetworkType()) {
                     valid = true;
                 }
             } catch (IOException e) {

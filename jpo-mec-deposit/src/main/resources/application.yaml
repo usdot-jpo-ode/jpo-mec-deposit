@@ -10,6 +10,15 @@ spring:
   kafka:
     consumer:
       group-id: jpo-mec-deposit
+      fetch-min-size: 1
+      fetch-max-wait: 50
+      max-poll-records: 500
+      auto-offset-reset: latest
+      enable-auto-commit: true
+      auto-commit-interval: 100
+    listener:
+      ack-mode: BATCH
+      poll-timeout: 100
     bootstrap-servers: ${BOOTSTRAP_SERVER:localhost:9092}
 
 logging:
