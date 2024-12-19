@@ -30,6 +30,9 @@ import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionState;
 import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
 import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+
 @Component
 @Slf4j
 public class ImpDepositorService {
@@ -40,9 +43,20 @@ public class ImpDepositorService {
     @Autowired
     private MapDataCollector mapDataCollector;
 
-    public ImpDepositorService(DepositorProperties properties, ImpMqttService mqttService) {
+    private final Timer spatProcessingTimer;
+    private final Timer bsmProcessingTimer;
+
+    public ImpDepositorService(DepositorProperties properties, ImpMqttService mqttService,
+            MeterRegistry registry) {
         this.properties = properties;
         this.mqttService = mqttService;
+
+        this.spatProcessingTimer = Timer.builder("imp.message.processing")
+                .tag("message.type", "spat").description("Time taken to process SPAT messages")
+                .register(registry);
+
+        this.bsmProcessingTimer = Timer.builder("imp.message.processing").tag("message.type", "bsm")
+                .description("Time taken to process BSM messages").register(registry);
 
         var registration = new ImpPartnerApi(properties);
         var response = registration.registerClientPartner();
@@ -131,11 +145,7 @@ public class ImpDepositorService {
             Duration latency = Duration.between(receivedAt, startTime);
 
             log.debug("Kafka processing latency: {} milliseconds", latency.toMillis());
-
-            if (latency.toMillis() > 25) {
-                log.warn("High SPaT Kafka processing latency of: {} milliseconds",
-                        latency.toMillis());
-            }
+            spatProcessingTimer.record(latency);
 
         } catch (Exception e) {
             log.error("Error processing SPaT message", e);
@@ -166,11 +176,8 @@ public class ImpDepositorService {
             Duration latency = Duration.between(receivedAt, startTime);
 
             log.debug("Kafka processing latency: {} milliseconds", latency.toMillis());
+            bsmProcessingTimer.record(latency);
 
-            if (latency.toMillis() > 25) {
-                log.warn("High BSM Kafka processing latency of: {} milliseconds",
-                        latency.toMillis());
-            }
         } catch (Exception e) {
             log.error("Error processing BSM message", e);
         }

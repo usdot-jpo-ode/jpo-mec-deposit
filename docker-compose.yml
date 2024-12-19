@@ -12,6 +12,8 @@ services:
       dockerfile: Dockerfile
     image: jpo_mec_deposit:latest
     restart: ${RESTART_POLICY}
+    ports:
+      - "8082:8082"
     deploy:
       resources:
         limits:
