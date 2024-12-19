@@ -18,8 +18,10 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 send_map = True
 count = 0
 
+frequency = 10
+
 while True:
-  print("sending SPaT at 10 Hz")
+  print(f"sending SPaT at {frequency} Hz")
   sock.sendto(bytes.fromhex(SPAT_MESSAGE), (UDP_IP, SPAT_UDP_PORT))
   if send_map:
     print("sending MAP at 1 Hz")

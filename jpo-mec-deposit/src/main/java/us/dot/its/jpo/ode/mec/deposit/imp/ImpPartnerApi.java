@@ -12,6 +12,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientConnectionRespons
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationConnectionPostRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationPostRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationResponse;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.NetworkType;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -84,10 +85,16 @@ public class ImpPartnerApi {
                 ClientConnectionResponse connectionResponse = connection(token, deviceID);
                 endtime = System.currentTimeMillis();
                 log.info("Time to connect: " + (endtime - startTime) + " ms");
-
                 URI uri = new URI(connectionResponse.getMqttURL());
-                configData = new ConfigData(configPath, caCertPath, certPath, keyPath,
-                        properties.getImpVendor(), properties.getImpNetworkType(), uri, deviceID);
+                // configData = new ConfigData(configPath, caCertPath, certPath, keyPath,
+                // properties.getImpVendor(),
+                // NetworkType.valueOf(properties.getImpNetworkType()), uri, deviceID);
+
+                configData = ConfigData.builder().configFilePath(configPath).caCertPath(caCertPath)
+                        .clientCertPath(certPath).keyFilePath(keyPath)
+                        .impVendor(properties.getImpVendor())
+                        .networkType(properties.getImpNetworkType()).impMqttUri(uri)
+                        .deviceID(deviceID).impSessionID(null).build();
 
                 String configDataJson = objectMapper.writeValueAsString(configData);
 

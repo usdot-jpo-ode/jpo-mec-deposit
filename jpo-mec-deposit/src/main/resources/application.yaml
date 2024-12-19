@@ -37,4 +37,12 @@ logging:
     guru.springframework.controllers: WARN
     org.springframework.kafka: WARN
     org.apache.kafka: WARN
+    org.springframework.integration.mqtt: INFO
     us.dot.its.jpo.ode.mec.deposit: ${LOGGING_LEVEL:DEBUG}
+
+depositor:
+  imp:
+    mqtt:
+      subscriptions:
+        - "vzimp/1/ClientInfo"
+      qos: 1

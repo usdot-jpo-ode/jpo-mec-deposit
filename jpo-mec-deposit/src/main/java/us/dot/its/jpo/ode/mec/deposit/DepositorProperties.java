@@ -6,6 +6,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.List;
+import java.util.Arrays;
 
 import jakarta.annotation.PostConstruct;
 
@@ -142,7 +144,8 @@ public class DepositorProperties implements EnvironmentAware {
 
 			String kafkaBroker = CommonUtils.getEnvironmentVariable("KAFKA_BROKER_IP");
 
-			logger.info("ode.kafkaBrokers property not defined. Will try KAFKA_BROKER_IP => {}", kafkaBrokers);
+			logger.info("ode.kafkaBrokers property not defined. Will try KAFKA_BROKER_IP => {}",
+					kafkaBrokers);
 
 			if (kafkaBroker == null) {
 				logger.warn(
@@ -186,7 +189,8 @@ public class DepositorProperties implements EnvironmentAware {
 		// HEADER_X_API_KEY = CommonUtils.getEnvironmentVariable("HEADER_X_API_KEY",
 		// "");
 
-		impEnabled = CommonUtils.getEnvironmentVariable("IMP_ENABLED", "false").equalsIgnoreCase("true");
+		impEnabled = CommonUtils.getEnvironmentVariable("IMP_ENABLED", "false")
+				.equalsIgnoreCase("true");
 
 		if (impEnabled) {
 			logger.info("IMP is enabled");
@@ -201,12 +205,15 @@ public class DepositorProperties implements EnvironmentAware {
 			String impMecLongitudeStr = CommonUtils.getEnvironmentVariable("IMP_MEC_LONGITUDE");
 			impMecLongitude = new BigDecimal(impMecLongitudeStr);
 			impCertPath = CommonUtils.getEnvironmentVariable("IMP_CERT_PATH");
-			impCacheRegistration = CommonUtils.getEnvironmentVariable("IMP_CACHE_REGISTRATION", "false")
+			impCacheRegistration = CommonUtils
+					.getEnvironmentVariable("IMP_CACHE_REGISTRATION", "false")
 					.equalsIgnoreCase("true");
 			impMqttVendor = CommonUtils.getEnvironmentVariable("IMP_MQTT_VENDOR");
-			impClientType = ClientType.fromValue(CommonUtils.getEnvironmentVariable("IMP_CLIENT_TYPE"));
-			impClientSubType = ClientSubType.fromValue(CommonUtils.getEnvironmentVariable("IMP_CLIENT_SUB_TYPE"));
-		} else {
+			impClientType = ClientType
+					.fromValue(CommonUtils.getEnvironmentVariable("IMP_CLIENT_TYPE"));
+			impClientSubType = ClientSubType
+					.fromValue(CommonUtils.getEnvironmentVariable("IMP_CLIENT_SUB_TYPE"));
+
 			logger.info("IMP is disabled");
 		}
 
