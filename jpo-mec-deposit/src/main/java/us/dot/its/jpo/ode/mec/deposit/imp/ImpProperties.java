@@ -1,6 +1,13 @@
 package us.dot.its.jpo.ode.mec.deposit.imp;
 
 import lombok.Data;
+import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttProperties;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpClientSubType;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpClientType;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ImpNetworkType;
+
+import java.math.BigDecimal;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -10,11 +17,13 @@ import org.springframework.context.annotation.Configuration;
 public class ImpProperties {
     private boolean enabled;
     private String vendor;
-    private String networkType;
+    private ImpNetworkType networkType;
     private boolean cacheRegistration;
     private String certificatePath;
+    private ImpClientType clientType;
+    private ImpClientSubType clientSubType;
     private PartnerApiProperties partnerApi;
-    private MecProperties mec;
+    private ImpMqttProperties mqtt;
 
     @Data
     public static class PartnerApiProperties {
@@ -22,6 +31,8 @@ public class ImpProperties {
         private String user;
         private String pass;
         private DepositorProperties depositors;
+        private BigDecimal mecLatitude;
+        private BigDecimal mecLongitude;
     }
 
     @Data
@@ -40,12 +51,6 @@ public class ImpProperties {
     public static class TimProperties {
         private String sourceKafkaTopic;
         private String distributionType;
-    }
-
-    @Data
-    public static class MecProperties {
-        private String latitude;
-        private String longitude;
     }
 
     @Data

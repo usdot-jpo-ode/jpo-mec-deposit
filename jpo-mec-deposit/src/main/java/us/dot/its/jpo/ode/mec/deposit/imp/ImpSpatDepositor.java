@@ -7,7 +7,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import us.dot.its.jpo.ode.mec.deposit.DepositorProperties;
 import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttService;
 import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttTopicBuilder;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageFormat;
@@ -33,11 +32,9 @@ public class ImpSpatDepositor extends AbstractImpDepositor {
     @Autowired
     private MapRefPointCollector mapDataCollector;
 
-    public ImpSpatDepositor(DepositorProperties properties, ImpMqttService mqttService,
+    public ImpSpatDepositor(ImpProperties impProperties, ImpMqttService mqttService,
             MeterRegistry registry) {
-        super(properties, mqttService,
-                Timer.builder("imp.message.processing").tag("message.type", "spat")
-                        .description("Time taken to process SPAT messages").register(registry));
+        super(impProperties, mqttService, ImpMqttMessageType.SPAT, registry);
     }
 
     @Async("kafkaListenerExecutor")
@@ -65,8 +62,8 @@ public class ImpSpatDepositor extends AbstractImpDepositor {
                     continue;
                 }
 
-                String topic = ImpMqttTopicBuilder.buildRegionalTopic(refPoint, 7, properties,
-                        ImpMqttMessageFormat.J2735, ImpMqttMessageType.SPAT);
+                String topic = ImpMqttTopicBuilder.buildRegionalTopic(messageType, refPoint, 7,
+                        impProperties);
 
                 topicList.add(topic);
             }

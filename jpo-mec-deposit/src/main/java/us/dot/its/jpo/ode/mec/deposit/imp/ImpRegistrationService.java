@@ -2,13 +2,12 @@ package us.dot.its.jpo.ode.mec.deposit.imp;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import us.dot.its.jpo.ode.mec.deposit.DepositorProperties;
 
 @Component
 @Slf4j
 public class ImpRegistrationService {
 
-    public ImpRegistrationService(DepositorProperties properties) {
+    public ImpRegistrationService(ImpProperties properties) {
         var registration = new ImpPartnerApi(properties);
         var response = registration.registerClientPartner();
 

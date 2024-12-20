@@ -1,26 +1,19 @@
 package us.dot.its.jpo.ode.mec.deposit.imp;
 
-import us.dot.its.jpo.ode.mec.deposit.DepositorProperties;
-import us.dot.its.jpo.ode.mec.deposit.utils.CommonUtils;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
+import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties.PartnerApiProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpConfigData;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.AuthToken;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.AuthTokenRequest;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientCompleteResponse;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientConnectionPostRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientConnectionResponse;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationConnectionPostRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationPostRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationResponse;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ImpNetworkType;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -29,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -38,11 +30,13 @@ import java.nio.file.Paths;
 @Slf4j
 public class ImpPartnerApi {
     protected final static ObjectMapper mapper = DateJsonMapper.getInstance();
-    private DepositorProperties properties;
+    private ImpProperties impProperties;
+    private PartnerApiProperties partnerApi;
     private RestTemplate restTemplate;
 
-    public ImpPartnerApi(DepositorProperties depositorProperties) {
-        this.properties = depositorProperties;
+    public ImpPartnerApi(ImpProperties properties) {
+        this.impProperties = properties;
+        this.partnerApi = properties.getPartnerApi();
         this.restTemplate = new RestTemplate();
         this.restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
     }
@@ -51,12 +45,12 @@ public class ImpPartnerApi {
         try {
             ImpConfigData configData;
             String deviceID = null;
-            Boolean cacheRegistration = properties.getImpCacheRegistration();
+            boolean cacheRegistration = impProperties.isCacheRegistration();
 
-            String configPath = properties.getImpCertPath() + "/config.json";
-            String caCertPath = properties.getImpCertPath() + "/imp-ca.pem";
-            String certPath = properties.getImpCertPath() + "/imp-cert.pem";
-            String keyPath = properties.getImpCertPath() + "/imp-key.pem";
+            String configPath = impProperties.getCertificatePath() + "/config.json";
+            String caCertPath = impProperties.getCertificatePath() + "/imp-ca.pem";
+            String certPath = impProperties.getCertificatePath() + "/imp-cert.pem";
+            String keyPath = impProperties.getCertificatePath() + "/imp-key.pem";
 
             if (!validRegistration(configPath) || !cacheRegistration) {
                 log.info("Registering client partner");
@@ -88,8 +82,8 @@ public class ImpPartnerApi {
 
                 configData = ImpConfigData.builder().configFilePath(configPath)
                         .caCertPath(caCertPath).clientCertPath(certPath).keyFilePath(keyPath)
-                        .impVendor(properties.getImpVendor())
-                        .networkType(properties.getImpNetworkType()).impMqttUri(uri)
+                        .impVendor(impProperties.getVendor())
+                        .networkType(impProperties.getNetworkType()).impMqttUri(uri)
                         .deviceID(deviceID).impSessionID(null).build();
 
                 String configDataJson = mapper.writeValueAsString(configData);
@@ -120,24 +114,23 @@ public class ImpPartnerApi {
     }
 
     public String getToken() {
-        var request = new AuthTokenRequest(properties.getImpPartnerUser(),
-                properties.getImpPartnerPass());
+        var request = new AuthTokenRequest(partnerApi.getUser(), partnerApi.getPass());
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
 
         HttpEntity<AuthTokenRequest> entity = new HttpEntity<>(request, headers);
 
-        AuthToken response = restTemplate.postForObject(
-                properties.getImpPartnerApiBaseUri() + "/auth/token", entity, AuthToken.class);
+        AuthToken response = restTemplate.postForObject(partnerApi.getBaseUri() + "/auth/token",
+                entity, AuthToken.class);
 
         return response.getAccessToken();
     }
 
     public ClientRegistrationResponse register(String token) {
         ClientRegistrationPostRequest request = new ClientRegistrationPostRequest(
-                properties.getImpClientType().getValue(),
-                properties.getImpClientSubType().getValue());
+                impProperties.getClientType().toString(),
+                impProperties.getClientSubType().toString());
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
@@ -147,8 +140,8 @@ public class ImpPartnerApi {
 
         try {
             ResponseEntity<ClientRegistrationResponse> response = restTemplate.exchange(
-                    properties.getImpPartnerApiBaseUri() + "/prd/v2/registration", HttpMethod.POST,
-                    entity, ClientRegistrationResponse.class);
+                    partnerApi.getBaseUri() + "/prd/v2/registration", HttpMethod.POST, entity,
+                    ClientRegistrationResponse.class);
 
             return response.getBody();
         } catch (HttpClientErrorException.Unauthorized e) {
@@ -159,8 +152,8 @@ public class ImpPartnerApi {
 
     public ClientConnectionResponse connection(String token, String deviceID) {
         ClientConnectionPostRequest request = new ClientConnectionPostRequest(deviceID,
-                properties.getImpMecLatitude(), properties.getImpMecLongitude(),
-                properties.getImpNetworkType());
+                partnerApi.getMecLatitude(), partnerApi.getMecLongitude(),
+                impProperties.getNetworkType());
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
@@ -170,8 +163,8 @@ public class ImpPartnerApi {
 
         try {
             ResponseEntity<ClientConnectionResponse> response = restTemplate.exchange(
-                    properties.getImpPartnerApiBaseUri() + "/prd/v2/connection", HttpMethod.POST,
-                    entity, ClientConnectionResponse.class);
+                    partnerApi.getBaseUri() + "/prd/v2/connection", HttpMethod.POST, entity,
+                    ClientConnectionResponse.class);
 
             return response.getBody();
         } catch (HttpClientErrorException.Unauthorized e) {
@@ -189,7 +182,7 @@ public class ImpPartnerApi {
                 ImpConfigData configData = mapper.readValue(configDataJson, ImpConfigData.class);
 
                 if (configData.getDeviceID() != null
-                        && configData.getNetworkType() == properties.getImpNetworkType()) {
+                        && configData.getNetworkType() == impProperties.getNetworkType()) {
                     valid = true;
                 }
             } catch (IOException e) {

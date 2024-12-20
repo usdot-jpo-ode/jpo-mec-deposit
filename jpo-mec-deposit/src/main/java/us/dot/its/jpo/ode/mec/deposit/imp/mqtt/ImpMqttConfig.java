@@ -17,7 +17,7 @@ import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.messaging.MessageChannel;
 
 import lombok.extern.slf4j.Slf4j;
-import us.dot.its.jpo.ode.mec.deposit.DepositorProperties;
+import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpUtil;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpConfigData;
 
@@ -25,66 +25,66 @@ import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpConfigData;
 @Configuration
 public class ImpMqttConfig {
 
-        private final MqttProperties mqttProperties;
+    private final ImpMqttProperties mqttProperties;
+    private final ImpProperties impProperties;
 
-        public ImpMqttConfig(MqttProperties mqttProperties) {
-                this.mqttProperties = mqttProperties;
-        }
+    public ImpMqttConfig(ImpMqttProperties mqttProperties, ImpProperties impProperties) {
+        this.mqttProperties = mqttProperties;
+        this.impProperties = impProperties;
+    }
 
-        @Bean
-        public ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager(
-                        DepositorProperties properties) {
-                ImpConfigData impConfig = ImpUtil
-                                .readConfigFile(properties.getImpCertPath() + "/config.json");
-                String brokerUrl = impConfig.getImpMqttUri().toString().replace("mqtt://",
-                                "ssl://");
+    @Bean
+    public ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager() {
+        ImpConfigData impConfig = ImpUtil
+                .readConfigFile(impProperties.getCertificatePath() + "/config.json");
+        String brokerUrl = impConfig.getImpMqttUri().toString().replace("mqtt://", "ssl://");
 
-                MqttConnectOptions options = new MqttConnectOptions();
-                options.setServerURIs(new String[] { brokerUrl });
-                options.setCleanSession(true);
-                options.setSocketFactory(ImpUtil.createSocketFactory(impConfig.getCaCertPath(),
-                                impConfig.getClientCertPath(), impConfig.getKeyFilePath()));
-                options.setConnectionTimeout(10);
-                options.setKeepAliveInterval(30);
-                options.setAutomaticReconnect(true);
-                options.setMaxInflight(1000);
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.setServerURIs(new String[] { brokerUrl });
+        options.setCleanSession(true);
+        options.setSocketFactory(ImpUtil.createSocketFactory(impConfig.getCaCertPath(),
+                impConfig.getClientCertPath(), impConfig.getKeyFilePath()));
+        options.setConnectionTimeout(10);
+        options.setKeepAliveInterval(30);
+        options.setAutomaticReconnect(true);
+        options.setMaxInflight(mqttProperties.getMaxInflight());
+        options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
 
-                Mqttv3ClientManager clientManager = new Mqttv3ClientManager(options,
-                                impConfig.getDeviceID());
-                clientManager.setPersistence(new MqttDefaultFilePersistence());
-                return clientManager;
-        }
+        Mqttv3ClientManager clientManager = new Mqttv3ClientManager(options,
+                impConfig.getDeviceID());
+        String tmpDir = impProperties.getCertificatePath() + "/mqtt-persistence";
+        clientManager.setPersistence(new MqttDefaultFilePersistence(tmpDir));
+        return clientManager;
+    }
 
-        @Bean
-        public MessageChannel mqttOutboundChannel() {
-                return new DirectChannel();
-        }
+    @Bean
+    public MessageChannel mqttOutboundChannel() {
+        return new DirectChannel();
+    }
 
-        @Bean
-        public IntegrationFlow mqttInFlow(
-                        ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager,
-                        DepositorProperties properties) {
+    @Bean
+    public IntegrationFlow mqttInFlow(
+            ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager,
+            ImpProperties impProperties) {
 
-                ImpConfigData impConfig = ImpUtil
-                                .readConfigFile(properties.getImpCertPath() + "/config.json");
+        ImpConfigData impConfig = ImpUtil
+                .readConfigFile(impProperties.getCertificatePath() + "/config.json");
 
-                log.debug("Setting up MQTT inbound adapter with deviceID: {}",
-                                impConfig.getDeviceID());
-                log.debug("Subscribing to topics: {}",
-                                Arrays.toString(mqttProperties.getSubscriptions()));
+        log.debug("Setting up MQTT inbound adapter with deviceID: {}", impConfig.getDeviceID());
+        log.debug("Subscribing to topics: {}", Arrays.toString(mqttProperties.getSubscriptions()));
 
-                MqttPahoMessageDrivenChannelAdapter messageProducer = new MqttPahoMessageDrivenChannelAdapter(
-                                clientManager, mqttProperties.getSubscriptions());
+        MqttPahoMessageDrivenChannelAdapter messageProducer = new MqttPahoMessageDrivenChannelAdapter(
+                clientManager, mqttProperties.getSubscriptions());
 
-                messageProducer.setQos(mqttProperties.getQos());
+        messageProducer.setQos(mqttProperties.getQos());
 
-                return IntegrationFlow.from(messageProducer).channel("mqttInputChannel").get();
-        }
+        return IntegrationFlow.from(messageProducer).channel("mqttInputChannel").get();
+    }
 
-        @Bean
-        public IntegrationFlow mqttOutFlow(
-                        ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager) {
-                return f -> f.channel("mqttOutboundChannel")
-                                .handle(new MqttPahoMessageHandler(clientManager));
-        }
+    @Bean
+    public IntegrationFlow mqttOutFlow(
+            ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager) {
+        return f -> f.channel("mqttOutboundChannel")
+                .handle(new MqttPahoMessageHandler(clientManager));
+    }
 }

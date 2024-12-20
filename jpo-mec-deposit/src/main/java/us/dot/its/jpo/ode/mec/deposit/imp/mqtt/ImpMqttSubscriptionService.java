@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import us.dot.its.jpo.ode.mec.deposit.DepositorProperties;
+import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpUtil;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpConfigData;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttClientInfo;
@@ -21,8 +21,8 @@ public class ImpMqttSubscriptionService {
     private final ObjectMapper mapper = DateJsonMapper.getInstance();
     private String configPath;
 
-    public ImpMqttSubscriptionService(DepositorProperties properties) {
-        this.configPath = properties.getImpCertPath() + "/config.json";
+    public ImpMqttSubscriptionService(ImpProperties impProperties) {
+        this.configPath = impProperties.getCertificatePath() + "/config.json";
     }
 
     @PostConstruct

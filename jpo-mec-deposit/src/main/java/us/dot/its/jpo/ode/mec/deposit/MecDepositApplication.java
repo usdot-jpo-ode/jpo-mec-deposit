@@ -17,7 +17,7 @@ import us.dot.its.jpo.ode.mec.deposit.utils.SystemConfig;
 
 @SpringBootApplication
 @EnableKafka
-@EnableConfigurationProperties(DepositorProperties.class)
+@EnableConfigurationProperties()
 public class MecDepositApplication {
 	static final int DEFAULT_NO_THREADS = 10;
 	static final String DEFAULT_SCHEMA = "default";

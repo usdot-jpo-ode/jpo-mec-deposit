@@ -1,9 +1,9 @@
-package us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt;
+package us.dot.its.jpo.ode.mec.deposit.models.imp;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum ImpMqttClientSubType {
+public enum ImpClientSubType {
     PASSENGER_CAR("PassengerCar"), TRUCK("Truck"), BUS("Bus"),
     EMERGENCY_VEHICLE("EmergencyVehicle"), SCHOOL_BUS("SchoolBus"),
     MAINTENANCE_VEHICLE("MaintenanceVehicle"), PEDESTRIAN("Pedestrian"), BICYCLE("Bicycle"),
@@ -13,7 +13,7 @@ public enum ImpMqttClientSubType {
 
     private String value;
 
-    ImpMqttClientSubType(String value) {
+    ImpClientSubType(String value) {
         this.value = value;
     }
 
@@ -28,8 +28,8 @@ public enum ImpMqttClientSubType {
     }
 
     @JsonCreator
-    public static ImpMqttClientSubType fromValue(String value) {
-        for (ImpMqttClientSubType b : ImpMqttClientSubType.values()) {
+    public static ImpClientSubType fromValue(String value) {
+        for (ImpClientSubType b : ImpClientSubType.values()) {
             if (b.value.equals(value)) {
                 return b;
             }

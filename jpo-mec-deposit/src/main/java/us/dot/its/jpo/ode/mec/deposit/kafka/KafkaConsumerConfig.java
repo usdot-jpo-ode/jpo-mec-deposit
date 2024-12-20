@@ -14,8 +14,7 @@
 // import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 // import org.springframework.kafka.listener.ContainerProperties;
 
-// import us.dot.its.jpo.ode.mec.deposit.DepositorProperties;
-
+//
 // import org.apache.kafka.common.serialization.StringDeserializer;
 
 // @EnableKafka
