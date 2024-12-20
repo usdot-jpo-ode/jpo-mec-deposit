@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit.common;
+package us.dot.its.jpo.ode.mec.deposit.utils;
 
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import us.dot.its.jpo.ode.mec.deposit.DateJsonMapper;
 import us.dot.its.jpo.ode.model.OdeMapData;
 import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionGeometry;
 import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionGeometryList;
@@ -17,29 +16,31 @@ import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
 
 @Component
 @Slf4j
-public class MapDataCollector {
+public class MapRefPointCollector {
     private final ObjectMapper mapper = DateJsonMapper.getInstance();
     private ConcurrentHashMap<String, OdePosition3D> map = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {
-        log.debug("MapDataCollector PostConstruct initialization");
+        log.debug("MapRefPointCollector PostConstruct initialization");
     }
 
-    public MapDataCollector() {
-        log.debug("MapDataCollector initialized");
+    public MapRefPointCollector() {
+        log.debug("MapRefPointCollector initialized");
     }
 
     @KafkaListener(topics = "topic.OdeMapJson", groupId = "${spring.kafka.consumer.group-id}-map", concurrency = "${listen.concurrency:1}", properties = {
             "auto.offset.reset=earliest" })
     public void jsonMapListener(String message) {
-        log.debug("Received message on topic.OdeMapJson: {}", message.substring(0, Math.min(message.length(), 100)));
+        log.debug("Received message on topic.OdeMapJson: {}",
+                message.substring(0, Math.min(message.length(), 100)));
         try {
             OdeMapData msg = mapper.readValue(message, OdeMapData.class);
             J2735MAP mapMsg = (J2735MAP) msg.getPayload().getData();
             J2735IntersectionGeometryList intersections = mapMsg.getIntersections();
 
-            log.debug("Processing MAP message with {} intersections", intersections.getIntersections().size());
+            log.debug("Processing MAP message with {} intersections",
+                    intersections.getIntersections().size());
 
             for (int i = 0; i < intersections.getIntersections().size(); i++) {
                 J2735IntersectionGeometry intersection = intersections.getIntersections().get(i);

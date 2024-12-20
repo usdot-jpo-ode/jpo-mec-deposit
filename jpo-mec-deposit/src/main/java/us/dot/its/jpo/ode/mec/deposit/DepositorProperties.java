@@ -23,10 +23,10 @@ import org.slf4j.LoggerFactory;
 
 import lombok.Getter;
 import lombok.Setter;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.ConfigData;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ClientSubType;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ClientType;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.NetworkType;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpConfigData;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttClientSubType;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttClientType;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ImpNetworkType;
 import us.dot.its.jpo.ode.mec.deposit.utils.CommonUtils;
 import lombok.AccessLevel;
 
@@ -79,36 +79,16 @@ public class DepositorProperties implements EnvironmentAware {
 	private String kafkaTopics = null;
 
 	/*
-	 * S3 Properties
-	 */
-	// private String K_AWS_ACCESS_KEY_ID;
-	// private String K_AWS_SECRET_ACCESS_KEY;
-	// private String K_AWS_SESSION_TOKEN;
-	// private String K_AWS_EXPIRATION;
-	// private String API_ENDPOINT;
-	// private String HEADER_Accept;
-	// private String HEADER_X_API_KEY;
-
-	// private String AWS_ACCESS_KEY_ID;
-	// private String AWS_SECRET_ACCESS_KEY;
-	// private String AWS_SESSION_TOKEN;
-	// private String AWS_EXPIRATION;
-
-	// private String S3_BUCKET_NAME;
-	// private String S3_KEY_NAME;
-	// private String AWS_REGION_NAME;
-
-	/*
 	 * IMP Properties
 	 */
 	private Boolean impEnabled;
 	private String impVendor;
-	private NetworkType impNetworkType;
+	private ImpNetworkType impNetworkType;
 	private String impPartnerApiBaseUri;
 	private String impPartnerUser;
 	private String impPartnerPass;
-	private ClientType impClientType;
-	private ClientSubType impClientSubType;
+	private ImpMqttClientType impClientType;
+	private ImpMqttClientSubType impClientSubType;
 	private String impTopicType;
 	private Boolean impCacheRegistration;
 	private BigDecimal impMecLatitude;
@@ -168,27 +148,6 @@ public class DepositorProperties implements EnvironmentAware {
 			}
 		}
 
-		// S3 Properties
-		// S3_BUCKET_NAME = CommonUtils.getEnvironmentVariable("DEPOSIT_BUCKET_NAME",
-		// "");
-		// AWS_REGION_NAME = CommonUtils.getEnvironmentVariable("REGION", "us-east-1");
-		// S3_KEY_NAME = CommonUtils.getEnvironmentVariable("DEPOSIT_KEY_NAME", "");
-
-		// K_AWS_ACCESS_KEY_ID = CommonUtils.getEnvironmentVariable("AWS_ACCESS_KEY_ID",
-		// "AccessKeyId");
-		// K_AWS_SECRET_ACCESS_KEY =
-		// CommonUtils.getEnvironmentVariable("AWS_SECRET_ACCESS_KEY",
-		// "SecretAccessKey");
-		// K_AWS_SESSION_TOKEN = CommonUtils.getEnvironmentVariable("AWS_SESSION_TOKEN",
-		// "SessionToken");
-		// K_AWS_EXPIRATION = CommonUtils.getEnvironmentVariable("AWS_EXPIRATION",
-		// "Expiration");
-		// API_ENDPOINT = CommonUtils.getEnvironmentVariable("API_ENDPOINT", "");
-		// HEADER_Accept = CommonUtils.getEnvironmentVariable("HEADER_ACCEPT",
-		// "application/json");
-		// HEADER_X_API_KEY = CommonUtils.getEnvironmentVariable("HEADER_X_API_KEY",
-		// "");
-
 		impEnabled = CommonUtils.getEnvironmentVariable("IMP_ENABLED", "false")
 				.equalsIgnoreCase("true");
 
@@ -196,7 +155,7 @@ public class DepositorProperties implements EnvironmentAware {
 			logger.info("IMP is enabled");
 			impVendor = CommonUtils.getEnvironmentVariable("IMP_VENDOR");
 			String impNetworkTypeStr = CommonUtils.getEnvironmentVariable("IMP_NETWORK_TYPE");
-			impNetworkType = NetworkType.fromValue(impNetworkTypeStr);
+			impNetworkType = ImpNetworkType.fromValue(impNetworkTypeStr);
 			impPartnerApiBaseUri = CommonUtils.getEnvironmentVariable("IMP_PARTNER_API_BASE_URI");
 			impPartnerUser = CommonUtils.getEnvironmentVariable("IMP_PARTNER_USER");
 			impPartnerPass = CommonUtils.getEnvironmentVariable("IMP_PARTNER_PASS");
@@ -209,86 +168,13 @@ public class DepositorProperties implements EnvironmentAware {
 					.getEnvironmentVariable("IMP_CACHE_REGISTRATION", "false")
 					.equalsIgnoreCase("true");
 			impMqttVendor = CommonUtils.getEnvironmentVariable("IMP_MQTT_VENDOR");
-			impClientType = ClientType
+			impClientType = ImpMqttClientType
 					.fromValue(CommonUtils.getEnvironmentVariable("IMP_CLIENT_TYPE"));
-			impClientSubType = ClientSubType
+			impClientSubType = ImpMqttClientSubType
 					.fromValue(CommonUtils.getEnvironmentVariable("IMP_CLIENT_SUB_TYPE"));
-
-			logger.info("IMP is disabled");
 		}
 
 	}
-
-	// public Properties createStreamProperties(String name) {
-	// Properties streamProps = new Properties();
-	// streamProps.put(StreamsConfig.APPLICATION_ID_CONFIG, name);
-
-	// streamProps.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBrokers);
-
-	// streamProps.put(StreamsConfig.DEFAULT_DESERIALIZATION_EXCEPTION_HANDLER_CLASS_CONFIG,
-	// LogAndContinueExceptionHandler.class.getName());
-
-	// streamProps.put(StreamsConfig.DEFAULT_TIMESTAMP_EXTRACTOR_CLASS_CONFIG,
-	// LogAndSkipOnInvalidTimestamp.class.getName());
-
-	// streamProps.put(StreamsConfig.DEFAULT_PRODUCTION_EXCEPTION_HANDLER_CLASS_CONFIG,
-	// AlwaysContinueProductionExceptionHandler.class.getName());
-
-	// streamProps.put(StreamsConfig.NUM_STREAM_THREADS_CONFIG, 2);
-
-	// // streamProps.put(StreamsConfig.producerPrefix("acks"), "all");
-	// streamProps.put(StreamsConfig.producerPrefix(ProducerConfig.ACKS_CONFIG),
-	// "all");
-
-	// // Reduce cache buffering per topology to 1MB
-	// streamProps.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 1 * 1024 *
-	// 1024L);
-
-	// // Decrease default commit interval. Default for 'at least once' mode of
-	// 30000ms
-	// // is too slow.
-	// streamProps.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 100);
-
-	// // All the keys are Strings in this app
-	// streamProps.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG,
-	// Serdes.String().getClass().getName());
-
-	// // Configure the state store location
-	// if (SystemUtils.IS_OS_LINUX) {
-	// streamProps.put(StreamsConfig.STATE_DIR_CONFIG,
-	// "/var/lib/ode/kafka-streams");
-	// } else if (SystemUtils.IS_OS_WINDOWS) {
-	// streamProps.put(StreamsConfig.STATE_DIR_CONFIG, "C:/temp/ode");
-	// }
-	// // streamProps.put(StreamsConfig.STATE_DIR_CONFIG, "/var/lib/")\
-
-	// // Increase max.block.ms and delivery.timeout.ms for streams
-	// final int FIVE_MINUTES_MS = 5 * 60 * 1000;
-	// streamProps.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, FIVE_MINUTES_MS);
-	// streamProps.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, FIVE_MINUTES_MS);
-
-	// // Disable batching
-	// streamProps.put(ProducerConfig.BATCH_SIZE_CONFIG, 0);
-
-	// if (confluentCloudEnabled) {
-	// streamProps.put("ssl.endpoint.identification.algorithm", "https");
-	// streamProps.put("security.protocol", "SASL_SSL");
-	// streamProps.put("sasl.mechanism", "PLAIN");
-
-	// if (confluentKey != null && confluentSecret != null) {
-	// String auth = "org.apache.kafka.common.security.plain.PlainLoginModule
-	// required " + "username=\""
-	// + confluentKey + "\" " + "password=\"" + confluentSecret + "\";";
-	// streamProps.put("sasl.jaas.config", auth);
-	// } else {
-	// logger.error(
-	// "Environment variables CONFLUENT_KEY and CONFLUENT_SECRET are not set. Set
-	// these in the .env file to use Confluent Cloud");
-	// }
-	// }
-
-	// return streamProps;
-	// }
 
 	public String getProperty(String key) {
 		return env.getProperty(key);

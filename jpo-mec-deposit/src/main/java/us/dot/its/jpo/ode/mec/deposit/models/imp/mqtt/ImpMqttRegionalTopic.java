@@ -7,11 +7,11 @@ import lombok.Data;
 @AllArgsConstructor
 @Data
 @Builder
-public class RegionalTopic {
+public class ImpMqttRegionalTopic {
     private String mqttGeohash;
     private String vendorId;
-    private MessageFormat messageFormat;
-    private MessageType messageType;
-    private ClientType clientType;
-    private ClientSubType clientSubType;
+    private ImpMqttMessageFormat messageFormat;
+    private ImpMqttMessageType messageType;
+    private ImpMqttClientType clientType;
+    private ImpMqttClientSubType clientSubType;
 }

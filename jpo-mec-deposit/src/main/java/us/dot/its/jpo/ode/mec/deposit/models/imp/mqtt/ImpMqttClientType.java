@@ -3,12 +3,16 @@ package us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum MessageType {
-    BSM("BSM"), PSM("PSM"), RSA("RSA"), TIM("TIM"), MAP("MAP"), SPAT("SPAT");
+public enum ImpMqttClientType {
+    // "Vehicle""VulnerableRoadUser""TrafficLightController""InfrastructureSensor""OnboardSensor""Software"
+    VEHICLE("Vehicle"), VULNERABLE_ROAD_USER("VulnerableRoadUser"),
+    TRAFFIC_LIGHT_CONTROLLER("TrafficLightController"),
+    INFRASTRUCTURE_SENSOR("InfrastructureSensor"), ONBOARD_SENSOR("OnboardSensor"),
+    SOFTWARE("Software");
 
     private String value;
 
-    MessageType(String value) {
+    ImpMqttClientType(String value) {
         this.value = value;
     }
 
@@ -23,8 +27,8 @@ public enum MessageType {
     }
 
     @JsonCreator
-    public static MessageType fromValue(String value) {
-        for (MessageType b : MessageType.values()) {
+    public static ImpMqttClientType fromValue(String value) {
+        for (ImpMqttClientType b : ImpMqttClientType.values()) {
             if (b.value.equals(value)) {
                 return b;
             }

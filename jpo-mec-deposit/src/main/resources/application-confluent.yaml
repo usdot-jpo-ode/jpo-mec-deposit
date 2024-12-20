@@ -1,0 +1,10 @@
+# Kafka properties
+spring:
+  config:
+    activate:
+      on-profile: "confluent"
+  kafka.properties.security.protocol: SASL_PLAINTEXT
+  kafka.properties.sasl.mechanism: PLAIN
+  kafka.properties.sasl.jaas.config: >
+    org.apache.kafka.common.security.plain.PlainLoginModule required
+    username="${CONFLUENT_KEY:user}" password="${CONFLUENT_SECRET:pass}";

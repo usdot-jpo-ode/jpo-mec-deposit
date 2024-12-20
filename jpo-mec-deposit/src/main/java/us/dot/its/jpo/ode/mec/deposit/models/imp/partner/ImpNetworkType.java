@@ -17,7 +17,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * Gets or Sets NetworkType
  */
 
-public enum NetworkType {
+public enum ImpNetworkType {
 
   NON_VZ("non-VZ"),
 
@@ -25,7 +25,7 @@ public enum NetworkType {
 
   private String value;
 
-  NetworkType(String value) {
+  ImpNetworkType(String value) {
     this.value = value;
   }
 
@@ -40,8 +40,8 @@ public enum NetworkType {
   }
 
   @JsonCreator
-  public static NetworkType fromValue(String value) {
-    for (NetworkType b : NetworkType.values()) {
+  public static ImpNetworkType fromValue(String value) {
+    for (ImpNetworkType b : ImpNetworkType.values()) {
       if (b.value.equals(value)) {
         return b;
       }

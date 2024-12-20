@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @NoArgsConstructor
 @Data
 @Builder
-public class ClientInfo {
+public class ImpMqttClientInfo {
     @JsonProperty("SessionID")
     private String sessionId;
 }

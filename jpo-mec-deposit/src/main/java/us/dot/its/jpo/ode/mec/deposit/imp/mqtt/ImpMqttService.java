@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit.imp;
+package us.dot.its.jpo.ode.mec.deposit.imp.mqtt;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;

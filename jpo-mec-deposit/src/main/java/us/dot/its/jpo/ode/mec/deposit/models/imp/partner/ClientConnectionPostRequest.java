@@ -11,7 +11,7 @@ import org.openapitools.jackson.nullable.JsonNullable;
 import java.time.OffsetDateTime;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.NetworkType;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ImpNetworkType;
 
 import java.util.*;
 
@@ -27,7 +27,7 @@ public class ClientConnectionPostRequest {
 
   private BigDecimal _long;
 
-  private NetworkType networkType;
+  private ImpNetworkType networkType;
 
   public ClientConnectionPostRequest() {
     super();
@@ -36,7 +36,8 @@ public class ClientConnectionPostRequest {
   /**
    * Constructor with only required parameters
    */
-  public ClientConnectionPostRequest(String deviceID, BigDecimal lat, BigDecimal _long, NetworkType networkType) {
+  public ClientConnectionPostRequest(String deviceID, BigDecimal lat, BigDecimal _long,
+      ImpNetworkType networkType) {
     this.deviceID = deviceID;
     this.lat = lat;
     this._long = _long;
@@ -103,7 +104,7 @@ public class ClientConnectionPostRequest {
     this._long = _long;
   }
 
-  public ClientConnectionPostRequest networkType(NetworkType networkType) {
+  public ClientConnectionPostRequest networkType(ImpNetworkType networkType) {
     this.networkType = networkType;
     return this;
   }
@@ -115,11 +116,11 @@ public class ClientConnectionPostRequest {
    */
   @Schema(name = "NetworkType", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("NetworkType")
-  public NetworkType getNetworkType() {
+  public ImpNetworkType getNetworkType() {
     return networkType;
   }
 
-  public void setNetworkType(NetworkType networkType) {
+  public void setNetworkType(ImpNetworkType networkType) {
     this.networkType = networkType;
   }
 
@@ -156,8 +157,7 @@ public class ClientConnectionPostRequest {
   }
 
   /**
-   * Convert the given object to string with each line indented by 4 spaces
-   * (except the first line).
+   * Convert the given object to string with each line indented by 4 spaces (except the first line).
    */
   private String toIndentedString(Object o) {
     if (o == null) {

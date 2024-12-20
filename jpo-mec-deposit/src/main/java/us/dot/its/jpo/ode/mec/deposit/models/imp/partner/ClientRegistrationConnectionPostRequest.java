@@ -11,7 +11,7 @@ import org.openapitools.jackson.nullable.JsonNullable;
 import java.time.OffsetDateTime;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.NetworkType;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ImpNetworkType;
 
 import java.util.*;
 
@@ -29,7 +29,7 @@ public class ClientRegistrationConnectionPostRequest {
 
   private BigDecimal deviceFixedLocationLong;
 
-  private NetworkType networkType;
+  private ImpNetworkType networkType;
 
   public ClientRegistrationConnectionPostRequest() {
     super();
@@ -38,8 +38,8 @@ public class ClientRegistrationConnectionPostRequest {
   /**
    * Constructor with only required parameters
    */
-  public ClientRegistrationConnectionPostRequest(String clientType, String clientSubtype, BigDecimal lat,
-      BigDecimal _long, NetworkType networkType) {
+  public ClientRegistrationConnectionPostRequest(String clientType, String clientSubtype,
+      BigDecimal lat, BigDecimal _long, ImpNetworkType networkType) {
     this.clientType = clientType;
     this.clientSubtype = clientSubtype;
     this.deviceFixedLocationLat = lat;
@@ -127,7 +127,7 @@ public class ClientRegistrationConnectionPostRequest {
     this.deviceFixedLocationLong = _long;
   }
 
-  public ClientRegistrationConnectionPostRequest networkType(NetworkType networkType) {
+  public ClientRegistrationConnectionPostRequest networkType(ImpNetworkType networkType) {
     this.networkType = networkType;
     return this;
   }
@@ -139,11 +139,11 @@ public class ClientRegistrationConnectionPostRequest {
    */
   @Schema(name = "NetworkType", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("NetworkType")
-  public NetworkType getNetworkType() {
+  public ImpNetworkType getNetworkType() {
     return networkType;
   }
 
-  public void setNetworkType(NetworkType networkType) {
+  public void setNetworkType(ImpNetworkType networkType) {
     this.networkType = networkType;
   }
 
@@ -158,14 +158,17 @@ public class ClientRegistrationConnectionPostRequest {
     ClientRegistrationConnectionPostRequest clientRegistrationConnectionPostRequest = (ClientRegistrationConnectionPostRequest) o;
     return Objects.equals(this.clientType, clientRegistrationConnectionPostRequest.clientType)
         && Objects.equals(this.clientSubtype, clientRegistrationConnectionPostRequest.clientSubtype)
-        && Objects.equals(this.deviceFixedLocationLat, clientRegistrationConnectionPostRequest.deviceFixedLocationLat)
-        && Objects.equals(this.deviceFixedLocationLong, clientRegistrationConnectionPostRequest.deviceFixedLocationLong)
+        && Objects.equals(this.deviceFixedLocationLat,
+            clientRegistrationConnectionPostRequest.deviceFixedLocationLat)
+        && Objects.equals(this.deviceFixedLocationLong,
+            clientRegistrationConnectionPostRequest.deviceFixedLocationLong)
         && Objects.equals(this.networkType, clientRegistrationConnectionPostRequest.networkType);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(clientType, clientSubtype, deviceFixedLocationLat, deviceFixedLocationLong, networkType);
+    return Objects.hash(clientType, clientSubtype, deviceFixedLocationLat, deviceFixedLocationLong,
+        networkType);
   }
 
   @Override
@@ -182,8 +185,7 @@ public class ClientRegistrationConnectionPostRequest {
   }
 
   /**
-   * Convert the given object to string with each line indented by 4 spaces
-   * (except the first line).
+   * Convert the given object to string with each line indented by 4 spaces (except the first line).
    */
   private String toIndentedString(Object o) {
     if (o == null) {

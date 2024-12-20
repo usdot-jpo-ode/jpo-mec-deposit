@@ -1,9 +1,9 @@
 package us.dot.its.jpo.ode.mec.deposit.imp;
 
-import us.dot.its.jpo.ode.mec.deposit.DateJsonMapper;
 import us.dot.its.jpo.ode.mec.deposit.DepositorProperties;
 import us.dot.its.jpo.ode.mec.deposit.utils.CommonUtils;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.ConfigData;
+import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpConfigData;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.AuthToken;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.AuthTokenRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientCompleteResponse;
@@ -12,7 +12,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientConnectionRespons
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationConnectionPostRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationPostRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationResponse;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.NetworkType;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ImpNetworkType;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -37,21 +37,19 @@ import java.nio.file.Paths;
 
 @Slf4j
 public class ImpPartnerApi {
-
+    protected final static ObjectMapper mapper = DateJsonMapper.getInstance();
     private DepositorProperties properties;
-    private ObjectMapper objectMapper;
     private RestTemplate restTemplate;
 
     public ImpPartnerApi(DepositorProperties depositorProperties) {
         this.properties = depositorProperties;
         this.restTemplate = new RestTemplate();
-        this.objectMapper = DateJsonMapper.getInstance();
         this.restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
     }
 
-    public ConfigData registerClientPartner() {
+    public ImpConfigData registerClientPartner() {
         try {
-            ConfigData configData;
+            ImpConfigData configData;
             String deviceID = null;
             Boolean cacheRegistration = properties.getImpCacheRegistration();
 
@@ -73,11 +71,9 @@ public class ImpPartnerApi {
                 endtime = System.currentTimeMillis();
                 log.info("Time to register: " + (endtime - startTime) + " ms");
 
-                CommonUtils.writeToFile(caCertPath,
-                        registrationResponse.getCertificate().getCaPem());
-                CommonUtils.writeToFile(certPath,
-                        registrationResponse.getCertificate().getCertPem());
-                CommonUtils.writeToFile(keyPath, registrationResponse.getCertificate().getKeyPem());
+                ImpUtil.writeToFile(caCertPath, registrationResponse.getCertificate().getCaPem());
+                ImpUtil.writeToFile(certPath, registrationResponse.getCertificate().getCertPem());
+                ImpUtil.writeToFile(keyPath, registrationResponse.getCertificate().getKeyPem());
 
                 deviceID = registrationResponse.getDeviceID();
 
@@ -90,20 +86,20 @@ public class ImpPartnerApi {
                 // properties.getImpVendor(),
                 // NetworkType.valueOf(properties.getImpNetworkType()), uri, deviceID);
 
-                configData = ConfigData.builder().configFilePath(configPath).caCertPath(caCertPath)
-                        .clientCertPath(certPath).keyFilePath(keyPath)
+                configData = ImpConfigData.builder().configFilePath(configPath)
+                        .caCertPath(caCertPath).clientCertPath(certPath).keyFilePath(keyPath)
                         .impVendor(properties.getImpVendor())
                         .networkType(properties.getImpNetworkType()).impMqttUri(uri)
                         .deviceID(deviceID).impSessionID(null).build();
 
-                String configDataJson = objectMapper.writeValueAsString(configData);
+                String configDataJson = mapper.writeValueAsString(configData);
 
-                CommonUtils.writeToFile(configPath, configDataJson);
+                ImpUtil.writeToFile(configPath, configDataJson);
             } else {
                 log.info("Client partner already registered, obtaining config data");
 
                 String configDataJson = Files.readString(Paths.get(configPath));
-                configData = objectMapper.readValue(configDataJson, ConfigData.class);
+                configData = mapper.readValue(configDataJson, ImpConfigData.class);
                 deviceID = configData.getDeviceID();
 
                 // startTime = System.currentTimeMillis();
@@ -190,7 +186,7 @@ public class ImpPartnerApi {
         if (file.exists()) {
             try {
                 String configDataJson = Files.readString(Paths.get(configPath));
-                ConfigData configData = objectMapper.readValue(configDataJson, ConfigData.class);
+                ImpConfigData configData = mapper.readValue(configDataJson, ImpConfigData.class);
 
                 if (configData.getDeviceID() != null
                         && configData.getNetworkType() == properties.getImpNetworkType()) {

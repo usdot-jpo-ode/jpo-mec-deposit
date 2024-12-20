@@ -5,6 +5,42 @@ artifactId: ^project.artifactId^
 version: ^project.version^
 server.port: 8082
 
+depositor:
+  imp:
+    enabled: true
+    vendor: ${IMP_VENDOR}
+    network-type: ${IMP_NETWORK_TYPE}
+    cache-registration: ${IMP_CACHE_REGISTRATION}
+    certificate-path: ${IMP_CERT_PATH}
+    client-type: ${IMP_CLIENT_TYPE}
+    client-sub-type: ${IMP_CLIENT_SUB_TYPE}
+    partner-api:
+      base-uri: ${IMP_PARTNER_API_BASE_URI}
+      user: ${IMP_PARTNER_USER}
+      pass: ${IMP_PARTNER_PASS}
+      depositors:
+        map:
+          source-kafka-topic: "topic.OdeMapJson"
+          distribution-type: "Targeted"
+        tim:
+          source-kafka-topic: "topic.OdeTimJsonTMCFiltered"
+          distribution-type: "Broadcast"
+    mec:
+      latitude: ${IMP_MEC_LATITUDE}
+      longitude: ${IMP_MEC_LONGITUDE}
+    mqtt:
+      qos: 1
+      vendor: ${IMP_MQTT_VENDOR}
+      depositors:
+        bsm:
+          source-kafka-topic: "topic.OdeBsmJson"
+        spat:
+          source-kafka-topic: "topic.OdeSpatJson"
+        tim:
+          source-kafka-topic: "topic.OdeTimJson"
+      subscriptions:
+        - "vzimp/1/ClientInfo"
+
 # microservice actuator
 management:
   endpoints:
@@ -14,35 +50,36 @@ management:
   server:
     port: 8082
 
-# Kafka properties
-spring:
-  kafka:
-    consumer:
-      group-id: jpo-mec-deposit
-      fetch-min-size: 1
-      fetch-max-wait: 50
-      max-poll-records: 500
-      auto-offset-reset: latest
-      enable-auto-commit: true
-      auto-commit-interval: 100
-    listener:
-      ack-mode: BATCH
-      poll-timeout: 100
-    bootstrap-servers: ${BOOTSTRAP_SERVER:localhost:9092}
-
 logging:
   level:
     root: INFO
     org.springframework.web: WARN
     guru.springframework.controllers: WARN
-    org.springframework.kafka: WARN
-    org.apache.kafka: WARN
     org.springframework.integration.mqtt: INFO
     us.dot.its.jpo.ode.mec.deposit: ${LOGGING_LEVEL:DEBUG}
 
-depositor:
-  imp:
-    mqtt:
-      subscriptions:
-        - "vzimp/1/ClientInfo"
-      qos: 1
+# Kafka properties
+spring:
+  profiles:
+    default: "none"
+    active: ${SPRING_PROFILES_ACTIVE:none}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: jpo-mec-deposit
+      fetch-min-size: 1
+      fetch-max-wait: 50
+      max-poll-records: 500
+      auto-offset-reset: earliest
+      enable-auto-commit: true
+      auto-commit-interval: 100
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: BATCH
+      poll-timeout: 1
+      idle-event-interval: 1
+      idle-between-polls: 0
+  config:
+    import:
+      - classpath:application-confluent.yaml

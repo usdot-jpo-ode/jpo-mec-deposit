@@ -3,12 +3,12 @@ package us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum MessageFormat {
-    J2735("j2735"), J2735_GR("j2735_gr"), AVRO("avro"), JSON("json");
+public enum ImpMqttMessageType {
+    BSM("BSM"), PSM("PSM"), RSA("RSA"), TIM("TIM"), MAP("MAP"), SPAT("SPAT");
 
     private String value;
 
-    MessageFormat(String value) {
+    ImpMqttMessageType(String value) {
         this.value = value;
     }
 
@@ -23,8 +23,8 @@ public enum MessageFormat {
     }
 
     @JsonCreator
-    public static MessageFormat fromValue(String value) {
-        for (MessageFormat b : MessageFormat.values()) {
+    public static ImpMqttMessageType fromValue(String value) {
+        for (ImpMqttMessageType b : ImpMqttMessageType.values()) {
             if (b.value.equals(value)) {
                 return b;
             }

@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit;
+package us.dot.its.jpo.ode.mec.deposit.utils;
 
 import org.springframework.context.annotation.Configuration;
 

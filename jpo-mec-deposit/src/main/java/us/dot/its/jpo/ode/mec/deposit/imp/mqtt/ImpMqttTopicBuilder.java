@@ -1,9 +1,9 @@
-package us.dot.its.jpo.ode.mec.deposit.imp;
+package us.dot.its.jpo.ode.mec.deposit.imp.mqtt;
 
 import us.dot.its.jpo.ode.mec.deposit.DepositorProperties;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.MessageFormat;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.MessageType;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.RegionalTopic;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageFormat;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageType;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttRegionalTopic;
 import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
 import ch.hsr.geohash.GeoHash;
 
@@ -17,10 +17,11 @@ public class ImpMqttTopicBuilder {
     private static final String MQTT_PUB_WILDCARD = "-";
     private static final String MQTT_SUB_WILDCARD = "+";
 
-    public static String getRegionalTopic(RegionalTopic topic) {
-        return String.format("%s/%s/%s/%s/%s/%s/%s/%s/%s", MQTT_PREFIX, MQTT_SCHEMA_VERSION, MQTT_TOPIC_TYPE,
-                topic.getMqttGeohash(), topic.getClientType(), topic.getClientSubType(), topic.getVendorId(),
-                topic.getMessageFormat(), topic.getMessageType());
+    public static String getRegionalTopic(ImpMqttRegionalTopic topic) {
+        return String.format("%s/%s/%s/%s/%s/%s/%s/%s/%s", MQTT_PREFIX, MQTT_SCHEMA_VERSION,
+                MQTT_TOPIC_TYPE, topic.getMqttGeohash(), topic.getClientType(),
+                topic.getClientSubType(), topic.getVendorId(), topic.getMessageFormat(),
+                topic.getMessageType());
     }
 
     public static String getPubTopicGeoHash(String geoHash, int precision) {
@@ -52,12 +53,14 @@ public class ImpMqttTopicBuilder {
         return getPubTopicGeoHash(geoHash, precision);
     }
 
-    public static String buildRegionalTopic(OdePosition3D refPoint, int precision, DepositorProperties properties,
-            MessageFormat messageFormat, MessageType messageType) {
-        String geoHash = getPubGeoHash(refPoint.getLatitude().doubleValue(), refPoint.getLongitude().doubleValue(),
-                precision);
-        RegionalTopic topic = RegionalTopic.builder().mqttGeohash(geoHash).vendorId(properties.getImpMqttVendor())
-                .messageFormat(messageFormat).messageType(messageType).clientType(properties.getImpClientType())
+    public static String buildRegionalTopic(OdePosition3D refPoint, int precision,
+            DepositorProperties properties, ImpMqttMessageFormat messageFormat,
+            ImpMqttMessageType messageType) {
+        String geoHash = getPubGeoHash(refPoint.getLatitude().doubleValue(),
+                refPoint.getLongitude().doubleValue(), precision);
+        ImpMqttRegionalTopic topic = ImpMqttRegionalTopic.builder().mqttGeohash(geoHash)
+                .vendorId(properties.getImpMqttVendor()).messageFormat(messageFormat)
+                .messageType(messageType).clientType(properties.getImpClientType())
                 .clientSubType(properties.getImpClientSubType()).build();
         return getRegionalTopic(topic);
     }

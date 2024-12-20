@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit.imp;
+package us.dot.its.jpo.ode.mec.deposit.imp.mqtt;
 
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
@@ -9,11 +9,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import us.dot.its.jpo.ode.mec.deposit.DateJsonMapper;
 import us.dot.its.jpo.ode.mec.deposit.DepositorProperties;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.ConfigData;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ClientInfo;
-import us.dot.its.jpo.ode.mec.deposit.utils.CommonUtils;
+import us.dot.its.jpo.ode.mec.deposit.imp.ImpUtil;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpConfigData;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttClientInfo;
+import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 
 @Slf4j
 @Service
@@ -42,7 +42,7 @@ public class ImpMqttSubscriptionService {
         switch (topic) {
         case "vzimp/1/ClientInfo":
             try {
-                ClientInfo clientInfo = mapper.readValue(payload, ClientInfo.class);
+                ImpMqttClientInfo clientInfo = mapper.readValue(payload, ImpMqttClientInfo.class);
                 handleClientInfo(clientInfo);
             } catch (JsonProcessingException e) {
                 log.error("Error parsing ClientInfo message: {}", e.getMessage());
@@ -53,12 +53,12 @@ public class ImpMqttSubscriptionService {
         }
     }
 
-    private void handleClientInfo(ClientInfo payload) {
+    private void handleClientInfo(ImpMqttClientInfo payload) {
         try {
             log.info("Processing client info: {}", payload);
-            ConfigData configData = CommonUtils.readConfigFile(configPath);
+            ImpConfigData configData = ImpUtil.readConfigFile(configPath);
             configData.setImpSessionID(payload);
-            CommonUtils.writeToFile(configData.getConfigFilePath(),
+            ImpUtil.writeToFile(configData.getConfigFilePath(),
                     mapper.writeValueAsString(configData));
         } catch (Exception e) {
             log.error("Error handling client info message", e);

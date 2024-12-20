@@ -113,7 +113,10 @@
 			<artifactId>protobuf-java-util</artifactId>
 			<version>${protobuf.version}</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.hibernate.validator</groupId>
+			<artifactId>hibernate-validator</artifactId>
+		</dependency>
 
 		<!-- Used to ingest `.pem` files into a JKS programmatically -->
 		<dependency>

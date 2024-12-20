@@ -13,6 +13,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.kafka.annotation.EnableKafka;
 
+import us.dot.its.jpo.ode.mec.deposit.utils.SystemConfig;
+
 @SpringBootApplication
 @EnableKafka
 @EnableConfigurationProperties(DepositorProperties.class)
@@ -20,7 +22,8 @@ public class MecDepositApplication {
 	static final int DEFAULT_NO_THREADS = 10;
 	static final String DEFAULT_SCHEMA = "default";
 
-	public static void main(String[] args) throws MalformedObjectNameException, InterruptedException,
+	public static void main(String[] args)
+			throws MalformedObjectNameException, InterruptedException,
 			InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException {
 
 		SpringApplication.run(MecDepositApplication.class, args);
