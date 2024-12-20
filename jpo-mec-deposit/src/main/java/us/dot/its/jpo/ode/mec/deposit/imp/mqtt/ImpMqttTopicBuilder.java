@@ -57,7 +57,7 @@ public class ImpMqttTopicBuilder {
                 refPoint.getLongitude().doubleValue(), precision);
         ImpMqttProperties mqttProperties = impProperties.getMqtt();
         ImpMqttRegionalTopic topic = ImpMqttRegionalTopic.builder().mqttGeohash(geoHash)
-                .vendorId(impProperties.getVendor())
+                .vendorId(mqttProperties.getVendor())
                 .messageFormat(mqttProperties.getMessageFormat()).messageType(messageType)
                 .clientType(impProperties.getClientType())
                 .clientSubType(impProperties.getClientSubType()).build();
