@@ -20,7 +20,7 @@ services:
           cpus: "1"
           memory: 2G
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_PROFILES_ACTIVE: docker
       KAFKA_BOOTSTRAP_SERVERS: ${DOCKER_HOST_IP:?error}:9092
       LOGGING_LEVEL: ${LOGGING_LEVEL}
 

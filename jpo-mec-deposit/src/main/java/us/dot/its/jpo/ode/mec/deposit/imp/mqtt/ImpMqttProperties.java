@@ -3,7 +3,6 @@ package us.dot.its.jpo.ode.mec.deposit.imp.mqtt;
 import lombok.Data;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties.MqttDepositorProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageFormat;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageType;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -17,5 +16,10 @@ public class ImpMqttProperties {
     private MqttDepositorProperties depositors;
     private String[] subscriptions;
     private int maxInflight;
+    private int connectionTimeout;
+    private int keepAliveInterval;
+    private int completionTimeout;
     private ImpMqttMessageFormat messageFormat;
+    private int maxMessagesPerSecond = 100;
+    private int staleMessageThreshold = 100;
 }

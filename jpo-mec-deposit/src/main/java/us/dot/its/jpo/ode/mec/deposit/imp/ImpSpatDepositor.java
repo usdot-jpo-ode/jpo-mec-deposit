@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttService;
 import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttTopicBuilder;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageType;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.model.OdeSpatData;
@@ -18,7 +17,6 @@ import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
 import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -43,8 +41,13 @@ public class ImpSpatDepositor extends AbstractImpDepositor {
         boolean retain = false;
         try {
             LocalDateTime startTime = LocalDateTime.now(ZoneOffset.UTC);
-
             OdeSpatData msg = mapper.readValue(message, OdeSpatData.class);
+
+            String odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
+            if (isMessageStale(odeReceivedAt)) {
+                return;
+            }
+
             String asn1String = msg.getMetadata().getAsn1();
 
             J2735SPAT spatMsg = (J2735SPAT) msg.getPayload().getData();
@@ -75,7 +78,7 @@ public class ImpSpatDepositor extends AbstractImpDepositor {
                 log.debug("Sending SPAT message to MQTT topics: {}", topic);
             }
 
-            recordLatency(msg.getMetadata().getOdeReceivedAt(), startTime);
+            recordLatency(odeReceivedAt, startTime);
 
         } catch (Exception e) {
             log.error("Error processing SPaT message", e);

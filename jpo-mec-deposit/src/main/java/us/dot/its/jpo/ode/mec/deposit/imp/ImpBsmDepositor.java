@@ -32,6 +32,12 @@ public class ImpBsmDepositor extends AbstractImpDepositor {
         try {
             LocalDateTime startTime = LocalDateTime.now(ZoneOffset.UTC);
             OdeBsmData msg = mapper.readValue(message, OdeBsmData.class);
+            String odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
+
+            if (isMessageStale(odeReceivedAt)) {
+                return;
+            }
+
             byte[] asn1Bytes = Hex.decode(msg.getMetadata().getAsn1());
 
             J2735Bsm bsm = (J2735Bsm) msg.getPayload().getData();
@@ -43,7 +49,7 @@ public class ImpBsmDepositor extends AbstractImpDepositor {
                 return null;
             });
 
-            recordLatency(msg.getMetadata().getOdeReceivedAt(), startTime);
+            recordLatency(odeReceivedAt, startTime);
 
         } catch (Exception e) {
             log.error("Error processing BSM message", e);

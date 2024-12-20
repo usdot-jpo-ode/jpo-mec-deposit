@@ -15,6 +15,7 @@ import org.springframework.integration.mqtt.core.Mqttv3ClientManager;
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
 import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.context.ApplicationEventPublisher;
 
 import lombok.extern.slf4j.Slf4j;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
@@ -27,10 +28,13 @@ public class ImpMqttConfig {
 
     private final ImpMqttProperties mqttProperties;
     private final ImpProperties impProperties;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public ImpMqttConfig(ImpMqttProperties mqttProperties, ImpProperties impProperties) {
+    public ImpMqttConfig(ImpMqttProperties mqttProperties, ImpProperties impProperties,
+            ApplicationEventPublisher eventPublisher) {
         this.mqttProperties = mqttProperties;
         this.impProperties = impProperties;
+        this.eventPublisher = eventPublisher;
     }
 
     @Bean
@@ -79,6 +83,16 @@ public class ImpMqttConfig {
         messageProducer.setQos(mqttProperties.getQos());
 
         return IntegrationFlow.from(messageProducer).channel("mqttInputChannel").get();
+    }
+
+    @Bean
+    public MqttPahoMessageHandler mqttOutboundMessageHandler(
+            ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager) {
+        MqttPahoMessageHandler messageHandler = new MqttPahoMessageHandler(clientManager);
+        messageHandler.setAsync(true);
+        messageHandler.setDefaultQos(0);
+        messageHandler.setDefaultRetained(false);
+        return messageHandler;
     }
 
     @Bean
