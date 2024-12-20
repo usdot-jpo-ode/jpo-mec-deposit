@@ -1,4 +1,4 @@
-# Kafka properties
+# Confluent properties
 spring:
   config:
     activate:

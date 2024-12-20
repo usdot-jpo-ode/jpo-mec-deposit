@@ -70,9 +70,9 @@ logging:
 spring:
   profiles:
     default: "none"
-    active: ${SPRING_PROFILES_ACTIVE:none}
+    active: ${SPRING_PROFILES_ACTIVE:local}
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       group-id: jpo-mec-deposit
       fetch-min-size: 1
