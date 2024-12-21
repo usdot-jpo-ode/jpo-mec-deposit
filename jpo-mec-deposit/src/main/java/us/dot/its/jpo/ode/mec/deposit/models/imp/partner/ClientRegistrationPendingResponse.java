@@ -81,7 +81,8 @@ public class ClientRegistrationPendingResponse {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ClientRegistrationPendingResponse clientRegistrationPendingResponse = (ClientRegistrationPendingResponse) o;
+    ClientRegistrationPendingResponse clientRegistrationPendingResponse =
+        (ClientRegistrationPendingResponse) o;
     return Objects.equals(this.deviceID, clientRegistrationPendingResponse.deviceID)
         && Objects.equals(this.message, clientRegistrationPendingResponse.message);
   }
@@ -102,8 +103,7 @@ public class ClientRegistrationPendingResponse {
   }
 
   /**
-   * Convert the given object to string with each line indented by 4 spaces
-   * (except the first line).
+   * Convert the given object to string with each line indented by 4 spaces (except the first line).
    */
   private String toIndentedString(Object o) {
     if (o == null) {

@@ -155,7 +155,8 @@ public class ClientRegistrationConnectionPostRequest {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ClientRegistrationConnectionPostRequest clientRegistrationConnectionPostRequest = (ClientRegistrationConnectionPostRequest) o;
+    ClientRegistrationConnectionPostRequest clientRegistrationConnectionPostRequest =
+        (ClientRegistrationConnectionPostRequest) o;
     return Objects.equals(this.clientType, clientRegistrationConnectionPostRequest.clientType)
         && Objects.equals(this.clientSubtype, clientRegistrationConnectionPostRequest.clientSubtype)
         && Objects.equals(this.deviceFixedLocationLat,

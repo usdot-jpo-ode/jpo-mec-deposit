@@ -42,8 +42,9 @@ public class AuthToken {
   /**
    * Constructor with only required parameters
    */
-  public AuthToken(String accessToken, Integer expiresIn, Integer refreshExpiresIn, String refreshToken,
-      String tokenType, String idToken, Integer notBeforePolicy, String sessionState, String scope) {
+  public AuthToken(String accessToken, Integer expiresIn, Integer refreshExpiresIn,
+      String refreshToken, String tokenType, String idToken, Integer notBeforePolicy,
+      String sessionState, String scope) {
     this.accessToken = accessToken;
     this.expiresIn = expiresIn;
     this.refreshExpiresIn = refreshExpiresIn;
@@ -248,15 +249,17 @@ public class AuthToken {
         && Objects.equals(this.expiresIn, authToken.expiresIn)
         && Objects.equals(this.refreshExpiresIn, authToken.refreshExpiresIn)
         && Objects.equals(this.refreshToken, authToken.refreshToken)
-        && Objects.equals(this.tokenType, authToken.tokenType) && Objects.equals(this.idToken, authToken.idToken)
+        && Objects.equals(this.tokenType, authToken.tokenType)
+        && Objects.equals(this.idToken, authToken.idToken)
         && Objects.equals(this.notBeforePolicy, authToken.notBeforePolicy)
-        && Objects.equals(this.sessionState, authToken.sessionState) && Objects.equals(this.scope, authToken.scope);
+        && Objects.equals(this.sessionState, authToken.sessionState)
+        && Objects.equals(this.scope, authToken.scope);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(accessToken, expiresIn, refreshExpiresIn, refreshToken, tokenType, idToken, notBeforePolicy,
-        sessionState, scope);
+    return Objects.hash(accessToken, expiresIn, refreshExpiresIn, refreshToken, tokenType, idToken,
+        notBeforePolicy, sessionState, scope);
   }
 
   @Override
@@ -277,8 +280,7 @@ public class AuthToken {
   }
 
   /**
-   * Convert the given object to string with each line indented by 4 spaces
-   * (except the first line).
+   * Convert the given object to string with each line indented by 4 spaces (except the first line).
    */
   private String toIndentedString(Object o) {
     if (o == null) {

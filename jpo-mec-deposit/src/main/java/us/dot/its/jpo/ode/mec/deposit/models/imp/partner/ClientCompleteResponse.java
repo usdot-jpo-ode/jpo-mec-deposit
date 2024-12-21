@@ -27,7 +27,8 @@ public class ClientCompleteResponse {
   /**
    * Constructor with only required parameters
    */
-  public ClientCompleteResponse(ClientRegistrationResponse registration, ClientConnectionResponse connection) {
+  public ClientCompleteResponse(ClientRegistrationResponse registration,
+      ClientConnectionResponse connection) {
     this.registration = registration;
     this.connection = connection;
   }
@@ -101,8 +102,7 @@ public class ClientCompleteResponse {
   }
 
   /**
-   * Convert the given object to string with each line indented by 4 spaces
-   * (except the first line).
+   * Convert the given object to string with each line indented by 4 spaces (except the first line).
    */
   private String toIndentedString(Object o) {
     if (o == null) {

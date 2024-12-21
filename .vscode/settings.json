@@ -1,26 +1,13 @@
 {
-  // "java.test.config": {
-  //     "env": {
-  //         "TEST_VARIABLE": "testValue",
-  //         "TEST_VARIABLE_EMPTY": "",
-  //         "AWS_ACCESS_KEY_ID": "testAccessKey",
-  //         "AWS_SECRET_ACCESS_KEY": "testSecretKey",
-  //         "AWS_EXPIRATION": "2020-01-01 00:00:00",
-  //         "AWS_SESSION_TOKEN": "testSessionToken",
-  //         "API_ENDPOINT": "testApiEndpoint",
-  //         "CONFLUENT_KEY": "testConfluentKey",
-  //         "CONFLUENT_SECRET": "testConfluentSecret",
-  //     }
-  // },
   "java.configuration.updateBuildConfiguration": "interactive",
   "java.compile.nullAnalysis.mode": "automatic",
-  "cmake.configureOnOpen": false,
-  "editor.experimental.pasteActions.enabled": true,
   "java.format.settings.url": ".vscode/java-formatter.xml",
   "editor.formatOnSave": true,
   "[xml]": {
     "editor.defaultFormatter": "redhat.vscode-xml",
     "editor.tabSize": 2
   },
-  "java.debug.settings.onBuildFailureProceed": true
+  "java.debug.settings.onBuildFailureProceed": true,
+  "java.checkstyle.configuration": "${workspaceFolder}\\checkstyle.xml",
+  "editor.tabSize": 2
 }

@@ -38,8 +38,8 @@ public class AuthUserInfo {
   /**
    * Constructor with only required parameters
    */
-  public AuthUserInfo(String sub, Boolean emailVerified, String name, String preferredUsername, String givenName,
-      String familyName, String email) {
+  public AuthUserInfo(String sub, Boolean emailVerified, String name, String preferredUsername,
+      String givenName, String familyName, String email) {
     this.sub = sub;
     this.emailVerified = emailVerified;
     this.name = name;
@@ -198,11 +198,13 @@ public class AuthUserInfo {
       return false;
     }
     AuthUserInfo authUserInfo = (AuthUserInfo) o;
-    return Objects.equals(this.sub, authUserInfo.sub) && Objects.equals(this.emailVerified, authUserInfo.emailVerified)
+    return Objects.equals(this.sub, authUserInfo.sub)
+        && Objects.equals(this.emailVerified, authUserInfo.emailVerified)
         && Objects.equals(this.name, authUserInfo.name)
         && Objects.equals(this.preferredUsername, authUserInfo.preferredUsername)
         && Objects.equals(this.givenName, authUserInfo.givenName)
-        && Objects.equals(this.familyName, authUserInfo.familyName) && Objects.equals(this.email, authUserInfo.email);
+        && Objects.equals(this.familyName, authUserInfo.familyName)
+        && Objects.equals(this.email, authUserInfo.email);
   }
 
   @Override
@@ -226,8 +228,7 @@ public class AuthUserInfo {
   }
 
   /**
-   * Convert the given object to string with each line indented by 4 spaces
-   * (except the first line).
+   * Convert the given object to string with each line indented by 4 spaces (except the first line).
    */
   private String toIndentedString(Object o) {
     if (o == null) {

@@ -1,32 +1,42 @@
-/*******************************************************************************
- * Copyright 2018 572682
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License.  You may obtain a copy
- * of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
- * License for the specific language governing permissions and limitations under
- * the License.
- ******************************************************************************/
 package us.dot.its.jpo.ode.mec.deposit.utils;
 
+/**
+ * Interface for the SystemConfigMBean, which provides methods for configuring the system.
+ */
 public interface SystemConfigMBean {
 
-   public void setThreadCount(int noOfThreads);
+  /**
+   * Sets the number of threads for the system.
+   *
+   * @param noOfThreads The number of threads to set
+   */
+  public void setThreadCount(int noOfThreads);
 
-   public int getThreadCount();
+  /**
+   * Gets the number of threads for the system.
+   *
+   * @return The number of threads
+   */
+  public int getThreadCount();
 
-   public void setSchemaName(String schemaName);
+  /**
+   * Sets the schema name for the system.
+   *
+   * @param schemaName The schema name to set
+   */
+  public void setSchemaName(String schemaName);
 
-   public String getSchemaName();
+  /**
+   * Gets the schema name for the system.
+   *
+   * @return The schema name
+   */
+  public String getSchemaName();
 
-   // any method starting with get and set are considered
-   // as attributes getter and setter methods, so I am
-   // using do* for operation.
-   public String doConfig();
+  /**
+   * Performs a configuration operation.
+   *
+   * @return A configuration string
+   */
+  public String doConfig();
 }

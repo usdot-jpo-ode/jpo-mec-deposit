@@ -33,6 +33,7 @@
 		<jpo-ode.version>4.0.0</jpo-ode.version>
 		<springdoc.version>2.3.0</springdoc.version>
 		<swagger-ui.version>5.3.1</swagger-ui.version>
+		<checkstyle-maven-plugin.version>3.6.0</checkstyle-maven-plugin.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -264,6 +265,29 @@
 					<execution>
 						<goals>
 							<goal>build-info</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>${checkstyle-maven-plugin.version}</version>
+				<configuration>
+					<configLocation>checkstyle.xml</configLocation>
+					<suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
+					<inputEncoding>UTF-8</inputEncoding>
+					<outputEncoding>UTF-8</outputEncoding>
+					<consoleOutput>true</consoleOutput>
+					<failsOnError>true</failsOnError>
+					<linkXRef>false</linkXRef>
+				</configuration>
+				<executions>
+					<execution>
+						<id>validate</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>check</goal>
 						</goals>
 					</execution>
 				</executions>
