@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit.imp.depositors.mqtt;
+package us.dot.its.jpo.ode.mec.deposit.imp.depositors.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.Counter;
@@ -9,45 +9,47 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import lombok.extern.slf4j.Slf4j;
+import us.dot.its.jpo.ode.mec.deposit.imp.ImpPartnerApi;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
-import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttService;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageType;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.AuthToken;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 
 /**
  * Abstract base class for IMP MQTT depositors that handles common functionality for processing and
- * publishing messages to MQTT topics.
+ * publishing messages to IMP API.
  */
 @Slf4j
-public abstract class AbstractImpMqttDepositor {
+public abstract class AbstractImpApiDepositor {
   protected final ObjectMapper mapper = DateJsonMapper.getInstance();
-  protected final ImpMqttService mqttService;
+  protected final ImpPartnerApi partnerApi;
+  private AuthToken authToken;
   protected final Timer processingTimer;
   protected final Counter staleMessageCounter;
   protected final ImpProperties impProperties;
   protected final ImpMqttMessageType messageType;
   protected final int staleMessageThreshold;
 
-  protected AbstractImpMqttDepositor(ImpProperties impProperties, ImpMqttService mqttService,
-      ImpMqttMessageType messageType, MeterRegistry registry) {
+  protected AbstractImpApiDepositor(ImpProperties impProperties, ImpMqttMessageType messageType,
+      MeterRegistry meterRegistry) {
     this.impProperties = impProperties;
-    this.mqttService = mqttService;
     this.messageType = messageType;
+    this.partnerApi = new ImpPartnerApi(impProperties);
     this.staleMessageThreshold = impProperties.getMqtt().getStaleMessageThreshold();
     this.processingTimer =
-        Timer.builder("imp.mqtt.processing").tag("message.type", messageType.name())
+        Timer.builder("imp.api.processing").tag("message.type", messageType.name())
             .description("Time taken to process " + messageType.name() + " messages")
-            .register(registry);
-    this.staleMessageCounter =
-        Counter.builder("imp.mqtt.stale").tag("message.type", messageType.name())
-            .description("Number of stale " + messageType.name() + " messages").register(registry);
+            .register(meterRegistry);
+    this.staleMessageCounter = Counter.builder("imp.api.stale")
+        .tag("message.type", messageType.name())
+        .description("Number of stale " + messageType.name() + " messages").register(meterRegistry);
   }
 
   protected void recordLatency(String odeReceivedAt, LocalDateTime startTime) {
     LocalDateTime msgTimestamp =
         LocalDateTime.parse(odeReceivedAt, DateTimeFormatter.ISO_DATE_TIME);
     Duration latency = Duration.between(msgTimestamp, startTime);
-    log.debug("Kafka processing latency: {} milliseconds", latency.toMillis());
+    log.debug("API processing latency: {} milliseconds", latency.toMillis());
     processingTimer.record(latency);
   }
 
@@ -62,5 +64,16 @@ public abstract class AbstractImpMqttDepositor {
       staleMessageCounter.increment();
     }
     return isStale;
+  }
+
+  protected AuthToken getAuthToken() {
+    if (this.authToken == null) {
+      this.authToken = partnerApi.getToken();
+    }
+    LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(this.authToken.getExpiresIn());
+    if (LocalDateTime.now(ZoneOffset.UTC).isAfter(expiresAt)) {
+      this.authToken = partnerApi.getToken();
+    }
+    return this.authToken;
   }
 }

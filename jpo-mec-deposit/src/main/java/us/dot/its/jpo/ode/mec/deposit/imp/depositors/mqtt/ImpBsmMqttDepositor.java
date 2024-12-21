@@ -36,8 +36,9 @@ public class ImpBsmMqttDepositor extends AbstractImpMqttDepositor {
   @ConditionalOnProperty(value = {"depositor.bsm.enabled", "depositor.imp.enabled"},
       havingValue = "true")
   @Async("kafkaListenerExecutor")
-  @KafkaListener(topics = "${depositor.spat.source-bsm-topic}",
-      groupId = "${spring.kafka.consumer.group-id}-bsm", concurrency = "${listen.concurrency:1}")
+  @KafkaListener(topics = "${depositor.bsm.source-mqtt-kafka-topic}",
+      groupId = "${spring.kafka.consumer.group-id}-bsm-mqtt-depositor",
+      concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
   public void bsmDepositListener(String message) {
     try {
       LocalDateTime startTime = LocalDateTime.now(ZoneOffset.UTC);

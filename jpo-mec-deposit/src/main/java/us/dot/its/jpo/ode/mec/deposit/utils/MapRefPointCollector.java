@@ -41,18 +41,14 @@ public class MapRefPointCollector {
    *
    * @param message The JSON MAP message
    */
-  @KafkaListener(topics = "topic.OdeMapJson", groupId = "${spring.kafka.consumer.group-id}-map",
+  @KafkaListener(topics = "${depositor.map.source-mqtt-kafka-topic}",
+      groupId = "${spring.kafka.consumer.group-id}-map-collector",
       concurrency = "${listen.concurrency:1}", properties = {"auto.offset.reset=earliest"})
   public void jsonMapListener(String message) {
-    log.debug("Received message on topic.OdeMapJson: {}",
-        message.substring(0, Math.min(message.length(), 100)));
     try {
       OdeMapData msg = mapper.readValue(message, OdeMapData.class);
       J2735MAP mapMsg = (J2735MAP) msg.getPayload().getData();
       J2735IntersectionGeometryList intersections = mapMsg.getIntersections();
-
-      log.debug("Processing MAP message with {} intersections",
-          intersections.getIntersections().size());
 
       for (int i = 0; i < intersections.getIntersections().size(); i++) {
         J2735IntersectionGeometry intersection = intersections.getIntersections().get(i);

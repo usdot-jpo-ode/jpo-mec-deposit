@@ -4,6 +4,7 @@ WORKDIR /home
 
 COPY ./jpo-mec-deposit/pom.xml ./jpo-mec-deposit/
 COPY ./jpo-mec-deposit/lib ./jpo-mec-deposit/lib
+COPY ./jpo-mec-deposit/checkstyle.xml ./jpo-mec-deposit/checkstyle.xml
 
 # Download dependencies alone to cache them first
 WORKDIR /home/jpo-mec-deposit
@@ -11,7 +12,7 @@ RUN mvn dependency:resolve
 
 # Copy the source code and build the geojson converter
 COPY ./jpo-mec-deposit/src ./src
-RUN mvn install -DskipTests
+RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
 

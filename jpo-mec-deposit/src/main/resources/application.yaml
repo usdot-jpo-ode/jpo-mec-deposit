@@ -9,16 +9,18 @@ server.port: 8082
 depositor:
   bsm:
     enabled: ${DEPOSITOR_BSM_ENABLED}
-    source-kafka-topic: ${BSM_KAFKA_TOPIC}
+    source-mqtt-kafka-topic: ${BSM_MQTT_KAFKA_TOPIC}
   spat:
     enabled: ${DEPOSITOR_SPAT_ENABLED}
-    source-kafka-topic: ${SPAT_KAFKA_TOPIC}
+    source-mqtt-kafka-topic: ${SPAT_MQTT_KAFKA_TOPIC}
   tim:
     enabled: ${DEPOSITOR_TIM_ENABLED}
-    source-kafka-topic: ${TIM_KAFKA_TOPIC}
+    source-mqtt-kafka-topic: ${TIM_MQTT_KAFKA_TOPIC}
+    source-api-kafka-topic: ${TIM_API_KAFKA_TOPIC}
   map:
     enabled: ${MAP_DEPOSITOR_ENABLED}
-    source-kafka-topic: ${MAP_KAFKA_TOPIC}
+    source-mqtt-kafka-topic: ${MAP_MQTT_KAFKA_TOPIC}
+    source-api-kafka-topic: ${MAP_API_KAFKA_TOPIC}
   imp:
     enabled: ${IMP_ENABLED}
     vendor: ${IMP_VENDOR}

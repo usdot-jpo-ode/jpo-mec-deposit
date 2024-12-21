@@ -95,4 +95,15 @@ public class ImpMqttTopicBuilder {
         .clientSubType(impProperties.getClientSubType()).build();
     return getRegionalTopic(topic);
   }
+
+  public static String buildRegionalTopic(ImpMqttMessageType messageType, double latitude,
+      double longitude, int precision, ImpProperties impProperties) {
+    String geoHash = getPubGeoHash(latitude, longitude, precision);
+    ImpMqttProperties mqttProperties = impProperties.getMqtt();
+    ImpMqttRegionalTopic topic = ImpMqttRegionalTopic.builder().mqttGeohash(geoHash)
+        .vendorId(mqttProperties.getVendor()).messageFormat(mqttProperties.getMessageFormat())
+        .messageType(messageType).clientType(impProperties.getClientType())
+        .clientSubType(impProperties.getClientSubType()).build();
+    return getRegionalTopic(topic);
+  }
 }

@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.HttpClientErrorException;
@@ -22,6 +24,8 @@ import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientConnectionPostReq
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientConnectionResponse;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationPostRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationResponse;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.DepositRequest;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 
 /**
@@ -66,12 +70,13 @@ public class ImpPartnerApi {
         log.info("Registering client partner");
 
         long startTime = System.currentTimeMillis();
-        String token = getToken();
+        AuthToken token = getToken();
+        String accessToken = token.getAccessToken();
         long endTime = System.currentTimeMillis();
         log.info("Time to get token: {} ms", (endTime - startTime));
 
         startTime = System.currentTimeMillis();
-        ClientRegistrationResponse registrationResponse = register(token);
+        ClientRegistrationResponse registrationResponse = register(accessToken);
         endTime = System.currentTimeMillis();
         log.info("Time to register: {} ms", (endTime - startTime));
 
@@ -82,7 +87,7 @@ public class ImpPartnerApi {
         deviceId = registrationResponse.getDeviceID();
 
         startTime = System.currentTimeMillis();
-        ClientConnectionResponse connectionResponse = connection(token, deviceId);
+        ClientConnectionResponse connectionResponse = connection(accessToken, deviceId);
         endTime = System.currentTimeMillis();
         log.info("Time to connect: {} ms", (endTime - startTime));
         URI uri = new URI(connectionResponse.getMqttURL());
@@ -126,7 +131,7 @@ public class ImpPartnerApi {
    *
    * @return The authentication token
    */
-  public String getToken() {
+  public AuthToken getToken() {
     var request = new AuthTokenRequest(partnerApi.getUser(), partnerApi.getPass());
 
     HttpHeaders headers = new HttpHeaders();
@@ -137,7 +142,7 @@ public class ImpPartnerApi {
     AuthToken response = restTemplate.postForObject(partnerApi.getBaseUri() + "/auth/token", entity,
         AuthToken.class);
 
-    return response.getAccessToken();
+    return response;
   }
 
   /**
@@ -220,5 +225,36 @@ public class ImpPartnerApi {
       }
     }
     return valid;
+  }
+
+  /**
+   * Deposits data to the IMP Partner API.
+   *
+   * @param token Authentication token
+   * @param asn1Hex ASN.1 hex string to deposit
+   * @param distributionType Type of distribution
+   */
+  public void deposit(String token, String asn1Hex, DistributionType distributionType) {
+    DepositRequest request = new DepositRequest(asn1Hex, distributionType);
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", "Bearer " + token);
+    headers.set("Content-Type", "application/json");
+
+    HttpEntity<DepositRequest> entity = new HttpEntity<>(request, headers);
+
+    try {
+      ResponseEntity<Void> response =
+          restTemplate.exchange(partnerApi.getBaseUri() + "/prd/v2/configurations/deposit",
+              HttpMethod.POST, entity, Void.class);
+      HttpStatusCode responseCode = response.getStatusCode();
+      if (responseCode.is2xxSuccessful()) {
+        log.debug("Deposit response: " + responseCode);
+      } else {
+        log.error("Deposit response: " + responseCode);
+      }
+    } catch (HttpClientErrorException.Unauthorized e) {
+      log.error("Unauthorized deposit error: " + e.getStackTrace());
+    }
   }
 }

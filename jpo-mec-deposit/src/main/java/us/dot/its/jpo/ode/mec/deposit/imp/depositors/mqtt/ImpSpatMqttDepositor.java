@@ -45,9 +45,9 @@ public class ImpSpatMqttDepositor extends AbstractImpMqttDepositor {
   @ConditionalOnProperty(value = {"depositor.spat.enabled", "depositor.imp.enabled"},
       havingValue = "true")
   @Async("kafkaListenerExecutor")
-  @KafkaListener(topics = "${depositor.spat.source-kafka-topic}",
-      groupId = "${spring.kafka.consumer.group-id}-spat", concurrency = "${listen.concurrency:1}",
-      containerFactory = "kafkaListenerContainerFactory")
+  @KafkaListener(topics = "${depositor.spat.source-mqtt-kafka-topic}",
+      groupId = "${spring.kafka.consumer.group-id}-spat-mqtt-depositor",
+      concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
   public void spatDepositListener(String message) {
     boolean retain = false;
     try {
