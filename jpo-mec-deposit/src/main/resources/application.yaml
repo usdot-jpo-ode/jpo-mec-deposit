@@ -7,8 +7,20 @@ server.port: 8082
 
 # Depositor specific properties
 depositor:
+  bsm:
+    enabled: ${DEPOSITOR_BSM_ENABLED}
+    source-kafka-topic: ${BSM_KAFKA_TOPIC}
+  spat:
+    enabled: ${DEPOSITOR_SPAT_ENABLED}
+    source-kafka-topic: ${SPAT_KAFKA_TOPIC}
+  tim:
+    enabled: ${DEPOSITOR_TIM_ENABLED}
+    source-kafka-topic: ${TIM_KAFKA_TOPIC}
+  map:
+    enabled: ${MAP_DEPOSITOR_ENABLED}
+    source-kafka-topic: ${MAP_KAFKA_TOPIC}
   imp:
-    enabled: true
+    enabled: ${IMP_ENABLED}
     vendor: ${IMP_VENDOR}
     network-type: ${IMP_NETWORK_TYPE}
     cache-registration: ${IMP_CACHE_REGISTRATION}
@@ -24,18 +36,9 @@ depositor:
       mec-latitude: ${IMP_MEC_LATITUDE}
       mec-longitude: ${IMP_MEC_LONGITUDE}
 
-      # these depositors are not using mqtt but rather the partner api - HIGHER LATENCY
-      depositors:
-        map:
-          source-kafka-topic: "topic.OdeMapJson"
-          distribution-type: "Targeted"
-        tim:
-          source-kafka-topic: "topic.OdeTimJsonTMCFiltered"
-          distribution-type: "Broadcast"
-
     mqtt:
       max-messages-per-second: 50
-      stale-message-threshold: 100
+      stale-message-threshold: 250
       qos: 0
       max-inflight: 10
       connection-timeout: 30
@@ -43,13 +46,6 @@ depositor:
       completion-timeout: 5000
       vendor: ${IMP_MQTT_VENDOR}
       message-format: j2735
-      depositors:
-        bsm:
-          source-kafka-topic: "topic.OdeBsmJson"
-        spat:
-          source-kafka-topic: "topic.OdeSpatJson"
-        tim:
-          source-kafka-topic: "topic.OdeTimJson"
       subscriptions:
         - "vzimp/1/ClientInfo"
 
@@ -65,6 +61,7 @@ management:
 logging:
   level:
     root: INFO
+    "[org.springframework.kafka]": info
     org.springframework.web: WARN
     guru.springframework.controllers: WARN
     org.springframework.integration.mqtt: INFO

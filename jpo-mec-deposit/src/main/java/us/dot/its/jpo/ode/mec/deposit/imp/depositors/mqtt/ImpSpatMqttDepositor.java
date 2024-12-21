@@ -1,12 +1,14 @@
-package us.dot.its.jpo.ode.mec.deposit.imp;
+package us.dot.its.jpo.ode.mec.deposit.imp.depositors.mqtt;
 
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
 import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttService;
 import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttTopicBuilder;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageType;
@@ -25,18 +27,20 @@ import java.util.List;
 
 @Component
 @Slf4j
-public class ImpSpatDepositor extends AbstractImpDepositor {
+public class ImpSpatMqttDepositor extends AbstractImpMqttDepositor {
 
     @Autowired
     private MapRefPointCollector mapDataCollector;
 
-    public ImpSpatDepositor(ImpProperties impProperties, ImpMqttService mqttService,
+    public ImpSpatMqttDepositor(ImpProperties impProperties, ImpMqttService mqttService,
             MeterRegistry registry) {
         super(impProperties, mqttService, ImpMqttMessageType.SPAT, registry);
     }
 
+    @ConditionalOnProperty(value = { "depositor.spat.enabled",
+            "depositor.imp.enabled" }, havingValue = "true")
     @Async("kafkaListenerExecutor")
-    @KafkaListener(topics = "topic.OdeSpatJson", groupId = "${spring.kafka.consumer.group-id}-spat", concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
+    @KafkaListener(topics = "${depositor.spat.source-kafka-topic}", groupId = "${spring.kafka.consumer.group-id}-spat", concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
     public void spatDepositListener(String message) {
         boolean retain = false;
         try {

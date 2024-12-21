@@ -1,11 +1,13 @@
-package us.dot.its.jpo.ode.mec.deposit.imp;
+package us.dot.its.jpo.ode.mec.deposit.imp.depositors.mqtt;
 
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
 import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttService;
 import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttTopicBuilder;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageType;
@@ -19,15 +21,17 @@ import java.time.ZoneOffset;
 
 @Component
 @Slf4j
-public class ImpBsmDepositor extends AbstractImpDepositor {
+public class ImpBsmMqttDepositor extends AbstractImpMqttDepositor {
 
-    public ImpBsmDepositor(ImpProperties impProperties, ImpMqttService mqttService,
+    public ImpBsmMqttDepositor(ImpProperties impProperties, ImpMqttService mqttService,
             MeterRegistry registry) {
         super(impProperties, mqttService, ImpMqttMessageType.BSM, registry);
     }
 
+    @ConditionalOnProperty(value = { "depositor.bsm.enabled",
+            "depositor.imp.enabled" }, havingValue = "true")
     @Async("kafkaListenerExecutor")
-    @KafkaListener(topics = "topic.OdeBsmJson", groupId = "${spring.kafka.consumer.group-id}-bsm", concurrency = "${listen.concurrency:1}")
+    @KafkaListener(topics = "${depositor.spat.source-bsm-topic}", groupId = "${spring.kafka.consumer.group-id}-bsm", concurrency = "${listen.concurrency:1}")
     public void bsmDepositListener(String message) {
         try {
             LocalDateTime startTime = LocalDateTime.now(ZoneOffset.UTC);

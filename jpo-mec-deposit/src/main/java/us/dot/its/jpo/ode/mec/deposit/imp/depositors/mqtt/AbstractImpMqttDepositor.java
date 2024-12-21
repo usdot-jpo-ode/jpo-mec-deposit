@@ -1,7 +1,8 @@
-package us.dot.its.jpo.ode.mec.deposit.imp;
+package us.dot.its.jpo.ode.mec.deposit.imp.depositors.mqtt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
 import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttService;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageType;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
@@ -16,7 +17,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Counter;
 
 @Slf4j
-public abstract class AbstractImpDepositor {
+public abstract class AbstractImpMqttDepositor {
     protected final ObjectMapper mapper = DateJsonMapper.getInstance();
     protected final ImpMqttService mqttService;
     protected final Timer processingTimer;
@@ -25,7 +26,7 @@ public abstract class AbstractImpDepositor {
     protected final ImpMqttMessageType messageType;
     protected final int staleMessageThreshold;
 
-    protected AbstractImpDepositor(ImpProperties impProperties, ImpMqttService mqttService,
+    protected AbstractImpMqttDepositor(ImpProperties impProperties, ImpMqttService mqttService,
             ImpMqttMessageType messageType, MeterRegistry registry) {
         this.impProperties = impProperties;
         this.mqttService = mqttService;

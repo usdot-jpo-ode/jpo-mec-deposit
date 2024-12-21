@@ -1,8 +1,11 @@
 package us.dot.its.jpo.ode.mec.deposit.imp;
 
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+@ConditionalOnProperty(value = "depositor.imp.enabled", havingValue = "true")
 @Component
 @Slf4j
 public class ImpRegistrationService {

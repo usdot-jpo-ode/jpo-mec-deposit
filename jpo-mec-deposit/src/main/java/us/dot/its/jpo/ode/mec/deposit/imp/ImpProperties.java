@@ -52,21 +52,4 @@ public class ImpProperties {
         private String sourceKafkaTopic;
         private String distributionType;
     }
-
-    @Data
-    public static class MqttDepositorProperties {
-        private BsmProperties bsm;
-        private SpatProperties spat;
-        private TimProperties tim;
-    }
-
-    @Data
-    public static class BsmProperties {
-        private String sourceKafkaTopic;
-    }
-
-    @Data
-    public static class SpatProperties {
-        private String sourceKafkaTopic;
-    }
 }
