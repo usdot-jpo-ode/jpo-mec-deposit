@@ -5,8 +5,20 @@
   "editor.formatOnSave": true,
   "[xml]": {
     "editor.defaultFormatter": "redhat.vscode-xml",
-    "editor.tabSize": 2
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "files.trimTrailingWhitespace": true,
+    "editor.detectIndentation": false,
+    "editor.autoIndent": "full"
   },
+  "xml.format.joinCDATALines": false,
+  "xml.format.joinContentLines": false,
+  "xml.format.preserveEmptyContent": false,
+  "xml.format.joinCommentLines": false,
+  "xml.format.enabled": true,
+  "xml.format.preservedNewlines": 1,
+  "xml.format.spaceBeforeEmptyCloseTag": true,
+  "xml.format.enforceQuoteStyle": "preferred",
   "java.debug.settings.onBuildFailureProceed": true,
   "java.checkstyle.configuration": "${workspaceFolder}\\checkstyle.xml",
   "editor.tabSize": 2
