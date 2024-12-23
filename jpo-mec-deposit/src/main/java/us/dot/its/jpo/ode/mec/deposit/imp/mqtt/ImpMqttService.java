@@ -11,6 +11,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.integration.mqtt.support.MqttHeaders;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service
+@ConditionalOnProperty(value = {"depositor.imp.enabled"}, havingValue = "true")
 public class ImpMqttService {
   private final MessageChannel mqttOutboundChannel;
   private final Executor executor;
@@ -29,6 +31,7 @@ public class ImpMqttService {
   private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
   private final int maxMessagesPerSecond;
   private final Counter rateLimitSkippedCounter;
+  private final AtomicInteger currentRate = new AtomicInteger(0);
 
   /**
    * Constructs an ImpMqttService with the specified parameters.
@@ -45,13 +48,17 @@ public class ImpMqttService {
     this.rateLimitSkippedCounter = Counter.builder("imp.mqtt.ratelimit.skipped")
         .description("Number of messages skipped due to rate limiting").register(registry);
 
+    // Add gauge metric for current publish rate
+    registry.gauge("imp.mqtt.publish.rate", currentRate);
+
     // Create a dedicated thread pool for MQTT publishing
     this.executor = new ThreadPoolExecutor(4, 8, 60L, TimeUnit.SECONDS,
         new LinkedBlockingQueue<>(1000), new ThreadPoolExecutor.CallerRunsPolicy());
 
-    // Reset message counter every second
+    // Reset message counter every second and update rate
     scheduler.scheduleAtFixedRate(() -> {
       int count = messageCount.getAndSet(0);
+      currentRate.set(count); // Update the current rate
       if (count > 0) {
         log.debug("Published {} messages in the last second", count);
       }

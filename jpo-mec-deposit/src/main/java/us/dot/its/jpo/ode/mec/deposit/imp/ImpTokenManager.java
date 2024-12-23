@@ -1,11 +1,13 @@
 package us.dot.its.jpo.ode.mec.deposit.imp;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.AuthToken;
 
 @Slf4j
 @Component
+@ConditionalOnProperty(value = {"depositor.imp.enabled"}, havingValue = "true")
 public class ImpTokenManager {
   private String currentToken;
   private long expirationTime;

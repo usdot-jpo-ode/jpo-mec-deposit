@@ -21,6 +21,8 @@ import us.dot.its.jpo.ode.plugin.j2735.J2735Bsm;
  */
 @Component
 @Slf4j
+@ConditionalOnProperty(value = {"depositor.bsm.mqtt.enabled", "depositor.imp.enabled"},
+    havingValue = "true")
 public class ImpBsmMqttDepositor extends AbstractImpMqttDepositor {
 
   public ImpBsmMqttDepositor(ImpProperties impProperties, ImpMqttService mqttService,
@@ -33,10 +35,8 @@ public class ImpBsmMqttDepositor extends AbstractImpMqttDepositor {
    *
    * @param message The BSM message from Kafka in JSON format
    */
-  @ConditionalOnProperty(value = {"depositor.bsm.enabled", "depositor.imp.enabled"},
-      havingValue = "true")
   @Async("kafkaListenerExecutor")
-  @KafkaListener(topics = "${depositor.bsm.source-mqtt-kafka-topic}",
+  @KafkaListener(topics = "${depositor.bsm.mqtt.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-bsm-mqtt-depositor",
       concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
   public void bsmDepositListener(String message) {

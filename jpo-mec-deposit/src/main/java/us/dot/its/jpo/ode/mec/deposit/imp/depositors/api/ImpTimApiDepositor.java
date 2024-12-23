@@ -21,6 +21,8 @@ import us.dot.its.jpo.ode.model.OdeTimData;
  */
 @Component
 @Slf4j
+@ConditionalOnProperty(value = {"depositor.tim.api.enabled", "depositor.imp.enabled"},
+    havingValue = "true")
 public class ImpTimApiDepositor extends AbstractImpApiDepositor {
   private final DistributionType distributionType = DistributionType.TARGETED;
 
@@ -35,10 +37,8 @@ public class ImpTimApiDepositor extends AbstractImpApiDepositor {
    *
    * @param message The TIM message to deposit
    */
-  @ConditionalOnProperty(value = {"depositor.tim.enabled", "depositor.imp.enabled"},
-      havingValue = "true")
   @Async("kafkaListenerExecutor")
-  @KafkaListener(topics = "${depositor.tim.source-api-kafka-topic}",
+  @KafkaListener(topics = "${depositor.tim.api.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-tim-api-depositor",
       concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
   public void timDepositListener(String message) {

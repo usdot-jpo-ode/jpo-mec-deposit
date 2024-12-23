@@ -21,6 +21,8 @@ import us.dot.its.jpo.ode.model.OdeMapData;
  */
 @Component
 @Slf4j
+@ConditionalOnProperty(value = {"depositor.map.api.enabled", "depositor.imp.enabled"},
+    havingValue = "true")
 public class ImpMapApiDepositor extends AbstractImpApiDepositor {
   private final DistributionType distributionType = DistributionType.TARGETED;
 
@@ -35,10 +37,8 @@ public class ImpMapApiDepositor extends AbstractImpApiDepositor {
    *
    * @param message The MAP message to deposit
    */
-  @ConditionalOnProperty(value = {"depositor.map.enabled", "depositor.imp.enabled"},
-      havingValue = "true")
   @Async("kafkaListenerExecutor")
-  @KafkaListener(topics = "${depositor.map.source-api-kafka-topic}",
+  @KafkaListener(topics = "${depositor.map.api.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-map-api-depositor",
       concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
   public void mapDepositListener(String message) {

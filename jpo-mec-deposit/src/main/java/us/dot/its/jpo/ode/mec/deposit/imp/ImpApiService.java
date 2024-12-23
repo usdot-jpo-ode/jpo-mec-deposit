@@ -10,9 +10,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * Service responsible for handling IMP client registration.
  */
-@ConditionalOnProperty(value = "depositor.imp.enabled", havingValue = "true")
 @Component
 @Slf4j
+@ConditionalOnProperty(value = {"depositor.imp.enabled"}, havingValue = "true")
 public class ImpApiService {
   private final ImpApi partnerApi;
   private final ImpTokenManager tokenManager;

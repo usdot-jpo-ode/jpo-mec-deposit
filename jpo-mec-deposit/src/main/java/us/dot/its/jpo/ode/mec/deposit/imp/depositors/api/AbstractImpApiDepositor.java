@@ -66,15 +66,4 @@ public abstract class AbstractImpApiDepositor {
     }
     return isStale;
   }
-
-  // protected AuthToken getAuthToken() {
-  // if (this.authToken == null) {
-  // this.authToken = partnerApi.getToken();
-  // }
-  // LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(this.authToken.getExpiresIn());
-  // if (LocalDateTime.now(ZoneOffset.UTC).isAfter(expiresAt)) {
-  // this.authToken = partnerApi.getToken();
-  // }
-  // return this.authToken;
-  // }
 }
