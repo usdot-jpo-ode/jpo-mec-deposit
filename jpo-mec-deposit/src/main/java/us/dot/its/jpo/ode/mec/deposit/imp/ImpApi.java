@@ -7,6 +7,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -20,6 +21,7 @@ import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties.PartnerApiProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpConfigData;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.AuthToken;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.AuthTokenRequest;
+import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClearRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientConnectionPostRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientConnectionResponse;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationPostRequest;
@@ -27,12 +29,14 @@ import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationRespo
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.DepositRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
+import org.springframework.stereotype.Component;
 
 /**
  * API client for interacting with the IMP Partner API.
  */
 @Slf4j
-public class ImpPartnerApi {
+@Component
+public class ImpApi {
   protected static final ObjectMapper MAPPER = DateJsonMapper.getInstance();
   private final ImpProperties impProperties;
   private final PartnerApiProperties partnerApi;
@@ -43,7 +47,7 @@ public class ImpPartnerApi {
    *
    * @param properties The IMP configuration properties
    */
-  public ImpPartnerApi(ImpProperties properties) {
+  public ImpApi(ImpProperties properties) {
     this.impProperties = properties;
     this.partnerApi = properties.getPartnerApi();
     this.restTemplate = new RestTemplate();
@@ -55,7 +59,7 @@ public class ImpPartnerApi {
    *
    * @return Configuration data for the registered client
    */
-  public ImpConfigData registerClientPartner() {
+  public ImpConfigData registerClientPartner(String token) {
     try {
       ImpConfigData configData;
       String deviceId = null;
@@ -69,15 +73,10 @@ public class ImpPartnerApi {
       if (!validRegistration(configPath) || !cacheRegistration) {
         log.info("Registering client partner");
 
+        String accessToken = token;
         long startTime = System.currentTimeMillis();
-        AuthToken token = getToken();
-        String accessToken = token.getAccessToken();
-        long endTime = System.currentTimeMillis();
-        log.info("Time to get token: {} ms", (endTime - startTime));
-
-        startTime = System.currentTimeMillis();
         ClientRegistrationResponse registrationResponse = register(accessToken);
-        endTime = System.currentTimeMillis();
+        long endTime = System.currentTimeMillis();
         log.info("Time to register: {} ms", (endTime - startTime));
 
         ImpUtil.writeToFile(caCertPath, registrationResponse.getCertificate().getCaPem());
@@ -109,14 +108,6 @@ public class ImpPartnerApi {
         String configDataJson = Files.readString(Paths.get(configPath));
         configData = MAPPER.readValue(configDataJson, ImpConfigData.class);
         deviceId = configData.getDeviceID();
-
-        // startTime = System.currentTimeMillis();
-        // ClientConnectionResponse connectionResponse = connection(token, deviceID);
-        // endtime = System.currentTimeMillis();
-        // log.info("Time to connect: " + (endtime - startTime) + " ms");
-
-        // URI uri = new URI(connectionResponse.getMqttURL());
-        // configData.setImpMqttUri(uri);
       }
 
       return configData;
@@ -255,6 +246,27 @@ public class ImpPartnerApi {
       }
     } catch (HttpClientErrorException.Unauthorized e) {
       log.error("Unauthorized deposit error: " + e.getStackTrace());
+    }
+  }
+
+  public boolean clearTim(String token) {
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", "Bearer " + token);
+    headers.set("Content-Type", "application/json");
+
+    HttpEntity<ClearRequest> entity = new HttpEntity<>(new ClearRequest(true), headers);
+
+    ResponseEntity<Void> response =
+        restTemplate.exchange(partnerApi.getBaseUri() + "/prd/v2/configurations/clear",
+            HttpMethod.POST, entity, Void.class);
+
+    HttpStatusCode responseCode = response.getStatusCode();
+    if (responseCode.is2xxSuccessful()) {
+      log.info("Cleared inactive TIMs deployed on the VZ Configuration API");
+      return true;
+    } else {
+      log.error("Failed to clear inactive TIMs deployed on the VZ Configuration API");
+      return false;
     }
   }
 }

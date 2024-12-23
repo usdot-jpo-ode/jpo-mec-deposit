@@ -9,10 +9,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import lombok.extern.slf4j.Slf4j;
-import us.dot.its.jpo.ode.mec.deposit.imp.ImpPartnerApi;
+import us.dot.its.jpo.ode.mec.deposit.imp.ImpApi;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
+import us.dot.its.jpo.ode.mec.deposit.imp.ImpTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageType;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.AuthToken;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 
 /**
@@ -22,19 +22,20 @@ import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 @Slf4j
 public abstract class AbstractImpApiDepositor {
   protected final ObjectMapper mapper = DateJsonMapper.getInstance();
-  protected final ImpPartnerApi partnerApi;
-  private AuthToken authToken;
+  protected final ImpApi partnerApi;
   protected final Timer processingTimer;
   protected final Counter staleMessageCounter;
   protected final ImpProperties impProperties;
   protected final ImpMqttMessageType messageType;
   protected final int staleMessageThreshold;
+  protected final ImpTokenManager tokenManager;
 
   protected AbstractImpApiDepositor(ImpProperties impProperties, ImpMqttMessageType messageType,
-      MeterRegistry meterRegistry) {
+      MeterRegistry meterRegistry, ImpApi impApi, ImpTokenManager tokenManager) {
     this.impProperties = impProperties;
     this.messageType = messageType;
-    this.partnerApi = new ImpPartnerApi(impProperties);
+    this.partnerApi = impApi;
+    this.tokenManager = tokenManager;
     this.staleMessageThreshold = impProperties.getMqtt().getStaleMessageThreshold();
     this.processingTimer =
         Timer.builder("imp.api.processing").tag("message.type", messageType.name())
@@ -66,14 +67,14 @@ public abstract class AbstractImpApiDepositor {
     return isStale;
   }
 
-  protected AuthToken getAuthToken() {
-    if (this.authToken == null) {
-      this.authToken = partnerApi.getToken();
-    }
-    LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(this.authToken.getExpiresIn());
-    if (LocalDateTime.now(ZoneOffset.UTC).isAfter(expiresAt)) {
-      this.authToken = partnerApi.getToken();
-    }
-    return this.authToken;
-  }
+  // protected AuthToken getAuthToken() {
+  // if (this.authToken == null) {
+  // this.authToken = partnerApi.getToken();
+  // }
+  // LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(this.authToken.getExpiresIn());
+  // if (LocalDateTime.now(ZoneOffset.UTC).isAfter(expiresAt)) {
+  // this.authToken = partnerApi.getToken();
+  // }
+  // return this.authToken;
+  // }
 }

@@ -11,6 +11,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import us.dot.its.jpo.ode.mec.deposit.utils.SystemConfig;
 
 /**
@@ -18,6 +19,7 @@ import us.dot.its.jpo.ode.mec.deposit.utils.SystemConfig;
  */
 @SpringBootApplication
 @EnableKafka
+@EnableScheduling
 @EnableConfigurationProperties()
 public class MecDepositApplication {
   static final int DEFAULT_NO_THREADS = 10;

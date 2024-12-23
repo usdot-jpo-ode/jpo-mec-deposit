@@ -8,7 +8,9 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import io.micrometer.core.instrument.MeterRegistry;
+import us.dot.its.jpo.ode.mec.deposit.imp.ImpApi;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
+import us.dot.its.jpo.ode.mec.deposit.imp.ImpTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.AuthToken;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.DistributionType;
@@ -22,8 +24,9 @@ import us.dot.its.jpo.ode.model.OdeMapData;
 public class ImpMapApiDepositor extends AbstractImpApiDepositor {
   private final DistributionType distributionType = DistributionType.TARGETED;
 
-  public ImpMapApiDepositor(ImpProperties properties, MeterRegistry meterRegistry) {
-    super(properties, ImpMqttMessageType.MAP, meterRegistry);
+  public ImpMapApiDepositor(ImpProperties properties, MeterRegistry meterRegistry, ImpApi impApi,
+      ImpTokenManager tokenManager) {
+    super(properties, ImpMqttMessageType.MAP, meterRegistry, impApi, tokenManager);
   }
 
 
@@ -48,10 +51,10 @@ public class ImpMapApiDepositor extends AbstractImpApiDepositor {
         return;
       }
 
-      AuthToken authToken = getAuthToken();
       String asn1String = msg.getMetadata().getAsn1();
 
-      this.partnerApi.deposit(authToken.getAccessToken(), asn1String, this.distributionType);
+      String token = tokenManager.getValidToken();
+      this.partnerApi.deposit(token, asn1String, this.distributionType);
       recordLatency(odeReceivedAt, startTime);
     } catch (Exception e) {
       log.error("Error depositing MAP message", e);

@@ -8,21 +8,21 @@ server.port: 8082
 # Depositor specific properties
 depositor:
   bsm:
-    enabled: ${DEPOSITOR_BSM_ENABLED}
-    source-mqtt-kafka-topic: ${BSM_MQTT_KAFKA_TOPIC}
+    enabled: ${DEPOSITOR_BSM_ENABLED:true}
+    source-mqtt-kafka-topic: ${BSM_MQTT_KAFKA_TOPIC:topic.DeduplicatedOdeBsmJson}
   spat:
-    enabled: ${DEPOSITOR_SPAT_ENABLED}
-    source-mqtt-kafka-topic: ${SPAT_MQTT_KAFKA_TOPIC}
+    enabled: ${DEPOSITOR_SPAT_ENABLED:true}
+    source-mqtt-kafka-topic: ${SPAT_MQTT_KAFKA_TOPIC:topic.OdeSpatJson}
   tim:
-    enabled: ${DEPOSITOR_TIM_ENABLED}
-    source-mqtt-kafka-topic: ${TIM_MQTT_KAFKA_TOPIC}
-    source-api-kafka-topic: ${TIM_API_KAFKA_TOPIC}
+    enabled: ${DEPOSITOR_TIM_ENABLED:true}
+    source-mqtt-kafka-topic: ${TIM_MQTT_KAFKA_TOPIC:topic.OdeTimJson}
+    source-api-kafka-topic: ${TIM_API_KAFKA_TOPIC:topic.OdeTimJsonTMCFiltered}
   map:
-    enabled: ${MAP_DEPOSITOR_ENABLED}
-    source-mqtt-kafka-topic: ${MAP_MQTT_KAFKA_TOPIC}
-    source-api-kafka-topic: ${MAP_API_KAFKA_TOPIC}
+    enabled: ${DEPOSITOR_MAP_ENABLED:true}
+    source-mqtt-kafka-topic: ${MAP_MQTT_KAFKA_TOPIC:topic.OdeMapJson}
+    source-api-kafka-topic: ${MAP_API_KAFKA_TOPIC:topic.DeduplicatedOdeMapJson}
   imp:
-    enabled: ${IMP_ENABLED}
+    enabled: ${IMP_ENABLED:false}
     vendor: ${IMP_VENDOR}
     network-type: ${IMP_NETWORK_TYPE}
     cache-registration: ${IMP_CACHE_REGISTRATION}
@@ -38,8 +38,12 @@ depositor:
       mec-latitude: ${IMP_MEC_LATITUDE}
       mec-longitude: ${IMP_MEC_LONGITUDE}
 
+    clear-tim:
+      enabled: ${IMP_CLEAR_TIM_ENABLED:false}
+      interval: ${IMP_CLEAR_TIM_INTERVAL:10}
+
     mqtt:
-      max-messages-per-second: 50
+      max-messages-per-second: ${IMP_PUBLISH_RATE:50}
       stale-message-threshold: 250
       qos: 0
       max-inflight: 10
@@ -63,11 +67,11 @@ management:
 logging:
   level:
     root: INFO
-    "[org.springframework.kafka]": info
+    org.springframework.kafka: info
     org.springframework.web: WARN
     guru.springframework.controllers: WARN
     org.springframework.integration.mqtt: INFO
-    us.dot.its.jpo.ode.mec.deposit: ${LOGGING_LEVEL:DEBUG}
+    us.dot.its.jpo.ode.mec.deposit: ${LOGGING_LEVEL:INFO}
     org.apache.kafka: WARN
 
 # Spring boot properties

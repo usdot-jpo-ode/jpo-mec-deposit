@@ -1,11 +1,21 @@
 package us.dot.its.jpo.ode.mec.deposit.imp.mqtt;
 
+import java.util.ArrayList;
+import java.util.List;
 import ch.hsr.geohash.GeoHash;
 import lombok.extern.slf4j.Slf4j;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttRegionalTopic;
+import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
+import us.dot.its.jpo.ode.model.OdeTimData;
+import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionState;
+import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
 import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
+import us.dot.its.jpo.ode.plugin.j2735.common.Position3D;
+import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.GeographicalPath;
+import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerDataFrame;
+import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerDataFrameList;
 
 /**
  * Utility class for building MQTT topics according to IMP specifications. Handles topic
@@ -105,5 +115,48 @@ public class ImpMqttTopicBuilder {
         .messageType(messageType).clientType(impProperties.getClientType())
         .clientSubType(impProperties.getClientSubType()).build();
     return getRegionalTopic(topic);
+  }
+
+  public static List<String> getTimTopicList(TravelerDataFrameList dataFramesList,
+      ImpProperties impProperties) {
+    List<String> topicList = new ArrayList<>();
+    for (TravelerDataFrame dataFrame : dataFramesList) {
+      var regions = dataFrame.getRegions();
+      for (GeographicalPath region : regions) {
+        Position3D refPoint = region.getAnchor();
+        if (refPoint == null) {
+          log.warn("No refPoint found for region: {} skipping IMP deposit", region.getName());
+          continue;
+        }
+        // Convert from J2735 integer microdegrees to decimal degrees
+        double scale = 10000000.0;
+        double latitude = refPoint.getLat().getValue() / scale; // 38.9549122
+        double longitude = refPoint.getLong_().getValue() / scale; // -77.1490570
+        String topic =
+            buildRegionalTopic(ImpMqttMessageType.TIM, latitude, longitude, 7, impProperties);
+
+        topicList.add(topic);
+      }
+    }
+    return topicList;
+  }
+
+  public static List<String> getSpatTopicList(J2735SPAT spatMsg, ImpProperties impProperties,
+      MapRefPointCollector mapDataCollector) {
+    List<String> topicList = new ArrayList<>();
+    for (J2735IntersectionState intersection : spatMsg.getIntersectionStateList()
+        .getIntersectionStatelist()) {
+      String intersectionId = intersection.getId().getId().toString();
+      OdePosition3D refPoint = mapDataCollector.getIntersectionRefPoint(intersectionId);
+      if (refPoint == null) {
+        log.warn("No refPoint found for intersectionId: {} skipping IMP deposit", intersectionId);
+        continue;
+      }
+
+      String topic = buildRegionalTopic(ImpMqttMessageType.SPAT, refPoint, 7, impProperties);
+
+      topicList.add(topic);
+    }
+    return topicList;
   }
 }

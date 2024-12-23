@@ -54,7 +54,7 @@ public class MapRefPointCollector {
         J2735IntersectionGeometry intersection = intersections.getIntersections().get(i);
         String intersectionId = intersection.getId().getId().toString();
         OdePosition3D refPoint = intersection.getRefPoint();
-        log.debug("Received MAP message: {} with refPoint: {}", intersectionId, refPoint);
+        // log.debug("Received MAP message: {} with refPoint: {}", intersectionId, refPoint);
         map.put(intersectionId, refPoint);
       }
 

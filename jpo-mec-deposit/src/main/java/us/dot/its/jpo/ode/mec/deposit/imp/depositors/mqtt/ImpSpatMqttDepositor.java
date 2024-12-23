@@ -62,24 +62,8 @@ public class ImpSpatMqttDepositor extends AbstractImpMqttDepositor {
       String asn1String = msg.getMetadata().getAsn1();
 
       J2735SPAT spatMsg = (J2735SPAT) msg.getPayload().getData();
-      List<J2735IntersectionState> intersections =
-          spatMsg.getIntersectionStateList().getIntersectionStatelist();
-
-      List<String> topicList = new ArrayList<>();
-
-      for (J2735IntersectionState intersection : intersections) {
-        String intersectionId = intersection.getId().getId().toString();
-        OdePosition3D refPoint = mapDataCollector.getIntersectionRefPoint(intersectionId);
-        if (refPoint == null) {
-          log.warn("No refPoint found for intersectionId: {} skipping IMP deposit", intersectionId);
-          continue;
-        }
-
-        String topic =
-            ImpMqttTopicBuilder.buildRegionalTopic(messageType, refPoint, 7, impProperties);
-
-        topicList.add(topic);
-      }
+      List<String> topicList =
+          ImpMqttTopicBuilder.getSpatTopicList(spatMsg, impProperties, mapDataCollector);
 
       byte[] asn1Bytes = Hex.decode(asn1String);
 
