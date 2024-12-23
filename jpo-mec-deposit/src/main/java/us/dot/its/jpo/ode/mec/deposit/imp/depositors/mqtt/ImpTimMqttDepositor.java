@@ -65,7 +65,7 @@ public class ImpTimMqttDepositor extends AbstractImpMqttDepositor {
 
       for (String topic : topicList) {
         mqttService.publishAsn1Bytes(topic, asn1Bytes, retain);
-        log.debug("Sending TIM message to MQTT topics: {}", topic);
+        log.info("Sending TIM message to MQTT topics: {}", topic);
       }
 
       recordLatency(odeReceivedAt, startTime);

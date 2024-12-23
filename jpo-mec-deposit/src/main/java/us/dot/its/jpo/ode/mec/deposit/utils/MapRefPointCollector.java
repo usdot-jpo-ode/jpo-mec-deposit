@@ -22,26 +22,11 @@ public class MapRefPointCollector {
   private ConcurrentHashMap<String, OdePosition3D> map = new ConcurrentHashMap<>();
 
   /**
-   * Initializes the collector after construction.
-   */
-  @PostConstruct
-  public void init() {
-    log.debug("MapRefPointCollector PostConstruct initialization");
-  }
-
-  /**
-   * Constructs a new MapRefPointCollector.
-   */
-  public MapRefPointCollector() {
-    log.debug("MapRefPointCollector initialized");
-  }
-
-  /**
    * Listens for and processes MAP messages from Kafka.
    *
    * @param message The JSON MAP message
    */
-  @KafkaListener(topics = "${depositor.map.source-mqtt-kafka-topic}",
+  @KafkaListener(topics = "${depositor.map.mqtt.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-map-collector",
       concurrency = "${listen.concurrency:1}", properties = {"auto.offset.reset=earliest"})
   public void jsonMapListener(String message) {
@@ -54,7 +39,7 @@ public class MapRefPointCollector {
         J2735IntersectionGeometry intersection = intersections.getIntersections().get(i);
         String intersectionId = intersection.getId().getId().toString();
         OdePosition3D refPoint = intersection.getRefPoint();
-        // log.debug("Received MAP message: {} with refPoint: {}", intersectionId, refPoint);
+        log.debug("Received MAP message: {} with refPoint: {}", intersectionId, refPoint);
         map.put(intersectionId, refPoint);
       }
 

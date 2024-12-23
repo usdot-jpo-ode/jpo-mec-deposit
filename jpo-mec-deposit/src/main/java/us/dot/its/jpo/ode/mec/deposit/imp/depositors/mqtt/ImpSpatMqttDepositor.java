@@ -69,7 +69,7 @@ public class ImpSpatMqttDepositor extends AbstractImpMqttDepositor {
 
       for (String topic : topicList) {
         mqttService.publishAsn1Bytes(topic, asn1Bytes, retain);
-        log.debug("Sending SPAT message to MQTT topics: {}", topic);
+        log.info("Sending SPAT message to MQTT topics: {}", topic);
       }
 
       recordLatency(odeReceivedAt, startTime);

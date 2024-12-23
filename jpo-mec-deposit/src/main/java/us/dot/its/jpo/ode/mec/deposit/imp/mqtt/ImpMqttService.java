@@ -60,7 +60,7 @@ public class ImpMqttService {
       int count = messageCount.getAndSet(0);
       currentRate.set(count); // Update the current rate
       if (count > 0) {
-        log.debug("Published {} messages in the last second", count);
+        log.info("Published {} messages in the last second", count);
       }
     }, 1, 1, TimeUnit.SECONDS);
   }

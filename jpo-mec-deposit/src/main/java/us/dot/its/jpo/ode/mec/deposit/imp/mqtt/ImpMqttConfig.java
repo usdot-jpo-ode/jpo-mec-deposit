@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.DirectChannel;
@@ -26,6 +27,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpConfigData;
  */
 @Slf4j
 @Configuration
+@ConditionalOnProperty(value = {"depositor.imp.enabled"}, havingValue = "true")
 public class ImpMqttConfig {
   private final ImpMqttProperties mqttProperties;
   private final ImpProperties impProperties;
@@ -36,11 +38,10 @@ public class ImpMqttConfig {
   /**
    * Constructs the MQTT configuration with required properties.
    *
-   * @param tokenManager The IMP token manager
-   * @param impApi The IMP API
+   * @param tokenManager The IMP token manager param impApi The IMP API
    */
-  public ImpMqttConfig(ImpTokenManager tokenManager, ImpApi impApi, ImpMqttProperties mqttProperties,
-      ImpProperties impProperties) {
+  public ImpMqttConfig(ImpTokenManager tokenManager, ImpApi impApi,
+      ImpMqttProperties mqttProperties, ImpProperties impProperties) {
     this.tokenManager = tokenManager;
     this.impApi = impApi;
     this.mqttProperties = mqttProperties;
@@ -115,8 +116,8 @@ public class ImpMqttConfig {
     ImpConfigData impConfig =
         ImpUtil.readConfigFile(impProperties.getCertificatePath() + "/config.json");
 
-    log.debug("Setting up MQTT inbound adapter with deviceID: {}", impConfig.getDeviceID());
-    log.debug("Subscribing to topics: {}", Arrays.toString(mqttProperties.getSubscriptions()));
+    log.info("Setting up MQTT inbound adapter with deviceID: {}", impConfig.getDeviceID());
+    log.info("Subscribing to topics: {}", Arrays.toString(mqttProperties.getSubscriptions()));
 
     MqttPahoMessageDrivenChannelAdapter messageProducer =
         new MqttPahoMessageDrivenChannelAdapter(clientManager, mqttProperties.getSubscriptions());
