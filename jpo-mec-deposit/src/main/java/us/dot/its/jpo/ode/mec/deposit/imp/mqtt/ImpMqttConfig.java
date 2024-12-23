@@ -14,7 +14,10 @@ import org.springframework.integration.mqtt.core.Mqttv3ClientManager;
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
 import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.messaging.MessageChannel;
+import jakarta.annotation.PostConstruct;
+import us.dot.its.jpo.ode.mec.deposit.imp.ImpApi;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
+import us.dot.its.jpo.ode.mec.deposit.imp.ImpTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpUtil;
 import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpConfigData;
 
@@ -24,19 +27,39 @@ import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpConfigData;
 @Slf4j
 @Configuration
 public class ImpMqttConfig {
-
   private final ImpMqttProperties mqttProperties;
   private final ImpProperties impProperties;
+  private final ImpTokenManager tokenManager;
+  private final ImpApi impApi;
+  private ImpConfigData impConfig;
 
   /**
    * Constructs the MQTT configuration with required properties.
    *
-   * @param mqttProperties MQTT-specific configuration properties
-   * @param impProperties IMP-specific configuration properties
+   * @param tokenManager The IMP token manager
+   * @param impApi The IMP API
    */
-  public ImpMqttConfig(ImpMqttProperties mqttProperties, ImpProperties impProperties) {
+  public ImpMqttConfig(ImpTokenManager tokenManager, ImpApi impApi, ImpMqttProperties mqttProperties,
+      ImpProperties impProperties) {
+    this.tokenManager = tokenManager;
+    this.impApi = impApi;
     this.mqttProperties = mqttProperties;
     this.impProperties = impProperties;
+  }
+
+  @PostConstruct
+  public void init() {
+    try {
+      String token = tokenManager.getValidToken();
+      this.impConfig = impApi.registerClientPartner(token);
+      if (this.impConfig == null || this.impConfig.getImpMqttUri() == null) {
+        throw new IllegalStateException("Failed to initialize IMP configuration");
+      }
+      log.info("IMP MQTT configuration initialized successfully");
+    } catch (Exception e) {
+      log.error("Failed to initialize IMP MQTT configuration", e);
+      throw new IllegalStateException("Failed to initialize IMP MQTT configuration", e);
+    }
   }
 
   /**
