@@ -61,6 +61,8 @@ public class ImpMqttService {
       currentRate.set(count); // Update the current rate
       if (count > 0) {
         log.info("Published {} messages in the last second", count);
+      } else {
+        log.debug("No messages published in the last second");
       }
     }, 1, 1, TimeUnit.SECONDS);
   }
@@ -79,8 +81,7 @@ public class ImpMqttService {
         // Check if we've exceeded our rate limit
         if (messageCount.get() >= maxMessagesPerSecond) {
           rateLimitSkippedCounter.increment();
-          log.warn("Skipping message publish - exceeded rate limit of {}/second",
-              maxMessagesPerSecond);
+          log.warn("Skipping message publish - exceeded rate limit of {} Hz", maxMessagesPerSecond);
           return;
         }
 

@@ -60,6 +60,7 @@ public class ImpBsmMqttDepositor extends AbstractImpMqttDepositor {
         return null;
       });
 
+      log.info("Sending BSM message to MQTT topics: {}", topic);
       recordLatency(odeReceivedAt, startTime);
 
     } catch (Exception e) {

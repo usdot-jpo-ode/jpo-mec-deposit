@@ -54,6 +54,7 @@ public class ImpMapApiDepositor extends AbstractImpApiDepositor {
       String asn1String = msg.getMetadata().getAsn1();
 
       String token = tokenManager.getValidToken();
+      log.info("Depositing MAP message to IMP API");
       this.partnerApi.deposit(token, asn1String, this.distributionType);
       recordLatency(odeReceivedAt, startTime);
     } catch (Exception e) {
