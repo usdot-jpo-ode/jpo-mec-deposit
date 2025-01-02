@@ -7,11 +7,9 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -123,7 +121,7 @@ public class ImpApi {
    * @return The authentication token
    */
   public AuthToken getToken() {
-    var request = new AuthTokenRequest(partnerApi.getUser(), partnerApi.getPass());
+    var request = new AuthTokenRequest(partnerApi.getUsername(), partnerApi.getPassword());
 
     HttpHeaders headers = new HttpHeaders();
     headers.set("Content-Type", "application/json");

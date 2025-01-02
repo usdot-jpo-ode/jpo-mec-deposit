@@ -5,61 +5,60 @@ artifactId: ^project.artifactId^
 version: ^project.version^
 server.port: 8082
 
-# Depositor specific properties
-depositor:
-  bsm:
-    mqtt:
-      enabled: ${DEPOSITOR_BSM_MQTT_ENABLED:true}
-      kafka-topic: ${BSM_MQTT_KAFKA_TOPIC:topic.OdeBsmJson}
-  spat:
-    mqtt:
-      enabled: ${DEPOSITOR_SPAT_MQTT_ENABLED:true}
-      kafka-topic: ${SPAT_MQTT_KAFKA_TOPIC:topic.OdeSpatJson}
-  tim:
-    mqtt:
-      enabled: ${DEPOSITOR_TIM_MQTT_ENABLED:true}
-      kafka-topic: ${TIM_MQTT_KAFKA_TOPIC:topic.OdeTimJson}
-    api:
-      enabled: ${DEPOSITOR_TIM_API_ENABLED:true}
-      kafka-topic: ${TIM_API_KAFKA_TOPIC:topic.OdeTimJsonTMCFiltered}
-  map:
-    mqtt:
-      enabled: ${DEPOSITOR_MAP_MQTT_ENABLED:true}
-      kafka-topic: ${MAP_MQTT_KAFKA_TOPIC:topic.OdeMapJson}
-    api:
-      enabled: ${DEPOSITOR_MAP_API_ENABLED:true}
-      kafka-topic: ${MAP_API_KAFKA_TOPIC:topic.DeduplicatedOdeMapJson}
-  imp:
-    enabled: ${IMP_ENABLED:false}
-    vendor: ${IMP_VENDOR}
-    network-type: ${IMP_NETWORK_TYPE}
-    cache-registration: ${IMP_CACHE_REGISTRATION}
-    certificate-path: ${IMP_CERT_PATH}
-    client-type: ${IMP_CLIENT_TYPE}
-    client-sub-type: ${IMP_CLIENT_SUB_TYPE}
+# IMP Depositor specific properties
+imp:
+  enabled: ${IMP_ENABLED:false}
+  vendor: ${IMP_VENDOR}
+  network-type: ${IMP_NETWORK_TYPE}
+  cache-registration: ${IMP_CACHE_REGISTRATION}
+  certificate-path: ${IMP_CERT_PATH}
+  client-type: ${IMP_CLIENT_TYPE}
+  client-sub-type: ${IMP_CLIENT_SUB_TYPE}
+  partner-api:
+    base-uri: ${IMP_PARTNER_API_BASE_URI}
+    username: ${IMP_PARTNER_API_USERNAME}
+    password: ${IMP_PARTNER_API_PASSWORD}
+    # used for the partner api registration to determine the MEC location
+    mec-latitude: ${IMP_MEC_LATITUDE}
+    mec-longitude: ${IMP_MEC_LONGITUDE}
     clear-tim:
-      enabled: ${IMP_CLEAR_TIM_ENABLED:false}
-      interval: ${IMP_CLEAR_TIM_INTERVAL:10}
-    partner-api:
-      base-uri: ${IMP_PARTNER_API_BASE_URI}
-      user: ${IMP_PARTNER_USER}
-      pass: ${IMP_PARTNER_PASS}
-
-      # used for the partner api registration to determine the MEC location
-      mec-latitude: ${IMP_MEC_LATITUDE}
-      mec-longitude: ${IMP_MEC_LONGITUDE}
-    mqtt:
-      max-messages-per-second: ${IMP_PUBLISH_RATE:50}
-      stale-message-threshold: 250
-      qos: 0
-      max-inflight: 10
-      connection-timeout: 30
-      keep-alive-interval: 60
-      completion-timeout: 5000
-      vendor: ${IMP_MQTT_VENDOR}
-      message-format: j2735
-      subscriptions:
-        - "vzimp/1/ClientInfo"
+      enabled: ${IMP_PARTNER_API_CLEAR_TIM_ENABLED:false}
+      interval: ${IMP_PARTNER_API_CLEAR_TIM_INTERVAL:10}
+  mqtt:
+    qos: 0
+    max-inflight: 10
+    connection-timeout: 30
+    keep-alive-interval: 60
+    completion-timeout: 5000
+    max-messages-per-second: ${IMP_PUBLISH_RATE:50}
+    stale-message-threshold: 250
+    vendor: ${IMP_MQTT_VENDOR}
+    message-format: j2735
+    subscriptions:
+      - "vzimp/1/ClientInfo"
+  depositors:
+    bsm:
+      mqtt:
+        enabled: ${IMP_DEPOSITORS_BSM_MQTT_ENABLED:true}
+        kafka-topic: ${IMP_DEPOSITORS_BSM_MQTT_KAFKA_TOPIC:topic.OdeBsmJson}
+    spat:
+      mqtt:
+        enabled: ${IMP_DEPOSITORS_SPAT_MQTT_ENABLED:true}
+        kafka-topic: ${IMP_DEPOSITORS_SPAT_MQTT_KAFKA_TOPIC:topic.OdeSpatJson}
+    tim:
+      mqtt:
+        enabled: ${IMP_DEPOSITORS_TIM_MQTT_ENABLED:true}
+        kafka-topic: ${IMP_DEPOSITORS_TIM_MQTT_KAFKA_TOPIC:topic.OdeTimJson}
+      api:
+        enabled: ${IMP_DEPOSITORS_TIM_API_ENABLED:true}
+        kafka-topic: ${IMP_DEPOSITORS_TIM_API_KAFKA_TOPIC:topic.OdeTimJsonTMCFiltered}
+    map:
+      mqtt:
+        enabled: ${IMP_DEPOSITORS_MAP_MQTT_ENABLED:true}
+        kafka-topic: ${IMP_DEPOSITORS_MAP_MQTT_KAFKA_TOPIC:topic.OdeMapJson}
+      api:
+        enabled: ${IMP_DEPOSITORS_MAP_API_ENABLED:true}
+        kafka-topic: ${IMP_DEPOSITORS_MAP_API_KAFKA_TOPIC:topic.DeduplicatedOdeMapJson}
 
 # microservice actuator
 management:

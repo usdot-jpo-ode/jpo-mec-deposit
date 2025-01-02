@@ -27,7 +27,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpConfigData;
  */
 @Slf4j
 @Configuration
-@ConditionalOnProperty(value = {"depositor.imp.enabled"}, havingValue = "true")
+@ConditionalOnProperty(value = {"imp.enabled"}, havingValue = "true")
 public class ImpMqttConfig {
   private final ImpMqttProperties mqttProperties;
   private final ImpProperties impProperties;

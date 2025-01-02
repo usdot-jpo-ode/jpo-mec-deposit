@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 @Slf4j
-@ConditionalOnProperty(value = {"depositor.imp.enabled"}, havingValue = "true")
+@ConditionalOnProperty(value = {"imp.enabled"}, havingValue = "true")
 public class ImpApiService {
   private final ImpApi partnerApi;
   private final ImpTokenManager tokenManager;
@@ -39,8 +39,8 @@ public class ImpApiService {
     }
   }
 
-  @ConditionalOnProperty(value = "depositor.imp.clear-tim.enabled", havingValue = "true")
-  @Scheduled(fixedRateString = "${depositor.imp.clear-tim.interval}", timeUnit = TimeUnit.MINUTES)
+  @ConditionalOnProperty(value = "imp.partner-api.clear-tim.enabled", havingValue = "true")
+  @Scheduled(fixedRateString = "${imp.partner-api.clear-tim.interval}", timeUnit = TimeUnit.MINUTES)
   public void clearTim() {
     String token = tokenManager.getValidToken();
     partnerApi.clearTim(token);

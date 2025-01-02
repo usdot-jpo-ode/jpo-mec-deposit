@@ -14,7 +14,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ImpNetworkType;
  * Configuration properties for the IMP (Infrastructure Message Processor) service.
  */
 @Configuration
-@ConfigurationProperties(prefix = "depositor.imp")
+@ConfigurationProperties(prefix = "imp")
 @Data
 public class ImpProperties {
   private boolean enabled;
@@ -24,8 +24,19 @@ public class ImpProperties {
   private String certificatePath;
   private ImpClientType clientType;
   private ImpClientSubType clientSubType;
+  private ClearTimProperties clearTim;
   private PartnerApiProperties partnerApi;
   private ImpMqttProperties mqtt;
+  private ImpDepositors depositors;
+
+  /**
+   * Properties for the IMP Clear TIM configuration.
+   */
+  @Data
+  public static class ClearTimProperties {
+    private Boolean enabled;
+    private Integer interval;
+  }
 
   /**
    * Properties for the IMP Partner API configuration.
@@ -33,37 +44,44 @@ public class ImpProperties {
   @Data
   public static class PartnerApiProperties {
     private String baseUri;
-    private String user;
-    private String pass;
-    private DepositorProperties depositors;
+    private String username;
+    private String password;
     private BigDecimal mecLatitude;
     private BigDecimal mecLongitude;
+  }
+
+  @Data
+  public static class ImpDepositors {
+    private ImpDepositorProperties bsm;
+    private ImpDepositorProperties spat;
+    private ImpDepositorProperties tim;
+    private ImpDepositorProperties map;
   }
 
   /**
    * Properties for IMP depositor configuration.
    */
   @Data
-  public static class DepositorProperties {
-    private MapProperties map;
-    private TimProperties tim;
+  public static class ImpDepositorProperties {
+    private ImpMqttDepositorProperties mqtt;
+    private ImpApiDepositorProperties api;
   }
 
   /**
-   * Properties for MAP message configuration.
+   * Properties for the IMP Mqtt configuration.
    */
   @Data
-  public static class MapProperties {
-    private String sourceKafkaTopic;
-    private String distributionType;
+  public static class ImpMqttDepositorProperties {
+    private Boolean enabled;
+    private String kafkaTopic;
   }
 
   /**
-   * Properties for TIM message configuration.
+   * Properties for the IMP Api configuration.
    */
   @Data
-  public static class TimProperties {
-    private String sourceKafkaTopic;
-    private String distributionType;
+  public static class ImpApiDepositorProperties {
+    private Boolean enabled;
+    private String kafkaTopic;
   }
 }

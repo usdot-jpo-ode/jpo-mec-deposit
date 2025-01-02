@@ -27,7 +27,7 @@ import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
  */
 @Component
 @Slf4j
-@ConditionalOnProperty(value = {"depositor.spat.mqtt.enabled", "depositor.imp.enabled"},
+@ConditionalOnProperty(value = {"imp.depositors.spat.mqtt.enabled", "imp.enabled"},
     havingValue = "true")
 public class ImpSpatMqttDepositor extends AbstractImpMqttDepositor {
 
@@ -45,7 +45,7 @@ public class ImpSpatMqttDepositor extends AbstractImpMqttDepositor {
    * @param message The SPAT message from Kafka in JSON format
    */
   @Async("kafkaListenerExecutor")
-  @KafkaListener(topics = "${depositor.spat.mqtt.kafka-topic}",
+  @KafkaListener(topics = "${imp.depositors.spat.mqtt.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-spat-mqtt-depositor",
       concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
   public void spatDepositListener(String message) {

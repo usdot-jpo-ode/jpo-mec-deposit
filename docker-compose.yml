@@ -1,5 +1,6 @@
 include:
   - jpo-utils/docker-compose.yml
+  - docker-compose-ode.yml
 
 services:
   mec_deposit:

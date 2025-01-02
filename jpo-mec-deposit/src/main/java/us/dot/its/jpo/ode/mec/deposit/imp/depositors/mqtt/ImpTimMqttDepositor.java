@@ -26,7 +26,7 @@ import us.dot.its.jpo.ode.plugin.j2735.common.Position3D;
  */
 @Component
 @Slf4j
-@ConditionalOnProperty(value = {"depositor.tim.mqtt.enabled", "depositor.imp.enabled"},
+@ConditionalOnProperty(value = {"imp.depositors.tim.mqtt.enabled", "imp.enabled"},
     havingValue = "true")
 public class ImpTimMqttDepositor extends AbstractImpMqttDepositor {
 
@@ -41,7 +41,7 @@ public class ImpTimMqttDepositor extends AbstractImpMqttDepositor {
    * @param message The TIM message from Kafka in JSON format
    */
   @Async("kafkaListenerExecutor")
-  @KafkaListener(topics = "${depositor.tim.mqtt.kafka-topic}",
+  @KafkaListener(topics = "${imp.depositors.tim.mqtt.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-tim-mqtt-depositor",
       concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
   public void timDepositListener(String message) {

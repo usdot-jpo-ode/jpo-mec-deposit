@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service
-@ConditionalOnProperty(value = {"depositor.imp.enabled"}, havingValue = "true")
+@ConditionalOnProperty(value = {"imp.enabled"}, havingValue = "true")
 public class ImpMqttService {
   private final MessageChannel mqttOutboundChannel;
   private final Executor executor;
