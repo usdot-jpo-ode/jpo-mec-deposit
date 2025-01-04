@@ -1,7 +1,7 @@
 package us.dot.its.jpo.ode.mec.deposit.imp;
 
 import lombok.extern.slf4j.Slf4j;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpConfigData;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.ImpConfigData;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

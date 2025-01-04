@@ -11,9 +11,8 @@ import io.micrometer.core.instrument.MeterRegistry;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpApi;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpTokenManager;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageType;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.AuthToken;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.DistributionType;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.mqtt.ImpMqttMessageType;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.partner.DistributionType;
 import us.dot.its.jpo.ode.model.OdeMapData;
 
 /**

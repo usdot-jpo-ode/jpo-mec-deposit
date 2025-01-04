@@ -16,16 +16,16 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties.PartnerApiProperties;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpConfigData;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.AuthToken;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.AuthTokenRequest;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClearRequest;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientConnectionPostRequest;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientConnectionResponse;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationPostRequest;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ClientRegistrationResponse;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.DepositRequest;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.DistributionType;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.ImpConfigData;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.partner.AuthToken;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.partner.AuthTokenRequest;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.partner.ClearRequest;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.partner.ClientConnectionPostRequest;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.partner.ClientConnectionResponse;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.partner.ClientRegistrationPostRequest;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.partner.ClientRegistrationResponse;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.partner.DepositRequest;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 import org.springframework.stereotype.Component;
 

@@ -3,7 +3,7 @@ package us.dot.its.jpo.ode.mec.deposit.imp.mqtt;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageFormat;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.mqtt.ImpMqttMessageFormat;
 
 /**
  * Configuration properties for IMP MQTT connection and messaging settings.

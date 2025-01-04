@@ -3,8 +3,8 @@ package us.dot.its.jpo.ode.mec.deposit.imp.depositors.mqtt;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,12 +15,10 @@ import org.springframework.stereotype.Component;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
 import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttService;
 import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttTopicBuilder;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageType;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.mqtt.ImpMqttMessageType;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.model.OdeSpatData;
-import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionState;
 import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
-import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
 
 /**
  * Depositor class for handling SPAT messages via MQTT integration with IMP.
@@ -62,7 +60,7 @@ public class ImpSpatMqttDepositor extends AbstractImpMqttDepositor {
       String asn1String = msg.getMetadata().getAsn1();
 
       J2735SPAT spatMsg = (J2735SPAT) msg.getPayload().getData();
-      List<String> topicList =
+      Set<String> topicList =
           ImpMqttTopicBuilder.getSpatTopicList(spatMsg, impProperties, mapDataCollector);
 
       byte[] asn1Bytes = Hex.decode(asn1String);

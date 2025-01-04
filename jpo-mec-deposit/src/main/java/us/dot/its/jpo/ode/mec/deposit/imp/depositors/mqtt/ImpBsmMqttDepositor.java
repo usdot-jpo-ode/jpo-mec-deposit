@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
 import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttService;
 import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttTopicBuilder;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageType;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.mqtt.ImpMqttMessageType;
 import us.dot.its.jpo.ode.model.OdeBsmData;
 import us.dot.its.jpo.ode.plugin.j2735.J2735Bsm;
 

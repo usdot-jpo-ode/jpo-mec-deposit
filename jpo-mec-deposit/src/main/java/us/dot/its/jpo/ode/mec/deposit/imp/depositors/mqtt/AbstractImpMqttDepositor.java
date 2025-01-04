@@ -11,7 +11,7 @@ import java.time.format.DateTimeFormatter;
 import lombok.extern.slf4j.Slf4j;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
 import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttService;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageType;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.mqtt.ImpMqttMessageType;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 
 /**

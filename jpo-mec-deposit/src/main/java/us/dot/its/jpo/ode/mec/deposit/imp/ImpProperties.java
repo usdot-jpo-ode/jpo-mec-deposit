@@ -4,10 +4,10 @@ import java.math.BigDecimal;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.ImpClientSubType;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.ImpClientType;
 import us.dot.its.jpo.ode.mec.deposit.imp.mqtt.ImpMqttProperties;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpClientSubType;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpClientType;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.ImpNetworkType;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.partner.ImpNetworkType;
 
 
 /**

@@ -1,14 +1,13 @@
 package us.dot.its.jpo.ode.mec.deposit.imp.mqtt;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import ch.hsr.geohash.GeoHash;
 import lombok.extern.slf4j.Slf4j;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttMessageType;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttRegionalTopic;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.mqtt.ImpMqttMessageType;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.mqtt.ImpMqttRegionalTopic;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
-import us.dot.its.jpo.ode.model.OdeTimData;
 import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionState;
 import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
 import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
@@ -59,12 +58,11 @@ public class ImpMqttTopicBuilder {
       throw new IllegalArgumentException("precision must be between 7 and 8");
     }
 
-    // Truncate if longer than 8 chars
     if (geoHash.length() > 8) {
+      // Truncate if longer than 8 chars
       geoHash = geoHash.substring(0, 8);
-    }
-    // Pad with wildcards if shorter than 8
-    else if (geoHash.length() < 8) {
+    } else if (geoHash.length() < 8) {
+      // Pad with wildcards if shorter than 8
       geoHash = geoHash + MQTT_PUB_WILDCARD.repeat(8 - geoHash.length());
     }
 
@@ -117,9 +115,9 @@ public class ImpMqttTopicBuilder {
     return getRegionalTopic(topic);
   }
 
-  public static List<String> getTimTopicList(TravelerDataFrameList dataFramesList,
+  public static Set<String> getTimTopicList(TravelerDataFrameList dataFramesList,
       ImpProperties impProperties) {
-    List<String> topicList = new ArrayList<>();
+    Set<String> topicSet = new HashSet<>();
     for (TravelerDataFrame dataFrame : dataFramesList) {
       var regions = dataFrame.getRegions();
       for (GeographicalPath region : regions) {
@@ -128,22 +126,21 @@ public class ImpMqttTopicBuilder {
           log.warn("No refPoint found for region: {} skipping IMP deposit", region.getName());
           continue;
         }
-        // Convert from J2735 integer microdegrees to decimal degrees
         double scale = 10000000.0;
-        double latitude = refPoint.getLat().getValue() / scale; // 38.9549122
-        double longitude = refPoint.getLong_().getValue() / scale; // -77.1490570
+        double latitude = refPoint.getLat().getValue() / scale;
+        double longitude = refPoint.getLong_().getValue() / scale;
         String topic =
             buildRegionalTopic(ImpMqttMessageType.TIM, latitude, longitude, 7, impProperties);
 
-        topicList.add(topic);
+        topicSet.add(topic);
       }
     }
-    return topicList;
+    return topicSet;
   }
 
-  public static List<String> getSpatTopicList(J2735SPAT spatMsg, ImpProperties impProperties,
+  public static Set<String> getSpatTopicList(J2735SPAT spatMsg, ImpProperties impProperties,
       MapRefPointCollector mapDataCollector) {
-    List<String> topicList = new ArrayList<>();
+    Set<String> topicSet = new HashSet<>();
     for (J2735IntersectionState intersection : spatMsg.getIntersectionStateList()
         .getIntersectionStatelist()) {
       String intersectionId = intersection.getId().getId().toString();
@@ -155,8 +152,8 @@ public class ImpMqttTopicBuilder {
 
       String topic = buildRegionalTopic(ImpMqttMessageType.SPAT, refPoint, 7, impProperties);
 
-      topicList.add(topic);
+      topicSet.add(topic);
     }
-    return topicList;
+    return topicSet;
   }
 }

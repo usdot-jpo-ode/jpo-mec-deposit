@@ -9,8 +9,8 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpUtil;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpConfigData;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.mqtt.ImpMqttClientInfo;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.ImpConfigData;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.mqtt.ImpMqttClientInfo;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 
 /**

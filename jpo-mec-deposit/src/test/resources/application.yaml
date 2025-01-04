@@ -1,0 +1,106 @@
+#General Properties
+#==================
+groupId: ^project.groupId^
+artifactId: ^project.artifactId^
+version: ^project.version^
+server.port: 8082
+
+# IMP Depositor specific properties
+imp:
+  enabled: true
+  vendor: vendorId
+  network-type: networkType
+  cache-registration: true
+  certificate-path: resources/IMP
+  client-type: Software
+  client-sub-type: Application
+  partner-api:
+    base-uri: baseUri
+    username: username
+    password: password
+    # used for the partner api registration to determine the MEC location
+    mec-latitude: 45.0000
+    mec-longitude: 45.0000
+    clear-tim:
+      enabled: true
+      interval: 10
+  mqtt:
+    qos: 0
+    max-inflight: 10
+    connection-timeout: 30
+    keep-alive-interval: 60
+    completion-timeout: 5000
+    max-messages-per-second: 50
+    stale-message-threshold: 250
+    vendor: Public
+    message-format: j2735
+    subscriptions:
+      - "vzimp/1/ClientInfo"
+  depositors:
+    bsm:
+      mqtt:
+        enabled: true
+        kafka-topic: topic.OdeBsmJson
+    spat:
+      mqtt:
+        enabled: true
+        kafka-topic: topic.OdeSpatJson
+    tim:
+      mqtt:
+        enabled: true
+        kafka-topic: topic.OdeTimJson
+      api:
+        enabled: true
+        kafka-topic: topic.OdeTimJsonTMCFiltered
+    map:
+      mqtt:
+        enabled: true
+        kafka-topic: topic.OdeMapJson
+      api:
+        enabled: true
+        kafka-topic: topic.DeduplicatedOdeMapJson
+
+# microservice actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  server:
+    port: 8082
+
+logging:
+  level:
+    root: INFO
+    org.springframework.kafka: info
+    org.springframework.web: WARN
+    guru.springframework.controllers: WARN
+    org.springframework.integration.mqtt: INFO
+    us.dot.its.jpo.ode.mec.deposit: INFO
+    org.apache.kafka: WARN
+
+# Spring boot properties
+spring:
+  profiles:
+    default: "none"
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  kafka:
+    bootstrap-servers: localhost:10093
+    consumer:
+      group-id: jpo-mec-deposit
+      fetch-min-size: 1
+      fetch-max-wait: 50
+      max-poll-records: 500
+      auto-offset-reset: latest
+      enable-auto-commit: true
+      auto-commit-interval: 100
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: BATCH
+      poll-timeout: 1
+      idle-event-interval: 1
+      idle-between-polls: 0
+  config:
+    import:
+      - classpath:application-confluent.yaml

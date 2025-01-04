@@ -2,7 +2,7 @@ package us.dot.its.jpo.ode.mec.deposit.imp;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.partner.AuthToken;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.partner.AuthToken;
 
 @Slf4j
 @Component

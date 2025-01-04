@@ -20,7 +20,7 @@ import us.dot.its.jpo.ode.mec.deposit.imp.ImpApi;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpProperties;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.imp.ImpUtil;
-import us.dot.its.jpo.ode.mec.deposit.models.imp.ImpConfigData;
+import us.dot.its.jpo.ode.mec.deposit.imp.models.ImpConfigData;
 
 /**
  * Configuration class for setting up MQTT client and message channels for IMP integration.
