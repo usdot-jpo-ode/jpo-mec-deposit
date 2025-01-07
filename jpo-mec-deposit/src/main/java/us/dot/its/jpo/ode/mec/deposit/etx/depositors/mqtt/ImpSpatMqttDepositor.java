@@ -3,7 +3,6 @@ package us.dot.its.jpo.ode.mec.deposit.etx.depositors.mqtt;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;

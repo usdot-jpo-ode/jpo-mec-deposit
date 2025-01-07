@@ -81,13 +81,10 @@ logging:
 
 # Spring boot properties
 spring:
-  profiles:
-    default: "none"
-    active: ${SPRING_PROFILES_ACTIVE:local}
   kafka:
-    bootstrap-servers: localhost:10093
+    bootstrap-servers: localhost:9092
     consumer:
-      group-id: jpo-mec-deposit
+      group-id: test-consumer-group
       fetch-min-size: 1
       fetch-max-wait: 50
       max-poll-records: 500
@@ -101,6 +98,9 @@ spring:
       poll-timeout: 1
       idle-event-interval: 1
       idle-between-polls: 0
-  config:
-    import:
-      - classpath:application-confluent.yaml
+
+etx:
+  depositors:
+    map:
+      mqtt:
+        kafka-topic: topic.OdeMapJson

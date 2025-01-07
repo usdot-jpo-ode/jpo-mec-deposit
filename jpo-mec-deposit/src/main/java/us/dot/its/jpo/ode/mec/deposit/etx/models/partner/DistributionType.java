@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * Processor) messages.
  */
 public enum DistributionType {
-  TARGETED("targeted"), BROADCAST("broadcast");
+  TARGETED("Targeted"), BROADCAST("Broadcast");
 
   private final String value;
 

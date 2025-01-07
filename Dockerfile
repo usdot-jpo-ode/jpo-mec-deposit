@@ -10,7 +10,7 @@ COPY ./jpo-mec-deposit/checkstyle.xml ./jpo-mec-deposit/checkstyle.xml
 WORKDIR /home/jpo-mec-deposit
 RUN mvn dependency:resolve
 
-# Copy the source code and build the geojson converter
+# Copy the source code and build the project
 COPY ./jpo-mec-deposit/src ./src
 RUN mvn clean package -DskipTests
 
