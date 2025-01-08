@@ -26,7 +26,6 @@ public class EtxMqttSubscriptionService {
    * Constructor for EtxMqttSubscriptionService.
    *
    * @param etxProperties Properties containing configuration paths
-   * @param mapper The ObjectMapper instance
    */
   public EtxMqttSubscriptionService(EtxProperties etxProperties) {
     this.configPath = etxProperties.getCertificatePath() + "/config.json";

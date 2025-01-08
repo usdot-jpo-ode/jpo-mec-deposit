@@ -1,8 +1,8 @@
 package us.dot.its.jpo.ode.mec.deposit.etx.mqtt;
 
+import ch.hsr.geohash.GeoHash;
 import java.util.HashSet;
 import java.util.Set;
-import ch.hsr.geohash.GeoHash;
 import lombok.extern.slf4j.Slf4j;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.models.mqtt.EtxMqttMessageType;

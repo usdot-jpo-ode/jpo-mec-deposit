@@ -1,12 +1,13 @@
 package us.dot.its.jpo.ode.mec.deposit.etx.mqtt;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.time.Instant;
-
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.protobuf.ByteString;
+import java.time.Instant;
+import org.junit.jupiter.api.Test;
 import us.dot.its.jpo.ode.mec.deposit.GeoRoutedMsg;
 
 class EtxMqttProtobufBuilderTest {

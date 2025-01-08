@@ -30,6 +30,10 @@
         <property name="fileNamePattern"
             value="(.*[\\/]partner[\\/].*|.*[\\/]generated-sources[\\/]protobuf[\\/].*)$" />
     </module>
+    <!-- Exclude all files in jpo-utils -->
+    <module name="BeforeExecutionExclusionFileFilter">
+        <property name="fileNamePattern" value="(.*[\\/]jpo-utils[\\/].*)$" />
+    </module>
     <!-- https://checkstyle.org/config_filters.html#SuppressionFilter -->
     <module name="SuppressionFilter">
         <property name="file" value="${org.checkstyle.google.suppressionfilter.config}"

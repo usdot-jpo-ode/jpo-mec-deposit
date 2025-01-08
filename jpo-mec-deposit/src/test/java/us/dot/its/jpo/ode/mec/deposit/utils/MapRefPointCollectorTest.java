@@ -1,13 +1,15 @@
 package us.dot.its.jpo.ode.mec.deposit.utils;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import us.dot.its.jpo.ode.plugin.j2735.*;
+import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
 
 class MapRefPointCollectorTest {
 
