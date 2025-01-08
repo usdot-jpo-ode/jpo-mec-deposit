@@ -2,6 +2,7 @@
   "java.configuration.updateBuildConfiguration": "interactive",
   "java.compile.nullAnalysis.mode": "automatic",
   "java.format.settings.url": ".vscode/java-formatter.xml",
+  "java.format.settings.profile": "GoogleStyle",
   "editor.formatOnSave": true,
   "[xml]": {
     "editor.defaultFormatter": "redhat.vscode-xml",
@@ -23,6 +24,13 @@
   "editor.tabSize": 2,
   "java.checkstyle.configuration": "${workspaceFolder}\\jpo-mec-deposit\\checkstyle.xml",
   "java.test.defaultConfig": "jpo-mec-deposit",
+  "java.completion.enabled": true,
+  "java.completion.importOrder": [
+    "",
+    "javax",
+    "java",
+    "#"
+  ],
   "java.project.sourcePaths": [
     "src/main/java",
     "src/test/java",
