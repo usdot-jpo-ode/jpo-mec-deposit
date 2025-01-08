@@ -13,7 +13,7 @@ print("UDP target port:", UDP_PORT)
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 
-frequency = 10
+frequency = 1
 
 print(f"Sending BSM at {frequency} Hz")
 while True:

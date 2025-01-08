@@ -1,11 +1,11 @@
 package us.dot.its.jpo.ode.mec.deposit.etx;
 
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.EtxConfigData;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import java.util.concurrent.TimeUnit;
+import us.dot.its.jpo.ode.mec.deposit.etx.models.EtxConfigData;
 
 /**
  * Service responsible for handling ETX client registration.
@@ -21,13 +21,17 @@ public class EtxApiService {
   /**
    * Creates a new ETX registration service and attempts to register the client.
    *
-   * @param properties The ETX configuration properties
+   * @param impApi The ETX API client
+   * @param tokenManager The token manager for authentication
    */
   public EtxApiService(EtxApi impApi, EtxTokenManager tokenManager) {
     this.partnerApi = impApi;
     this.tokenManager = tokenManager;
   }
 
+  /**
+   * Registers this client with the ETX partner service.
+   */
   public void registerClientPartner() {
     String token = tokenManager.getValidToken();
     EtxConfigData response = partnerApi.registerClientPartner(token);

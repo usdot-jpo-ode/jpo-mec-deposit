@@ -1,6 +1,7 @@
 package us.dot.its.jpo.ode.mec.deposit.etx.depositors.mqtt;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Set;
@@ -10,8 +11,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import us.dot.its.jpo.ode.mec.deposit.GeoRoutedMsg;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.models.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.etx.models.mqtt.EtxMqttMessageType;
+import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProtobufBuilder;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttService;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttTopicBuilder;
 import us.dot.its.jpo.ode.model.OdeTimData;
@@ -51,16 +55,23 @@ public class ImpTimMqttDepositor extends AbstractEtxMqttDepositor {
         return;
       }
 
-      String asn1String = msg.getMetadata().getAsn1();
+      byte[] messageBytes = Hex.decode(msg.getMetadata().getAsn1());
 
       var timMsg = (TravelerInformation) msg.getPayload().getData();
+
+      // If the message format is J2735_GR, we need to convert the message to a GeoRoutedMsg
+      if (etxProperties.getMqtt().getMessageFormat() == EtxMqttMessageFormat.J2735_GR) {
+        Instant timestamp = Instant.parse(odeReceivedAt);
+        GeoRoutedMsg geoRoutedMsg =
+            EtxMqttProtobufBuilder.buildGeoRoutedMsg(messageBytes, timestamp);
+        messageBytes = geoRoutedMsg.toByteArray();
+      }
+
       var dataFramesList = timMsg.getDataFrames();
       Set<String> topicList = EtxMqttTopicBuilder.getTimTopicList(dataFramesList, etxProperties);
 
-      byte[] asn1Bytes = Hex.decode(asn1String);
-
       for (String topic : topicList) {
-        mqttService.publishAsn1Bytes(topic, asn1Bytes, retain);
+        mqttService.publishAsn1Bytes(topic, messageBytes, retain);
         log.info("Sending TIM message to MQTT topics: {}", topic);
       }
 

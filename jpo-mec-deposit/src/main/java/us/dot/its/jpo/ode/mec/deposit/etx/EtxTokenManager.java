@@ -1,9 +1,13 @@
 package us.dot.its.jpo.ode.mec.deposit.etx;
 
 import lombok.extern.slf4j.Slf4j;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.AuthToken;
 import org.springframework.stereotype.Component;
+import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.AuthToken;
 
+/**
+ * Manages authentication tokens for ETX API interactions. Handles token storage, validation, and
+ * refresh.
+ */
 @Slf4j
 @Component
 public class EtxTokenManager {
@@ -15,6 +19,12 @@ public class EtxTokenManager {
     this.impApi = impApi;
   }
 
+  /**
+   * Gets a valid authentication token, refreshing if necessary.
+   * 
+   *
+   * @return Valid authentication token
+   */
   public synchronized String getValidToken() {
     if (currentToken == null || System.currentTimeMillis() >= expirationTime) {
       refreshToken();

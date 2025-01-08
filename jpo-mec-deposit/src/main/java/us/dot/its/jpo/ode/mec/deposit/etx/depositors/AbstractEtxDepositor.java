@@ -13,9 +13,12 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.models.mqtt.EtxMqttMessageType;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 
+/**
+ * Abstract base class for ETX depositors.
+ */
 @Slf4j
 public abstract class AbstractEtxDepositor {
-  protected final ObjectMapper mapper = DateJsonMapper.getInstance();
+  protected final ObjectMapper mapper;
   protected final Timer processingTimer;
   protected final Counter staleMessageCounter;
   protected final EtxProperties etxProperties;
@@ -34,6 +37,7 @@ public abstract class AbstractEtxDepositor {
     this.staleMessageCounter =
         Counter.builder(metricsPrefix + ".stale").tag("message.type", messageType.name())
             .description("Number of stale " + messageType.name() + " messages").register(registry);
+    this.mapper = DateJsonMapper.getInstance();
   }
 
   protected void recordLatency(String odeReceivedAt, LocalDateTime startTime) {

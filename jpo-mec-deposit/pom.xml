@@ -178,7 +178,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
     <build>
         <finalName>${project.artifactId}</finalName>
         <extensions>
@@ -220,6 +219,8 @@
                 <extensions>true</extensions>
                 <executions>
                     <execution>
+                        <id>protobuf-compilation</id>
+                        <phase>generate-sources</phase>
                         <goals>
                             <goal>compile</goal>
                             <goal>test-compile</goal>
@@ -227,6 +228,9 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <outputDirectory>${project.build.directory}/generated-sources/protobuf/java</outputDirectory>
+                    <!-- This prevents the generated sources from being deleted while developing-->
+                    <clearOutputDirectory>false</clearOutputDirectory>
                     <additionalProtoPathElements>
                         <additionalProtoPathElement>${project.basedir}/src/main/proto</additionalProtoPathElement>
                     </additionalProtoPathElements>

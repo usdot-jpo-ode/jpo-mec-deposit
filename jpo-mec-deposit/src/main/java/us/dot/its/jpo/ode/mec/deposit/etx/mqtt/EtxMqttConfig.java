@@ -1,12 +1,8 @@
 package us.dot.its.jpo.ode.mec.deposit.etx.mqtt;
 
+import jakarta.annotation.PostConstruct;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxApi;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxTokenManager;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.EtxConfigData;
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
@@ -20,7 +16,11 @@ import org.springframework.integration.mqtt.core.Mqttv3ClientManager;
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
 import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.messaging.MessageChannel;
-import jakarta.annotation.PostConstruct;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxApi;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxTokenManager;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
+import us.dot.its.jpo.ode.mec.deposit.etx.models.EtxConfigData;
 
 /**
  * Configuration class for setting up MQTT client and message channels for ETX integration.
@@ -48,6 +48,9 @@ public class EtxMqttConfig {
     this.etxProperties = etxProperties;
   }
 
+  /**
+   * Initializes the MQTT configuration.
+   */
   @PostConstruct
   public void init() {
     try {

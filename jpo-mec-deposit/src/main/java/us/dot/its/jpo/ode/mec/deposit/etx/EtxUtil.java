@@ -6,8 +6,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.X509ExtendedKeyManager;
 import javax.net.ssl.X509ExtendedTrustManager;
@@ -95,9 +93,7 @@ public class EtxUtil {
   public static EtxConfigData readConfigFile(String filePath) {
     try {
       String fileContent = new String(Files.readAllBytes(Paths.get(filePath)));
-      EtxConfigData configData = mapper.readValue(fileContent, EtxConfigData.class);
-
-      return configData;
+      return mapper.readValue(fileContent, EtxConfigData.class);
     } catch (IOException e) {
       log.error("writeToFile IOException: " + e.getStackTrace());
       return null;

@@ -2,16 +2,17 @@ package us.dot.its.jpo.ode.mec.deposit.etx;
 
 import java.math.BigDecimal;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 import us.dot.its.jpo.ode.mec.deposit.etx.models.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.etx.models.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.EtxNetworkType;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
 
 /**
- * Configuration properties for the ETX (Infrastructure Message Processor) service.
+ * Configuration properties for ETX integration. Defines properties for API endpoints, MQTT
+ * settings, and client configuration.
  */
 @Configuration
 @ConfigurationProperties(prefix = "etx")
@@ -50,6 +51,9 @@ public class EtxProperties {
     private BigDecimal mecLongitude;
   }
 
+  /**
+   * Properties for ETX depositor configuration groups.
+   */
   @Data
   public static class EtxDepositors {
     private ImpDepositorProperties bsm;

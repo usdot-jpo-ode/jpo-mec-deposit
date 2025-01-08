@@ -104,6 +104,16 @@ public class EtxMqttTopicBuilder {
     return getRegionalTopic(topic);
   }
 
+  /**
+   * Builds a regional topic for the given message type and coordinates.
+   *
+   * @param messageType The type of message
+   * @param latitude The latitude coordinate
+   * @param longitude The longitude coordinate
+   * @param precision The geohash precision
+   * @param etxProperties The ETX configuration properties
+   * @return The formatted topic string
+   */
   public static String buildRegionalTopic(EtxMqttMessageType messageType, double latitude,
       double longitude, int precision, EtxProperties etxProperties) {
     String geoHash = getPubGeoHash(latitude, longitude, precision);
@@ -115,6 +125,13 @@ public class EtxMqttTopicBuilder {
     return getRegionalTopic(topic);
   }
 
+  /**
+   * Gets a list of topics for TIM messages.
+   *
+   * @param dataFramesList The TIM data frames
+   * @param etxProperties The ETX configuration properties
+   * @return Set of topic strings
+   */
   public static Set<String> getTimTopicList(TravelerDataFrameList dataFramesList,
       EtxProperties etxProperties) {
     Set<String> topicSet = new HashSet<>();
@@ -138,6 +155,14 @@ public class EtxMqttTopicBuilder {
     return topicSet;
   }
 
+  /**
+   * Gets a list of topics for SPAT messages.
+   *
+   * @param spatMsg The SPAT message
+   * @param etxProperties The ETX configuration properties
+   * @param mapDataCollector The map reference point collector
+   * @return Set of topic strings
+   */
   public static Set<String> getSpatTopicList(J2735SPAT spatMsg, EtxProperties etxProperties,
       MapRefPointCollector mapDataCollector) {
     Set<String> topicSet = new HashSet<>();

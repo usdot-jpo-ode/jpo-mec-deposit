@@ -1,13 +1,13 @@
 package us.dot.its.jpo.ode.mec.deposit.etx.depositors.api;
 
-import lombok.extern.slf4j.Slf4j;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import io.micrometer.core.instrument.MeterRegistry;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxApi;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxTokenManager;
@@ -42,7 +42,7 @@ public class ImpTimApiDepositor extends AbstractImpApiDepositor {
       concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
   public void timDepositListener(String message) {
     try {
-      LocalDateTime startTime = LocalDateTime.now(ZoneOffset.UTC);
+      final LocalDateTime startTime = LocalDateTime.now(ZoneOffset.UTC);
       OdeTimData msg = mapper.readValue(message, OdeTimData.class);
       String odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
 

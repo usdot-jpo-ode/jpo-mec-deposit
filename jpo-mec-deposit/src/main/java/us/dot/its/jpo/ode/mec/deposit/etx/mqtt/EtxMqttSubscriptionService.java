@@ -19,16 +19,18 @@ import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 @Slf4j
 @Service
 public class EtxMqttSubscriptionService {
-  private final ObjectMapper mapper = DateJsonMapper.getInstance();
-  private String configPath;
+  protected final ObjectMapper mapper;
+  private final String configPath;
 
   /**
-   * Constructs the MQTT subscription service.
+   * Constructor for EtxMqttSubscriptionService.
    *
    * @param etxProperties Properties containing configuration paths
+   * @param mapper The ObjectMapper instance
    */
   public EtxMqttSubscriptionService(EtxProperties etxProperties) {
     this.configPath = etxProperties.getCertificatePath() + "/config.json";
+    this.mapper = DateJsonMapper.getInstance();
   }
 
   @PostConstruct
@@ -43,24 +45,26 @@ public class EtxMqttSubscriptionService {
    */
   @ServiceActivator(inputChannel = "mqttInputChannel")
   public void handleMessage(Message<?> message) {
-    String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
-    String payload = message.getPayload().toString();
+    try {
+      String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
+      String payload = message.getPayload().toString();
 
-    log.info("Received message from topic {}", topic);
-    log.debug("Message payload: {}", payload);
-    log.debug("Message headers: {}", message.getHeaders());
+      log.info("Received message from topic {}", topic);
+      log.debug("Message payload: {}", payload);
+      log.debug("Message headers: {}", message.getHeaders());
 
-    switch (topic) {
-      case "vzimp/1/ClientInfo":
+      if ("vzimp/1/ClientInfo".equals(topic)) {
         try {
           EtxMqttClientInfo clientInfo = mapper.readValue(payload, EtxMqttClientInfo.class);
           handleClientInfo(clientInfo);
         } catch (JsonProcessingException e) {
-          log.error("Error parsing ClientInfo message: {}", e.getMessage());
+          log.error("Failed to parse client info payload: {}", payload, e);
         }
-        break;
-      default:
-        log.info("Unhandled topic: {}", topic);
+      } else {
+        log.warn("Unhandled topic: {}", topic);
+      }
+    } catch (Exception e) {
+      log.error("Error processing message: {}", message, e);
     }
   }
 
@@ -71,7 +75,7 @@ public class EtxMqttSubscriptionService {
       configData.setEtxSessionID(payload);
       EtxUtil.writeToFile(configData.getConfigFilePath(), mapper.writeValueAsString(configData));
     } catch (Exception e) {
-      log.error("Error handling client info message", e);
+      log.error("Failed to handle client info: {}", payload, e);
     }
   }
 }

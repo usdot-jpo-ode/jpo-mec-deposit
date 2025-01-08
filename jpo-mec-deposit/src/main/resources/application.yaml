@@ -34,7 +34,7 @@ etx:
     # stale message threshold in milliseconds
     stale-message-threshold: 250
     vendor: ${ETX_MQTT_VENDOR}
-    message-format: j2735
+    message-format: ${ETX_MQTT_MESSAGE_FORMAT:j2735}
     subscriptions:
       - "vzimp/1/ClientInfo"
   depositors:
@@ -59,7 +59,7 @@ etx:
         kafka-topic: ${ETX_DEPOSITORS_MAP_MQTT_KAFKA_TOPIC:topic.OdeMapJson}
       api:
         enabled: ${ETX_DEPOSITORS_MAP_API_ENABLED:true}
-        kafka-topic: ${ETX_DEPOSITORS_MAP_API_KAFKA_TOPIC:topic.DeduplicatedOdeMapJson}
+        kafka-topic: ${ETX_DEPOSITORS_MAP_API_KAFKA_TOPIC:topic.OdeMapJson}
 
 # microservice actuator
 management:

@@ -2,10 +2,14 @@ package us.dot.its.jpo.ode.mec.deposit.etx.depositors.mqtt;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.depositors.AbstractEtxDepositor;
 import us.dot.its.jpo.ode.mec.deposit.etx.models.mqtt.EtxMqttMessageType;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttService;
-import us.dot.its.jpo.ode.mec.deposit.etx.depositors.AbstractEtxDepositor;
 
+/**
+ * Abstract base class for ETX MQTT depositors. Extends AbstractEtxDepositor to provide common MQTT
+ * deposit functionality.
+ */
 public abstract class AbstractEtxMqttDepositor extends AbstractEtxDepositor {
   protected final EtxMqttService mqttService;
 

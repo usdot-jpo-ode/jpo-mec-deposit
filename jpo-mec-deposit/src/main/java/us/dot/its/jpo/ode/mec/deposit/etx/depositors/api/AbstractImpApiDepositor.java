@@ -4,9 +4,13 @@ import io.micrometer.core.instrument.MeterRegistry;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxApi;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxTokenManager;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.mqtt.EtxMqttMessageType;
 import us.dot.its.jpo.ode.mec.deposit.etx.depositors.AbstractEtxDepositor;
+import us.dot.its.jpo.ode.mec.deposit.etx.models.mqtt.EtxMqttMessageType;
 
+/**
+ * Abstract base class for ETX API depositors. Extends AbstractEtxDepositor to provide common API
+ * deposit functionality.
+ */
 public abstract class AbstractImpApiDepositor extends AbstractEtxDepositor {
   protected final EtxApi partnerApi;
   protected final EtxTokenManager tokenManager;

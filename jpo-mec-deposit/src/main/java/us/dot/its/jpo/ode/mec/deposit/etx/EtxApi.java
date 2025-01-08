@@ -13,6 +13,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.PartnerApiProperties;
@@ -27,7 +28,6 @@ import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.ClientRegistrationRespo
 import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.DepositRequest;
 import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
-import org.springframework.stereotype.Component;
 
 /**
  * API client for interacting with the ETX Partner API.
@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class EtxApi {
-  protected static final ObjectMapper MAPPER = DateJsonMapper.getInstance();
+  private final ObjectMapper mapper;
   private final EtxProperties etxProperties;
   private final PartnerApiProperties partnerApi;
   private final RestTemplate restTemplate;
@@ -50,6 +50,7 @@ public class EtxApi {
     this.partnerApi = properties.getPartnerApi();
     this.restTemplate = new RestTemplate();
     this.restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+    this.mapper = DateJsonMapper.getInstance();
   }
 
   /**
@@ -88,23 +89,20 @@ public class EtxApi {
         endTime = System.currentTimeMillis();
         log.info("Time to connect: {} ms", (endTime - startTime));
         URI uri = new URI(connectionResponse.getMqttURL());
-        // configData = new ConfigData(configPath, caCertPath, certPath, keyPath,
-        // properties.getImpVendor(),
-        // NetworkType.valueOf(properties.getEtxNetworkType()), uri, deviceID);
 
         configData = EtxConfigData.builder().configFilePath(configPath).caCertPath(caCertPath)
             .clientCertPath(certPath).keyFilePath(keyPath).impVendor(etxProperties.getVendor())
             .networkType(etxProperties.getNetworkType()).etxMqttUri(uri).deviceID(deviceId)
             .etxSessionID(null).build();
 
-        String configDataJson = MAPPER.writeValueAsString(configData);
+        String configDataJson = mapper.writeValueAsString(configData);
 
         EtxUtil.writeToFile(configPath, configDataJson);
       } else {
         log.info("Client partner already registered, obtaining config data");
 
         String configDataJson = Files.readString(Paths.get(configPath));
-        configData = MAPPER.readValue(configDataJson, EtxConfigData.class);
+        configData = mapper.readValue(configDataJson, EtxConfigData.class);
         deviceId = configData.getDeviceID();
       }
 
@@ -203,7 +201,7 @@ public class EtxApi {
     if (file.exists()) {
       try {
         String configDataJson = Files.readString(Paths.get(configPath));
-        EtxConfigData configData = MAPPER.readValue(configDataJson, EtxConfigData.class);
+        EtxConfigData configData = mapper.readValue(configDataJson, EtxConfigData.class);
 
         if (configData.getDeviceID() != null
             && configData.getNetworkType() == etxProperties.getNetworkType()) {
@@ -247,6 +245,12 @@ public class EtxApi {
     }
   }
 
+  /**
+   * Clears TIM messages from the ETX system.
+   *
+   * @param token Authentication token
+   * @return true if clear operation was successful, false otherwise
+   */
   public boolean clearTim(String token) {
     HttpHeaders headers = new HttpHeaders();
     headers.set("Authorization", "Bearer " + token);
