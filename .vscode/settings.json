@@ -1,5 +1,5 @@
 {
-  "java.configuration.updateBuildConfiguration": "interactive",
+  "java.configuration.updateBuildConfiguration": "automatic",
   "java.compile.nullAnalysis.mode": "automatic",
   "java.format.settings.url": ".vscode/java-formatter.xml",
   "java.format.settings.profile": "GoogleStyle",
@@ -30,11 +30,6 @@
     "javax",
     "java",
     "#"
-  ],
-  "java.project.sourcePaths": [
-    "src/main/java",
-    "src/test/java",
-    "target/generated-sources/protobuf/java"
   ],
   "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m -Xlog:disable",
 }

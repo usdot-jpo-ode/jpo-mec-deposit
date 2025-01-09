@@ -251,7 +251,9 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <source>${project.basedir}/target/generated-sources/protobuf/java</source>
+                                <generatedSourcesDirectory>
+                                    ${project.build.directory}/generated-sources/protobuf/java
+                                </generatedSourcesDirectory>
                             </sources>
                         </configuration>
                     </execution>
