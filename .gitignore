@@ -12,7 +12,7 @@ idea/
 
 .env
 
-*.pem
+resources/ETX/
 config.json
 *.lck
 *.tar

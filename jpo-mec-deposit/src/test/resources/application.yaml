@@ -5,24 +5,24 @@ artifactId: ^project.artifactId^
 version: ^project.version^
 server.port: 8082
 
-# IMP Depositor specific properties
-imp:
-  enabled: true
-  vendor: vendorId
-  network-type: networkType
+# ETX Depositor specific properties
+etx:
+  enabled: false
+  vendor: "default-vendor"
+  network-type: "non-VZ"
   cache-registration: true
-  certificate-path: resources/IMP
-  client-type: Software
-  client-sub-type: Application
+  certificate-path: "/etc/ssl/cert.pem"
+  client-type: "Software"
+  client-sub-type: "Application"
   partner-api:
-    base-uri: baseUri
-    username: username
-    password: password
+    base-uri: "http://localhost:8080"
+    username: "test-user"
+    password: "test-password"
     # used for the partner api registration to determine the MEC location
-    mec-latitude: 45.0000
-    mec-longitude: 45.0000
+    mec-latitude: "00.0000"
+    mec-longitude: "00.0000"
     clear-tim:
-      enabled: true
+      enabled: false
       interval: 10
   mqtt:
     qos: 0
@@ -31,34 +31,35 @@ imp:
     keep-alive-interval: 60
     completion-timeout: 5000
     max-messages-per-second: 50
+    # stale message threshold in milliseconds
     stale-message-threshold: 250
-    vendor: Public
-    message-format: j2735
+    vendor: "default-mqtt-vendor"
+    message-format: "j2735"
     subscriptions:
       - "vzimp/1/ClientInfo"
   depositors:
     bsm:
       mqtt:
         enabled: true
-        kafka-topic: topic.OdeBsmJson
+        kafka-topic: "topic.OdeBsmJson"
     spat:
       mqtt:
         enabled: true
-        kafka-topic: topic.OdeSpatJson
+        kafka-topic: "topic.OdeSpatJson"
     tim:
       mqtt:
         enabled: true
-        kafka-topic: topic.OdeTimJson
+        kafka-topic: "topic.OdeTimJson"
       api:
         enabled: true
-        kafka-topic: topic.OdeTimJsonTMCFiltered
+        kafka-topic: "topic.OdeTimJsonTMCFiltered"
     map:
       mqtt:
         enabled: true
-        kafka-topic: topic.OdeMapJson
+        kafka-topic: "topic.OdeMapJson"
       api:
         enabled: true
-        kafka-topic: topic.DeduplicatedOdeMapJson
+        kafka-topic: "topic.OdeMapJson"
 
 # microservice actuator
 management:
@@ -82,9 +83,9 @@ logging:
 # Spring boot properties
 spring:
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: localhost:19092
     consumer:
-      group-id: test-consumer-group
+      group-id: jpo-mec-deposit
       fetch-min-size: 1
       fetch-max-wait: 50
       max-poll-records: 500
@@ -98,9 +99,3 @@ spring:
       poll-timeout: 1
       idle-event-interval: 1
       idle-between-polls: 0
-
-etx:
-  depositors:
-    map:
-      mqtt:
-        kafka-topic: topic.OdeMapJson
