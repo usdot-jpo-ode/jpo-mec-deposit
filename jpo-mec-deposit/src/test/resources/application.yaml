@@ -5,61 +5,65 @@ artifactId: ^project.artifactId^
 version: ^project.version^
 server.port: 8082
 
-# ETX Depositor specific properties
-etx:
-  enabled: false
-  vendor: "default-vendor"
-  network-type: "non-VZ"
-  cache-registration: true
-  certificate-path: "/etc/ssl/cert.pem"
-  client-type: "Software"
-  client-sub-type: "Application"
-  partner-api:
-    base-uri: "http://localhost:8080"
-    username: "test-user"
-    password: "test-password"
-    # used for the partner api registration to determine the MEC location
-    mec-latitude: "00.0000"
-    mec-longitude: "00.0000"
-    clear-tim:
-      enabled: false
-      interval: 10
-  mqtt:
-    qos: 0
-    max-inflight: 10
-    connection-timeout: 30
-    keep-alive-interval: 60
-    completion-timeout: 5000
-    max-messages-per-second: 50
-    # stale message threshold in milliseconds
-    stale-message-threshold: 250
-    vendor: "default-mqtt-vendor"
-    message-format: "j2735"
-    subscriptions:
-      - "vzimp/1/ClientInfo"
-  depositors:
-    bsm:
-      mqtt:
-        enabled: true
-        kafka-topic: "topic.OdeBsmJson"
-    spat:
-      mqtt:
-        enabled: true
-        kafka-topic: "topic.OdeSpatJson"
-    tim:
-      mqtt:
-        enabled: true
-        kafka-topic: "topic.OdeTimJson"
-      api:
-        enabled: true
-        kafka-topic: "topic.OdeTimJsonTMCFiltered"
-    map:
-      mqtt:
-        enabled: true
-        kafka-topic: "topic.OdeMapJson"
-      api:
-        enabled: true
-        kafka-topic: "topic.OdeMapJson"
+# MEC Deposit Metrics
+mec-deposit:
+  metrics:
+    enabled: true
+    kafka-topic: topic.MecDepositMetrics
+  etx:
+    enabled: true
+    vendor: "default-vendor"
+    network-type: "non-VZ"
+    cache-registration: true
+    certificate-path: "/etc/ssl/cert.pem"
+    client-type: "Software"
+    client-sub-type: "Application"
+    partner-api:
+      base-uri: "http://localhost:8080"
+      username: "test-user"
+      password: "test-password"
+      # used for the partner api registration to determine the MEC location
+      mec-latitude: "00.0000"
+      mec-longitude: "00.0000"
+      clear-tim:
+        enabled: false
+        interval: 10
+    mqtt:
+      qos: 0
+      max-inflight: 10
+      connection-timeout: 30
+      keep-alive-interval: 60
+      completion-timeout: 5000
+      max-messages-per-second: 50
+      # stale message threshold in milliseconds
+      stale-message-threshold: 250
+      vendor: "default-mqtt-vendor"
+      message-format: "j2735"
+      subscriptions:
+        - "vzimp/1/ClientInfo"
+    depositors:
+      bsm:
+        mqtt:
+          enabled: true
+          kafka-topic: "topic.OdeBsmJson"
+      spat:
+        mqtt:
+          enabled: true
+          kafka-topic: "topic.OdeSpatJson"
+      tim:
+        mqtt:
+          enabled: true
+          kafka-topic: "topic.OdeTimJson"
+        api:
+          enabled: true
+          kafka-topic: "topic.OdeTimJsonTMCFiltered"
+      map:
+        mqtt:
+          enabled: true
+          kafka-topic: "topic.OdeMapJson"
+        api:
+          enabled: true
+          kafka-topic: "topic.OdeMapJson"
 
 # microservice actuator
 management:
@@ -85,7 +89,7 @@ spring:
   kafka:
     bootstrap-servers: localhost:19092
     consumer:
-      group-id: jpo-mec-deposit
+      group-id: test-group
       fetch-min-size: 1
       fetch-max-wait: 50
       max-poll-records: 500
