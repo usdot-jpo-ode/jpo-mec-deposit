@@ -28,9 +28,12 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientRegistrationRespo
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DepositRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
+import org.springframework.util.StringUtils;
+import org.springframework.lang.Nullable;
 
 /**
- * API client for interacting with the ETX Partner API.
+ * API client for interacting with the ETX Partner API. This class handles registration,
+ * authentication, and data exchange with the ETX system.
  */
 @Slf4j
 @Component
@@ -45,12 +48,25 @@ public class EtxApi {
    *
    * @param properties The ETX configuration properties
    */
-  public EtxApi(EtxProperties properties) {
+  public EtxApi(EtxProperties properties, RestTemplate restTemplate) {
+    if (properties == null) {
+      throw new IllegalArgumentException("EtxProperties cannot be null");
+    }
     this.etxProperties = properties;
     this.partnerApi = properties.getPartnerApi();
-    this.restTemplate = new RestTemplate();
-    this.restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+    this.restTemplate = restTemplate != null ? restTemplate : createDefaultRestTemplate();
     this.mapper = DateJsonMapper.getInstance();
+  }
+
+  /**
+   * Creates a default RestTemplate configured with JSON message conversion capabilities.
+   *
+   * @return A new RestTemplate instance
+   */
+  private RestTemplate createDefaultRestTemplate() {
+    RestTemplate template = new RestTemplate();
+    template.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+    return template;
   }
 
   /**
@@ -58,59 +74,124 @@ public class EtxApi {
    *
    * @return Configuration data for the registered client
    */
+  @Nullable
   public EtxConfigData registerClientPartner(String token) {
-    try {
-      EtxConfigData configData;
-      String deviceId = null;
-      boolean cacheRegistration = etxProperties.isCacheRegistration();
+    if (!StringUtils.hasText(token)) {
+      throw new IllegalArgumentException("Token cannot be null or empty");
+    }
 
-      String configPath = etxProperties.getCertificatePath() + "/config.json";
-      String caCertPath = etxProperties.getCertificatePath() + "/etx-ca.pem";
-      String certPath = etxProperties.getCertificatePath() + "/etx-cert.pem";
-      String keyPath = etxProperties.getCertificatePath() + "/etx-key.pem";
+    try {
+      boolean cacheRegistration = etxProperties.isCacheRegistration();
+      String configPath = buildConfigPath();
 
       if (!validRegistration(configPath) || !cacheRegistration) {
-        log.info("Registering client partner");
-
-        String accessToken = token;
-        long startTime = System.currentTimeMillis();
-        ClientRegistrationResponse registrationResponse = register(accessToken);
-        long endTime = System.currentTimeMillis();
-        log.info("Time to register: {} ms", (endTime - startTime));
-
-        EtxUtil.writeToFile(caCertPath, registrationResponse.getCertificate().getCaPem());
-        EtxUtil.writeToFile(certPath, registrationResponse.getCertificate().getCertPem());
-        EtxUtil.writeToFile(keyPath, registrationResponse.getCertificate().getKeyPem());
-
-        deviceId = registrationResponse.getDeviceID();
-
-        startTime = System.currentTimeMillis();
-        ClientConnectionResponse connectionResponse = connection(accessToken, deviceId);
-        endTime = System.currentTimeMillis();
-        log.info("Time to connect: {} ms", (endTime - startTime));
-        URI uri = new URI(connectionResponse.getMqttURL());
-
-        configData = EtxConfigData.builder().configFilePath(configPath).caCertPath(caCertPath)
-            .clientCertPath(certPath).keyFilePath(keyPath).impVendor(etxProperties.getVendor())
-            .networkType(etxProperties.getNetworkType()).etxMqttUri(uri).deviceID(deviceId)
-            .etxSessionID(null).build();
-
-        String configDataJson = mapper.writeValueAsString(configData);
-
-        EtxUtil.writeToFile(configPath, configDataJson);
+        return handleNewRegistration(token, configPath);
       } else {
-        log.info("Client partner already registered, obtaining config data");
-
-        String configDataJson = Files.readString(Paths.get(configPath));
-        configData = mapper.readValue(configDataJson, EtxConfigData.class);
-        deviceId = configData.getDeviceID();
+        return loadExistingConfiguration(configPath);
       }
-
-      return configData;
     } catch (Exception e) {
-      log.error("Error in registerClientPartner", e);
+      log.error("Failed to register client partner", e);
       return null;
     }
+  }
+
+  /**
+   * Builds the path to the configuration file based on the certificate path property.
+   *
+   * @return The full path to the configuration file
+   * @throws IllegalStateException if certificate path is not configured
+   */
+  private String buildConfigPath() {
+    String basePath = etxProperties.getCertificatePath();
+    if (!StringUtils.hasText(basePath)) {
+      throw new IllegalStateException("Certificate path not configured");
+    }
+    return basePath + "/config.json";
+  }
+
+  /**
+   * Handles the registration of a new client partner with the ETX system. This includes certificate
+   * generation and connection establishment.
+   *
+   * @param token Authentication token for the API
+   * @param configPath Path where configuration should be stored
+   * @return Configuration data for the new registration
+   * @throws Exception if registration, certificate writing, or connection fails
+   */
+  private EtxConfigData handleNewRegistration(String token, String configPath) throws Exception {
+    log.info("Initiating new client partner registration");
+
+    String caCertPath = etxProperties.getCertificatePath() + "/etx-ca.pem";
+    String certPath = etxProperties.getCertificatePath() + "/etx-cert.pem";
+    String keyPath = etxProperties.getCertificatePath() + "/etx-key.pem";
+
+    ClientRegistrationResponse registrationResponse = register(token);
+    if (registrationResponse == null || registrationResponse.getDeviceID() == null) {
+      throw new RuntimeException("Registration failed - null or invalid response");
+    }
+
+    String deviceId = registrationResponse.getDeviceID();
+    writeCertificates(registrationResponse, caCertPath, certPath, keyPath);
+
+    ClientConnectionResponse connectionResponse = connection(token, deviceId);
+    if (connectionResponse == null || connectionResponse.getMqttURL() == null) {
+      throw new RuntimeException("Connection failed - null or invalid response");
+    }
+
+    URI uri = new URI(connectionResponse.getMqttURL());
+    EtxConfigData configData =
+        buildConfigData(configPath, caCertPath, certPath, keyPath, deviceId, uri);
+
+    String configDataJson = mapper.writeValueAsString(configData);
+    EtxUtil.writeToFile(configPath, configDataJson);
+
+    return configData;
+  }
+
+  /**
+   * Writes the certificate data received during registration to files.
+   *
+   * @param response Registration response containing certificate data
+   * @param caCertPath Path where CA certificate should be written
+   * @param certPath Path where client certificate should be written
+   * @param keyPath Path where private key should be written
+   * @throws IOException if writing certificates fails
+   * @throws RuntimeException if certificate data is missing from response
+   */
+  private void writeCertificates(ClientRegistrationResponse response, String caCertPath,
+      String certPath, String keyPath) throws IOException {
+    if (response.getCertificate() == null) {
+      throw new RuntimeException("Registration response missing certificate data");
+    }
+
+    EtxUtil.writeToFile(caCertPath, response.getCertificate().getCaPem());
+    EtxUtil.writeToFile(certPath, response.getCertificate().getCertPem());
+    EtxUtil.writeToFile(keyPath, response.getCertificate().getKeyPem());
+  }
+
+  /**
+   * Constructs configuration data object from registration and connection information.
+   *
+   * @param configPath Path to configuration file
+   * @param caCertPath Path to CA certificate
+   * @param certPath Path to client certificate
+   * @param keyPath Path to private key
+   * @param deviceId Device identifier from registration
+   * @param uri MQTT URI from connection response
+   * @return Constructed configuration data object
+   */
+  private EtxConfigData buildConfigData(String configPath, String caCertPath, String certPath,
+      String keyPath, String deviceId, URI uri) {
+    return EtxConfigData.builder().configFilePath(configPath).caCertPath(caCertPath)
+        .clientCertPath(certPath).keyFilePath(keyPath).impVendor(etxProperties.getVendor())
+        .networkType(etxProperties.getNetworkType()).etxMqttUri(uri).deviceID(deviceId)
+        .etxSessionID(null).build();
+  }
+
+  private EtxConfigData loadExistingConfiguration(String configPath) throws IOException {
+    log.info("Loading existing client partner configuration");
+    String configDataJson = Files.readString(Paths.get(configPath));
+    return mapper.readValue(configDataJson, EtxConfigData.class);
   }
 
   /**
@@ -118,18 +199,25 @@ public class EtxApi {
    *
    * @return The authentication token
    */
+  @Nullable
   public AuthToken getToken() {
-    var request = new AuthTokenRequest(partnerApi.getUsername(), partnerApi.getPassword());
+    if (!StringUtils.hasText(partnerApi.getUsername())
+        || !StringUtils.hasText(partnerApi.getPassword())) {
+      log.error("Username or password not configured");
+      return null;
+    }
 
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("Content-Type", "application/json");
+    try {
+      var request = new AuthTokenRequest(partnerApi.getUsername(), partnerApi.getPassword());
+      HttpHeaders headers = createJsonHeaders();
+      HttpEntity<AuthTokenRequest> entity = new HttpEntity<>(request, headers);
 
-    HttpEntity<AuthTokenRequest> entity = new HttpEntity<>(request, headers);
-
-    AuthToken response = restTemplate.postForObject(partnerApi.getBaseUri() + "/auth/token", entity,
-        AuthToken.class);
-
-    return response;
+      return restTemplate.postForObject(partnerApi.getBaseUri() + "/auth/token", entity,
+          AuthToken.class);
+    } catch (Exception e) {
+      log.error("Failed to obtain auth token", e);
+      return null;
+    }
   }
 
   /**
@@ -270,5 +358,28 @@ public class EtxApi {
       log.error("Failed to clear inactive TIMs deployed on the VZ Configuration API");
       return false;
     }
+  }
+
+  /**
+   * Creates HTTP headers for JSON content.
+   *
+   * @return HttpHeaders configured for JSON content
+   */
+  private HttpHeaders createJsonHeaders() {
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Content-Type", "application/json");
+    return headers;
+  }
+
+  /**
+   * Creates HTTP headers for authenticated JSON requests.
+   *
+   * @param token Authentication token
+   * @return HttpHeaders configured with authorization and JSON content type
+   */
+  private HttpHeaders createAuthJsonHeaders(String token) {
+    HttpHeaders headers = createJsonHeaders();
+    headers.set("Authorization", "Bearer " + token);
+    return headers;
   }
 }

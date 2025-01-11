@@ -144,8 +144,7 @@ class EtxTimApiDepositorTest {
     depositor.timDepositListener(staleTimJson);
 
     verify(etxApi, never()).deposit(anyString(), anyString(), any());
-    verify(kafkaTemplate, never()).send(anyString(), anyString()); // No metrics for stale
-                                                                   // messages
+    verify(kafkaTemplate, never()).send(anyString(), anyString());
     assertEquals(1.0,
         meterRegistry.counter("mec-deposit.etx.api.stale", "message.type", "TIM").count());
   }
