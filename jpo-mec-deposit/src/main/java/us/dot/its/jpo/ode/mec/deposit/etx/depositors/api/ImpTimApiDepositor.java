@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxApi;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxTokenManager;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.mqtt.EtxMqttMessageType;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.DistributionType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.model.OdeTimData;
 
 /**

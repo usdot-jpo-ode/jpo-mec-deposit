@@ -1,0 +1,13 @@
+{
+  "configFilePath": "resources/etx/config.json",
+  "caCertPath": "resources/etx/etx-ca.pem",
+  "clientCertPath": "resources/etx/etx-cert.pem",
+  "keyFilePath": "resources/etx/etx-key.pem",
+  "impVendor": "vendorName",
+  "networkType": "non-VZ",
+  "etxMqttUri": "mqtt://url:8883",
+  "deviceID": "deviceID",
+  "etxSessionID": {
+    "SessionID": "1234567890"
+  }
+}

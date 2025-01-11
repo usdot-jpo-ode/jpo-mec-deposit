@@ -12,7 +12,7 @@ import javax.net.ssl.X509ExtendedTrustManager;
 import lombok.extern.slf4j.Slf4j;
 import nl.altindag.ssl.SSLFactory;
 import nl.altindag.ssl.pem.util.PemUtils;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.EtxConfigData;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxConfigData;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 
 /**

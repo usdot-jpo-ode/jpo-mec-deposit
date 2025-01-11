@@ -2,7 +2,7 @@ package us.dot.its.jpo.ode.mec.deposit.etx;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.AuthToken;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.AuthToken;
 
 /**
  * Manages authentication tokens for ETX API interactions. Handles token storage, validation, and

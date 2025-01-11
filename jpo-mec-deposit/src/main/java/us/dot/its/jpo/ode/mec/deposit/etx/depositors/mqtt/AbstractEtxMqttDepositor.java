@@ -3,7 +3,7 @@ package us.dot.its.jpo.ode.mec.deposit.etx.depositors.mqtt;
 import io.micrometer.core.instrument.MeterRegistry;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.depositors.AbstractEtxDepositor;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.mqtt.EtxMqttMessageType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageType;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttService;
 
 /**

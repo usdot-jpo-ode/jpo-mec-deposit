@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.protobuf.ByteString;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
-import us.dot.its.jpo.ode.mec.deposit.GeoRoutedMsg;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.GeoRoutedMsg;
 
 class EtxMqttProtobufBuilderTest {
 

@@ -11,11 +11,11 @@ mec-deposit:
     enabled: true
     kafka-topic: topic.MecDepositMetrics
   etx:
-    enabled: true
+    enabled: false
     vendor: "default-vendor"
     network-type: "non-VZ"
-    cache-registration: true
-    certificate-path: "/etc/ssl/cert.pem"
+    cache-registration: false
+    certificate-path: "etx/"
     client-type: "Software"
     client-sub-type: "Application"
     partner-api:
@@ -44,25 +44,25 @@ mec-deposit:
     depositors:
       bsm:
         mqtt:
-          enabled: true
+          enabled: false
           kafka-topic: "topic.OdeBsmJson"
       spat:
         mqtt:
-          enabled: true
+          enabled: false
           kafka-topic: "topic.OdeSpatJson"
       tim:
         mqtt:
-          enabled: true
+          enabled: false
           kafka-topic: "topic.OdeTimJson"
         api:
-          enabled: true
+          enabled: false
           kafka-topic: "topic.OdeTimJsonTMCFiltered"
       map:
         mqtt:
-          enabled: true
+          enabled: false
           kafka-topic: "topic.OdeMapJson"
         api:
-          enabled: true
+          enabled: false
           kafka-topic: "topic.OdeMapJson"
 
 # microservice actuator

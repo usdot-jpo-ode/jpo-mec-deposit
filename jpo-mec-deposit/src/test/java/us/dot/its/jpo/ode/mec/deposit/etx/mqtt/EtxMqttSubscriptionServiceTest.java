@@ -22,8 +22,8 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.EtxConfigData;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.mqtt.EtxMqttClientInfo;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxConfigData;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttClientInfo;
 
 @ExtendWith(MockitoExtension.class)
 class EtxMqttSubscriptionServiceTest {

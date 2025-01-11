@@ -3,7 +3,7 @@ package us.dot.its.jpo.ode.mec.deposit.etx.mqtt;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.mqtt.EtxMqttMessageFormat;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 
 /**
  * Configuration properties for ETX MQTT connection and messaging settings.

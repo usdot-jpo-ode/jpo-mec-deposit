@@ -12,8 +12,10 @@ idea/
 
 .env
 
-resources/ETX/
+resources/etx
 config.json
 *.lck
 *.tar
 *.log
+
+jpo-mec-deposit/src/main/java/us/dot/its/jpo/ode/mec/deposit/models/etx/mqtt/generated

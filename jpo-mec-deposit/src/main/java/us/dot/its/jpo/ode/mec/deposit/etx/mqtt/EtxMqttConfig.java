@@ -20,7 +20,7 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxApi;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.EtxConfigData;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxConfigData;
 
 /**
  * Configuration class for setting up MQTT client and message channels for ETX integration.

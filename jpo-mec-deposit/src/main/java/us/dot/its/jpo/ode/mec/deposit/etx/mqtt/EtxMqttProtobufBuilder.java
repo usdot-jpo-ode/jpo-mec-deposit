@@ -3,8 +3,8 @@ package us.dot.its.jpo.ode.mec.deposit.etx.mqtt;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
 import java.time.Instant;
-import us.dot.its.jpo.ode.mec.deposit.GeoRoutedMsg;
-import us.dot.its.jpo.ode.mec.deposit.Position;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.GeoRoutedMsg;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.Position;
 
 /**
  * Builder class for creating ETX MQTT protobuf messages. Handles conversion of message data to

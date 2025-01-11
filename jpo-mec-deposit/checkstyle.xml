@@ -28,7 +28,7 @@
     <!-- Exclude all files in partner directory and generated protobuf files -->
     <module name="BeforeExecutionExclusionFileFilter">
         <property name="fileNamePattern"
-            value="(.*[\\/]partner[\\/].*|.*[\\/]generated-sources[\\/]protobuf[\\/].*)$" />
+            value="(.*[\\/]partner[\\/].*|.*[\\/]generated[\\/].*)$" />
     </module>
     <!-- Exclude all files in jpo-utils -->
     <module name="BeforeExecutionExclusionFileFilter">

@@ -17,16 +17,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.PartnerApiProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.EtxConfigData;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.AuthToken;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.AuthTokenRequest;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.ClearRequest;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.ClientConnectionPostRequest;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.ClientConnectionResponse;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.ClientRegistrationPostRequest;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.ClientRegistrationResponse;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.DepositRequest;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.DistributionType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxConfigData;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.AuthToken;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.AuthTokenRequest;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClearRequest;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientConnectionPostRequest;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientConnectionResponse;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientRegistrationPostRequest;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientRegistrationResponse;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DepositRequest;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 
 /**

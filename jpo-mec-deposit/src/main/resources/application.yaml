@@ -5,61 +5,65 @@ artifactId: ^project.artifactId^
 version: ^project.version^
 server.port: 8082
 
-# ETX Depositor specific properties
-etx:
-  enabled: ${ETX_ENABLED:false}
-  vendor: ${ETX_VENDOR}
-  network-type: ${ETX_NETWORK_TYPE}
-  cache-registration: ${ETX_CACHE_REGISTRATION}
-  certificate-path: ${ETX_CERT_PATH}
-  client-type: ${ETX_CLIENT_TYPE}
-  client-sub-type: ${ETX_CLIENT_SUB_TYPE}
-  partner-api:
-    base-uri: ${ETX_PARTNER_API_BASE_URI}
-    username: ${ETX_PARTNER_API_USERNAME}
-    password: ${ETX_PARTNER_API_PASSWORD}
-    # used for the partner api registration to determine the MEC location
-    mec-latitude: ${ETX_MEC_LATITUDE}
-    mec-longitude: ${ETX_MEC_LONGITUDE}
-    clear-tim:
-      enabled: ${ETX_PARTNER_API_CLEAR_TIM_ENABLED:false}
-      interval: ${ETX_PARTNER_API_CLEAR_TIM_INTERVAL:10}
-  mqtt:
-    qos: 0
-    max-inflight: 10
-    connection-timeout: 30
-    keep-alive-interval: 60
-    completion-timeout: 5000
-    max-messages-per-second: ${ETX_PUBLISH_RATE:50}
-    # stale message threshold in milliseconds
-    stale-message-threshold: 250
-    vendor: ${ETX_MQTT_VENDOR}
-    message-format: ${ETX_MQTT_MESSAGE_FORMAT:j2735}
-    subscriptions:
-      - "vzimp/1/ClientInfo"
-  depositors:
-    bsm:
-      mqtt:
-        enabled: ${ETX_DEPOSITORS_BSM_MQTT_ENABLED:true}
-        kafka-topic: ${ETX_DEPOSITORS_BSM_MQTT_KAFKA_TOPIC:topic.OdeBsmJson}
-    spat:
-      mqtt:
-        enabled: ${ETX_DEPOSITORS_SPAT_MQTT_ENABLED:true}
-        kafka-topic: ${ETX_DEPOSITORS_SPAT_MQTT_KAFKA_TOPIC:topic.OdeSpatJson}
-    tim:
-      mqtt:
-        enabled: ${ETX_DEPOSITORS_TIM_MQTT_ENABLED:true}
-        kafka-topic: ${ETX_DEPOSITORS_TIM_MQTT_KAFKA_TOPIC:topic.OdeTimJson}
-      api:
-        enabled: ${ETX_DEPOSITORS_TIM_API_ENABLED:true}
-        kafka-topic: ${ETX_DEPOSITORS_TIM_API_KAFKA_TOPIC:topic.OdeTimJsonTMCFiltered}
-    map:
-      mqtt:
-        enabled: ${ETX_DEPOSITORS_MAP_MQTT_ENABLED:true}
-        kafka-topic: ${ETX_DEPOSITORS_MAP_MQTT_KAFKA_TOPIC:topic.OdeMapJson}
-      api:
-        enabled: ${ETX_DEPOSITORS_MAP_API_ENABLED:true}
-        kafka-topic: ${ETX_DEPOSITORS_MAP_API_KAFKA_TOPIC:topic.OdeMapJson}
+# MEC Deposit Metrics
+mec-deposit:
+  metrics:
+    enabled: ${METRICS_ENABLED:true}
+    kafka-topic: ${METRICS_KAFKA_TOPIC:topic.MecDepositMetrics}
+  etx:
+    enabled: ${ETX_ENABLED:false}
+    vendor: ${ETX_VENDOR}
+    network-type: ${ETX_NETWORK_TYPE}
+    cache-registration: ${ETX_CACHE_REGISTRATION}
+    certificate-path: ${ETX_CERT_PATH}
+    client-type: ${ETX_CLIENT_TYPE}
+    client-sub-type: ${ETX_CLIENT_SUB_TYPE}
+    partner-api:
+      base-uri: ${ETX_PARTNER_API_BASE_URI}
+      username: ${ETX_PARTNER_API_USERNAME}
+      password: ${ETX_PARTNER_API_PASSWORD}
+      # used for the partner api registration to determine the MEC location
+      mec-latitude: ${ETX_MEC_LATITUDE}
+      mec-longitude: ${ETX_MEC_LONGITUDE}
+      clear-tim:
+        enabled: ${ETX_PARTNER_API_CLEAR_TIM_ENABLED:false}
+        interval: ${ETX_PARTNER_API_CLEAR_TIM_INTERVAL:10}
+    mqtt:
+      qos: 0
+      max-inflight: 10
+      connection-timeout: 30
+      keep-alive-interval: 60
+      completion-timeout: 5000
+      max-messages-per-second: ${ETX_PUBLISH_RATE:50}
+      # stale message threshold in milliseconds
+      stale-message-threshold: 250
+      vendor: ${ETX_MQTT_VENDOR}
+      message-format: ${ETX_MQTT_MESSAGE_FORMAT:j2735}
+      subscriptions:
+        - "vzimp/1/ClientInfo"
+    depositors:
+      bsm:
+        mqtt:
+          enabled: ${ETX_DEPOSITORS_BSM_MQTT_ENABLED:true}
+          kafka-topic: ${ETX_DEPOSITORS_BSM_MQTT_KAFKA_TOPIC:topic.OdeBsmJson}
+      spat:
+        mqtt:
+          enabled: ${ETX_DEPOSITORS_SPAT_MQTT_ENABLED:true}
+          kafka-topic: ${ETX_DEPOSITORS_SPAT_MQTT_KAFKA_TOPIC:topic.OdeSpatJson}
+      tim:
+        mqtt:
+          enabled: ${ETX_DEPOSITORS_TIM_MQTT_ENABLED:true}
+          kafka-topic: ${ETX_DEPOSITORS_TIM_MQTT_KAFKA_TOPIC:topic.OdeTimJson}
+        api:
+          enabled: ${ETX_DEPOSITORS_TIM_API_ENABLED:true}
+          kafka-topic: ${ETX_DEPOSITORS_TIM_API_KAFKA_TOPIC:topic.OdeTimJsonTMCFiltered}
+      map:
+        mqtt:
+          enabled: ${ETX_DEPOSITORS_MAP_MQTT_ENABLED:true}
+          kafka-topic: ${ETX_DEPOSITORS_MAP_MQTT_KAFKA_TOPIC:topic.OdeMapJson}
+        api:
+          enabled: ${ETX_DEPOSITORS_MAP_API_ENABLED:true}
+          kafka-topic: ${ETX_DEPOSITORS_MAP_API_KAFKA_TOPIC:topic.OdeMapJson}
 
 # microservice actuator
 management:

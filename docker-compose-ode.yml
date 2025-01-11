@@ -1,19 +1,16 @@
-include:
-  - jpo-utils/docker-compose.yml
-
 services:
   # ODE Services:
   ode:
     profiles:
       - all
-      - cm_full
-      - ode_geojsonconverter
+      - mec_deposit_full
+      - ode
     image: usdotjpoode/jpo-ode:latest
     restart: ${RESTART_POLICY}
     deploy:
       resources:
         limits:
-          cpus: '2'
+          cpus: "2"
           memory: 4G
     ports:
       - "8080:8080"
@@ -39,7 +36,7 @@ services:
         condition: service_healthy
         required: false
     healthcheck:
-      test: ["CMD", "wget" ,"--spider", "http://localhost:8080"]
+      test: ["CMD", "wget", "--spider", "http://localhost:8080"]
       interval: 5s
       timeout: 30s
       retries: 5
@@ -52,14 +49,14 @@ services:
   adm:
     profiles:
       - all
-      - cm_full
-      - ode_geojsonconverter
+      - mec_deposit_full
+      - adm
     image: usdotjpoode/asn1_codec:latest
     restart: ${RESTART_POLICY}
     deploy:
       resources:
         limits:
-          cpus: '1'
+          cpus: "1"
           memory: 2G
     environment:
       DOCKER_HOST_IP: ${DOCKER_HOST_IP:?error}

@@ -4,9 +4,9 @@ import java.math.BigDecimal;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.EtxClientSubType;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.EtxClientType;
-import us.dot.its.jpo.ode.mec.deposit.etx.models.partner.EtxNetworkType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.EtxNetworkType;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 
 
@@ -25,19 +25,9 @@ public class EtxProperties {
   private String certificatePath;
   private EtxClientType clientType;
   private EtxClientSubType clientSubType;
-  private ClearTimProperties clearTim;
   private PartnerApiProperties partnerApi;
   private EtxMqttProperties mqtt;
   private EtxDepositors depositors;
-
-  /**
-   * Properties for the ETX Clear TIM configuration.
-   */
-  @Data
-  public static class ClearTimProperties {
-    private Boolean enabled;
-    private Integer interval;
-  }
 
   /**
    * Properties for the ETX Partner API configuration.
@@ -49,7 +39,18 @@ public class EtxProperties {
     private String password;
     private BigDecimal mecLatitude;
     private BigDecimal mecLongitude;
+    private ClearTimProperties clearTim;
   }
+
+  /**
+   * Properties for the ETX Clear TIM configuration.
+   */
+  @Data
+  public static class ClearTimProperties {
+    private Boolean enabled;
+    private Integer interval;
+  }
+
 
   /**
    * Properties for ETX depositor configuration groups.
