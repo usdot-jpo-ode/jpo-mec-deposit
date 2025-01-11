@@ -57,6 +57,7 @@ mec-deposit:
         api:
           enabled: false
           kafka-topic: "topic.OdeTimJsonTMCFiltered"
+          distribution-type: TARGETED
       map:
         mqtt:
           enabled: false
@@ -64,7 +65,7 @@ mec-deposit:
         api:
           enabled: false
           kafka-topic: "topic.OdeMapJson"
-
+          distribution-type: TARGETED
 # microservice actuator
 management:
   endpoints:

@@ -14,11 +14,11 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
  * Abstract base class for ETX API depositors. Extends AbstractEtxDepositor to provide common API
  * deposit functionality.
  */
-public abstract class AbstractImpApiDepositor extends AbstractEtxDepositor {
+public abstract class AbstractEtxApiDepositor extends AbstractEtxDepositor {
   protected final EtxApi partnerApi;
   protected final EtxTokenManager tokenManager;
 
-  protected AbstractImpApiDepositor(MecDepositProperties mecDepositProperties,
+  protected AbstractEtxApiDepositor(MecDepositProperties mecDepositProperties,
       EtxProperties etxProperties, EtxApi etxApi, EtxTokenManager tokenManager,
       MeterRegistry registry, KafkaTemplate<String, String> kafkaTemplate,
       EtxMessageType messageType) {

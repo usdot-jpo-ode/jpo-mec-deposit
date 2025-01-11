@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.EtxNetworkType;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 
@@ -88,5 +89,6 @@ public class EtxProperties {
   public static class ImpApiDepositorProperties {
     private Boolean enabled;
     private String kafkaTopic;
+    private DistributionType distributionType;
   }
 }

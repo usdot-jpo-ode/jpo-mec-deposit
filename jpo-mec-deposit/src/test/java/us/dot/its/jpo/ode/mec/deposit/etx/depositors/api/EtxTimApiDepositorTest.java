@@ -28,6 +28,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.TestPropertySource;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxApi;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.test.etx.depositor.api.config.EtxApiTestConfig;
@@ -45,6 +46,9 @@ class EtxTimApiDepositorTest {
 
   @Autowired
   private MecDepositProperties mecDepositProperties;
+
+  @Autowired
+  private EtxProperties etxProperties;
 
   @Autowired
   private MeterRegistry meterRegistry;
@@ -65,8 +69,8 @@ class EtxTimApiDepositorTest {
 
     when(tokenManager.getValidToken()).thenReturn("mock-token");
 
-    depositor = new EtxTimApiDepositor(mecDepositProperties, meterRegistry, etxApi, tokenManager,
-        kafkaTemplate);
+    depositor = new EtxTimApiDepositor(mecDepositProperties, etxProperties, etxApi, tokenManager,
+        meterRegistry, kafkaTemplate);
 
     // Load sample TIM JSON from resources
     sampleTimJson = new String(Files.readAllBytes(Paths.get(
@@ -140,7 +144,8 @@ class EtxTimApiDepositorTest {
     depositor.timDepositListener(staleTimJson);
 
     verify(etxApi, never()).deposit(anyString(), anyString(), any());
-    verify(kafkaTemplate, never()).send(anyString(), anyString()); // No metrics for stale messages
+    verify(kafkaTemplate, never()).send(anyString(), anyString()); // No metrics for stale
+                                                                   // messages
     assertEquals(1.0,
         meterRegistry.counter("mec-deposit.etx.api.stale", "message.type", "TIM").count());
   }

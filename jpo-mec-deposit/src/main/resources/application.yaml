@@ -57,6 +57,7 @@ mec-deposit:
         api:
           enabled: ${ETX_DEPOSITORS_TIM_API_ENABLED:true}
           kafka-topic: ${ETX_DEPOSITORS_TIM_API_KAFKA_TOPIC:topic.OdeTimJsonTMCFiltered}
+          distribution-type: ${ETX_DEPOSITORS_TIM_API_DISTRIBUTION_TYPE:TARGETED}
       map:
         mqtt:
           enabled: ${ETX_DEPOSITORS_MAP_MQTT_ENABLED:true}
@@ -64,7 +65,7 @@ mec-deposit:
         api:
           enabled: ${ETX_DEPOSITORS_MAP_API_ENABLED:true}
           kafka-topic: ${ETX_DEPOSITORS_MAP_API_KAFKA_TOPIC:topic.OdeMapJson}
-
+          distribution-type: ${ETX_DEPOSITORS_MAP_API_DISTRIBUTION_TYPE:TARGETED}
 # microservice actuator
 management:
   endpoints:

@@ -5,7 +5,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -25,6 +28,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.TestPropertySource;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxApi;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.test.etx.depositor.api.config.EtxApiTestConfig;
@@ -42,6 +46,9 @@ class EtxMapApiDepositorTest {
 
   @Autowired
   private MecDepositProperties mecDepositProperties;
+
+  @Autowired
+  private EtxProperties etxProperties;
 
   @Autowired
   private MeterRegistry meterRegistry;
@@ -62,8 +69,8 @@ class EtxMapApiDepositorTest {
 
     when(tokenManager.getValidToken()).thenReturn("mock-token");
 
-    depositor = new EtxMapApiDepositor(mecDepositProperties, meterRegistry, etxApi, tokenManager,
-        kafkaTemplate);
+    depositor = new EtxMapApiDepositor(mecDepositProperties, etxProperties, etxApi, tokenManager,
+        meterRegistry, kafkaTemplate);
 
     // Load sample MAP JSON from resources
     sampleMapJson = new String(Files.readAllBytes(Paths.get(
@@ -135,7 +142,7 @@ class EtxMapApiDepositorTest {
     depositor.mapDepositListener(staleMapJson);
 
     verify(etxApi, never()).deposit(anyString(), anyString(), any());
-    verify(kafkaTemplate, never()).send(anyString(), anyString()); // No metrics for stale messages
+    verify(kafkaTemplate, never()).send(anyString(), anyString());
     assertEquals(1.0,
         meterRegistry.counter("mec-deposit.etx.api.stale", "message.type", "MAP").count());
   }
