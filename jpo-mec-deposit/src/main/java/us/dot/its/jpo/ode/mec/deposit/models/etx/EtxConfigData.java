@@ -10,7 +10,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttClientInfo;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.EtxNetworkType;
 
 /**
- * Configuration data for ETX (Infrastructure Message Processor) client.
+ * Configuration data for ETX (Edge Traffic Exchange) client.
  */
 @AllArgsConstructor
 @NoArgsConstructor

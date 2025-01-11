@@ -1,13 +1,12 @@
-package us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt;
+package us.dot.its.jpo.ode.mec.deposit.models.etx;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * Enumeration representing the different message types for ETX (Infrastructure Message Processor)
- * MQTT messages.
+ * Enumeration representing the different message types for ETX (Edge Traffic Exchange) messages.
  */
-public enum EtxMqttMessageType {
+public enum EtxMessageType {
   BSM("BSM"), PSM("PSM"), RSA("RSA"), TIM("TIM"), MAP("MAP"), SPAT("SPAT");
 
   private String value;
@@ -17,7 +16,7 @@ public enum EtxMqttMessageType {
    *
    * @param value The string representation
    */
-  EtxMqttMessageType(String value) {
+  EtxMessageType(String value) {
     this.value = value;
   }
 
@@ -44,8 +43,8 @@ public enum EtxMqttMessageType {
    * @throws IllegalArgumentException if value is invalid
    */
   @JsonCreator
-  public static EtxMqttMessageType fromValue(String value) {
-    for (EtxMqttMessageType b : EtxMqttMessageType.values()) {
+  public static EtxMessageType fromValue(String value) {
+    for (EtxMessageType b : EtxMessageType.values()) {
       if (b.value.equals(value)) {
         return b;
       }

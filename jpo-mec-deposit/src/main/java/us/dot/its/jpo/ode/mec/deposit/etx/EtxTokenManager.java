@@ -13,10 +13,10 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.AuthToken;
 public class EtxTokenManager {
   private String currentToken;
   private long expirationTime;
-  private final EtxApi impApi;
+  private final EtxApi etxApi;
 
-  public EtxTokenManager(EtxApi impApi) {
-    this.impApi = impApi;
+  public EtxTokenManager(EtxApi etxApi) {
+    this.etxApi = etxApi;
   }
 
   /**
@@ -33,7 +33,7 @@ public class EtxTokenManager {
   }
 
   private void refreshToken() {
-    AuthToken authToken = impApi.getToken();
+    AuthToken authToken = etxApi.getToken();
     if (authToken != null) {
       currentToken = authToken.getAccessToken();
       // Set expiration 5 minutes before actual expiry to be safe

@@ -15,7 +15,7 @@ import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
  * settings, and client configuration.
  */
 @Configuration
-@ConfigurationProperties(prefix = "etx")
+@ConfigurationProperties(prefix = "mec-deposit.etx")
 @Data
 public class EtxProperties {
   private boolean enabled;

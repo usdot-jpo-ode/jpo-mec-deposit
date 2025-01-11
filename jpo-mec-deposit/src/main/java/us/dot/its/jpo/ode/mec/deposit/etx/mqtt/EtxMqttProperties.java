@@ -9,7 +9,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
  * Configuration properties for ETX MQTT connection and messaging settings.
  */
 @Configuration
-@ConfigurationProperties(prefix = "etx.mqtt")
+@ConfigurationProperties(prefix = "mec-deposit.etx.mqtt")
 @Data
 public class EtxMqttProperties {
   private int qos;

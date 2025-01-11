@@ -56,7 +56,7 @@ class EtxSpatMqttDepositorTest {
   @Autowired
   private MeterRegistry meterRegistry;
 
-  @Mock
+  @Autowired
   private EtxProperties etxProperties;
 
   @Mock
@@ -76,14 +76,10 @@ class EtxSpatMqttDepositorTest {
     MockitoAnnotations.openMocks(this);
     mapper = new ObjectMapper();
 
-    // Setup mock properties
-    when(etxProperties.getMqtt()).thenReturn(mqttProperties);
-    when(mqttProperties.getStaleMessageThreshold()).thenReturn(5000);
-
     doNothing().when(mqttService).publishAsn1Bytes(anyString(), any(), eq(false));
 
-    depositor =
-        new EtxSpatMqttDepositor(mecDepositProperties, mqttService, meterRegistry, kafkaTemplate);
+    depositor = new EtxSpatMqttDepositor(mecDepositProperties, etxProperties, mqttService,
+        meterRegistry, kafkaTemplate);
 
     // Inject the mock mapDataCollector
     ReflectionTestUtils.setField(depositor, "mapDataCollector", mapDataCollector);

@@ -50,7 +50,7 @@ class EtxBsmMqttDepositorTest {
   @Autowired
   private MeterRegistry meterRegistry;
 
-  @Mock
+  @Autowired
   private EtxProperties etxProperties;
 
   @Mock
@@ -99,7 +99,7 @@ class EtxBsmMqttDepositorTest {
     depositor.bsmDepositListener(staleBsmJson);
 
     verify(mqttService, never()).publishAsn1Bytes(anyString(), any(), anyBoolean());
-    verify(kafkaTemplate, never()).send(anyString(), anyString()); // No metrics for stale messages
+    verify(kafkaTemplate, never()).send(anyString(), anyString());
     assertEquals(1.0,
         meterRegistry.counter("mec-deposit.etx.mqtt.stale", "message.type", "BSM").count());
   }

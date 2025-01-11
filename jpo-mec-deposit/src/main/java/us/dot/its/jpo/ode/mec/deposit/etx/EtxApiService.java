@@ -12,7 +12,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxConfigData;
  */
 @Component
 @Slf4j
-@ConditionalOnProperty(value = {"etx.enabled"}, havingValue = "true")
+@ConditionalOnProperty(value = {"mec-deposit.etx.enabled"}, havingValue = "true")
 public class EtxApiService {
   private final EtxApi partnerApi;
   private final EtxTokenManager tokenManager;
@@ -21,11 +21,11 @@ public class EtxApiService {
   /**
    * Creates a new ETX registration service and attempts to register the client.
    *
-   * @param impApi The ETX API client
+   * @param etxApi The ETX API client
    * @param tokenManager The token manager for authentication
    */
-  public EtxApiService(EtxApi impApi, EtxTokenManager tokenManager) {
-    this.partnerApi = impApi;
+  public EtxApiService(EtxApi etxApi, EtxTokenManager tokenManager) {
+    this.partnerApi = etxApi;
     this.tokenManager = tokenManager;
   }
 
@@ -43,8 +43,10 @@ public class EtxApiService {
     }
   }
 
-  @ConditionalOnProperty(value = "etx.partner-api.clear-tim.enabled", havingValue = "true")
-  @Scheduled(fixedRateString = "${etx.partner-api.clear-tim.interval}", timeUnit = TimeUnit.MINUTES)
+  @ConditionalOnProperty(value = "mec-deposit.etx.partner-api.clear-tim.enabled",
+      havingValue = "true")
+  @Scheduled(fixedRateString = "${mec-deposit.etx.partner-api.clear-tim.interval}",
+      timeUnit = TimeUnit.MINUTES)
   public void clearTim() {
     String token = tokenManager.getValidToken();
     partnerApi.clearTim(token);

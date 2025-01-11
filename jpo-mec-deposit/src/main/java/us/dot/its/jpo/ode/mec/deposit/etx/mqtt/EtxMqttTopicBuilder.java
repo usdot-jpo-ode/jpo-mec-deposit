@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttRegionalTopic;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionState;
@@ -92,8 +92,8 @@ public class EtxMqttTopicBuilder {
    * @param etxProperties ETX configuration properties
    * @return Complete MQTT topic string
    */
-  public static String buildRegionalTopic(EtxMqttMessageType messageType, OdePosition3D refPoint,
-      int precision, EtxProperties etxProperties) {
+  public static String buildRegionalTopic(EtxMessageType messageType, OdePosition3D refPoint,
+                                          int precision, EtxProperties etxProperties) {
     String geoHash = getPubGeoHash(refPoint.getLatitude().doubleValue(),
         refPoint.getLongitude().doubleValue(), precision);
     EtxMqttProperties mqttProperties = etxProperties.getMqtt();
@@ -114,8 +114,8 @@ public class EtxMqttTopicBuilder {
    * @param etxProperties The ETX configuration properties
    * @return The formatted topic string
    */
-  public static String buildRegionalTopic(EtxMqttMessageType messageType, double latitude,
-      double longitude, int precision, EtxProperties etxProperties) {
+  public static String buildRegionalTopic(EtxMessageType messageType, double latitude,
+                                          double longitude, int precision, EtxProperties etxProperties) {
     String geoHash = getPubGeoHash(latitude, longitude, precision);
     EtxMqttProperties mqttProperties = etxProperties.getMqtt();
     EtxMqttRegionalTopic topic = EtxMqttRegionalTopic.builder().mqttGeohash(geoHash)
@@ -147,7 +147,7 @@ public class EtxMqttTopicBuilder {
         double latitude = refPoint.getLat().getValue() / scale;
         double longitude = refPoint.getLong_().getValue() / scale;
         String topic =
-            buildRegionalTopic(EtxMqttMessageType.TIM, latitude, longitude, 7, etxProperties);
+            buildRegionalTopic(EtxMessageType.TIM, latitude, longitude, 7, etxProperties);
 
         topicSet.add(topic);
       }
@@ -175,7 +175,7 @@ public class EtxMqttTopicBuilder {
         continue;
       }
 
-      String topic = buildRegionalTopic(EtxMqttMessageType.SPAT, refPoint, 7, etxProperties);
+      String topic = buildRegionalTopic(EtxMessageType.SPAT, refPoint, 7, etxProperties);
 
       topicSet.add(topic);
     }

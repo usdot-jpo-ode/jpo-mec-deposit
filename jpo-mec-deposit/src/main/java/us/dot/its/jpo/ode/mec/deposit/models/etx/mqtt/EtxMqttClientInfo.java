@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Represents information about an MQTT client for ETX (Infrastructure Message Processor).
+ * Represents information about an MQTT client for ETX (Edge Traffic Exchange).
  */
 @AllArgsConstructor
 @NoArgsConstructor

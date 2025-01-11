@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * Enumeration representing the different types of ETX (Infrastructure Message Processor) clients.
+ * Enumeration representing the different types of ETX (Edge Traffic Exchange) clients.
  */
 public enum EtxClientType {
   // "Vehicle""VulnerableRoadUser""TrafficLightController""InfrastructureSensor""OnboardSensor""Software"

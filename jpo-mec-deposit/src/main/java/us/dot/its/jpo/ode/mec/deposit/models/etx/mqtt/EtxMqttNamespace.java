@@ -4,8 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * Enumeration representing the different namespaces for ETX (Infrastructure Message Processor) MQTT
- * messages.
+ * Enumeration representing the different namespaces for ETX (Edge Traffic Exchange) MQTT messages.
  */
 public enum EtxMqttNamespace {
   GEO_RELEVANCE("GeoRelevance"), REGIONAL("Regional"), PRIVATE("Private");

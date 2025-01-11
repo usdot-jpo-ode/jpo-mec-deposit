@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * Enumeration representing the different message formats for ETX (Infrastructure Message Processor)
- * MQTT messages.
+ * Enumeration representing the different message formats for ETX (Edge Traffic Exchange) MQTT
+ * messages.
  */
 public enum EtxMqttMessageFormat {
   J2735("j2735"), J2735_GR("j2735_gr"), AVRO("avro"), JSON("json");

@@ -18,7 +18,7 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
 import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
@@ -74,7 +74,7 @@ public class EtxMqttTopicBuilderTest {
     refPoint.setLongitude(new BigDecimal(-83.0));
 
     String topic =
-        EtxMqttTopicBuilder.buildRegionalTopic(EtxMqttMessageType.SPAT, refPoint, 7, etxProperties);
+        EtxMqttTopicBuilder.buildRegionalTopic(EtxMessageType.SPAT, refPoint, 7, etxProperties);
 
     assertTrue(topic.startsWith("vzimp/1"));
     assertTrue(topic.contains("Software"));

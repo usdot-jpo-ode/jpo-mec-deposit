@@ -4,16 +4,21 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.GeoRoutedMsg;
+import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxDepositMetrics;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProtobufBuilder;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttService;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttTopicBuilder;
@@ -26,13 +31,16 @@ import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
  */
 @Component
 @Slf4j
-@ConditionalOnProperty(value = {"etx.depositors.bsm.mqtt.enabled", "etx.enabled"},
+@ConditionalOnProperty(
+    value = {"mec-deposit.etx.depositors.bsm.mqtt.enabled", "mec-deposit.etx.enabled"},
     havingValue = "true")
-public class ImpBsmMqttDepositor extends AbstractEtxMqttDepositor {
+public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
 
-  public ImpBsmMqttDepositor(EtxProperties etxProperties, EtxMqttService mqttService,
-      MeterRegistry registry) {
-    super(etxProperties, mqttService, EtxMqttMessageType.BSM, registry);
+  public EtxBsmMqttDepositor(MecDepositProperties mecDepositProperties, EtxProperties etxProperties,
+      EtxMqttService mqttService, MeterRegistry registry,
+      KafkaTemplate<String, String> kafkaTemplate) {
+    super(mecDepositProperties, etxProperties, EtxMessageType.BSM, mqttService, registry,
+        kafkaTemplate);
   }
 
   /**
@@ -41,14 +49,16 @@ public class ImpBsmMqttDepositor extends AbstractEtxMqttDepositor {
    * @param message The BSM message from Kafka in JSON format
    */
   @Async("kafkaListenerExecutor")
-  @KafkaListener(topics = "${etx.depositors.bsm.mqtt.kafka-topic}",
+  @KafkaListener(topics = "${mec-deposit.etx.depositors.bsm.mqtt.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-bsm-mqtt-depositor",
       concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
   public void bsmDepositListener(String message) {
+    boolean retain = false;
+    String topic = null;
+    String odeReceivedAt = null;
     try {
-      final LocalDateTime startTime = LocalDateTime.now(ZoneOffset.UTC);
       OdeBsmData msg = mapper.readValue(message, OdeBsmData.class);
-      String odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
+      odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
 
       if (isMessageStale(odeReceivedAt)) {
         return;
@@ -67,19 +77,30 @@ public class ImpBsmMqttDepositor extends AbstractEtxMqttDepositor {
         messageBytes = geoRoutedMsg.toByteArray();
       }
 
-      String topic = EtxMqttTopicBuilder.buildRegionalTopic(messageType,
-          bsm.getCoreData().getPosition(), 7, etxProperties);
+      topic = EtxMqttTopicBuilder.buildRegionalTopic(messageType, bsm.getCoreData().getPosition(),
+          7, etxProperties);
 
-      mqttService.publishAsn1Bytes(topic, messageBytes, false).exceptionally(throwable -> {
-        log.error("Failed to publish BSM message: {}", throwable.getMessage());
-        return null;
-      });
+      // This will now block until the message is published or throws an exception
+      mqttService.publishAsn1Bytes(topic, messageBytes, retain);
+      log.info("Successfully sent BSM message to MQTT topic: {}", topic);
+      LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
 
-      log.info("Sending BSM message to MQTT topics: {}", topic);
-      recordLatency(odeReceivedAt, startTime);
-
+      // Only publish success metrics after confirmed MQTT publish
+      publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
+          .messageType(messageType).odeReceivedAt(odeReceivedAt)
+          .depositedAt(depositedAt.format(DateTimeFormatter.ISO_DATE_TIME))
+          .latencyMs(recordLatency(odeReceivedAt, depositedAt).toMillis()).success(true)
+          .topics(Set.of(topic)).build());
     } catch (Exception e) {
+      String errorMessage = e.getMessage();
       log.error("Error processing BSM message", e);
+
+      // Publish failure metrics with the attempted topic if available
+      publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
+          .messageType(messageType).odeReceivedAt(odeReceivedAt)
+          .depositedAt(LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME))
+          .success(false).errorMessage(errorMessage).topics(topic != null ? Set.of(topic) : null)
+          .build());
     }
   }
 }

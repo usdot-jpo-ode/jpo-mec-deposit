@@ -52,7 +52,7 @@ class EtxTimMqttDepositorTest {
   @Autowired
   private MeterRegistry meterRegistry;
 
-  @Mock
+  @Autowired
   private EtxProperties etxProperties;
 
   @Mock
@@ -69,14 +69,10 @@ class EtxTimMqttDepositorTest {
     MockitoAnnotations.openMocks(this);
     mapper = new ObjectMapper();
 
-    // Setup mock properties
-    when(etxProperties.getMqtt()).thenReturn(mqttProperties);
-    when(mqttProperties.getStaleMessageThreshold()).thenReturn(5000);
-
     doNothing().when(mqttService).publishAsn1Bytes(anyString(), any(), eq(false));
 
-    depositor =
-        new EtxTimMqttDepositor(mecDepositProperties, mqttService, meterRegistry, kafkaTemplate);
+    depositor = new EtxTimMqttDepositor(mecDepositProperties, etxProperties, mqttService,
+        meterRegistry, kafkaTemplate);
 
     // Load sample TIM JSON from resources
     sampleTimJson = new String(Files.readAllBytes(Paths.get(

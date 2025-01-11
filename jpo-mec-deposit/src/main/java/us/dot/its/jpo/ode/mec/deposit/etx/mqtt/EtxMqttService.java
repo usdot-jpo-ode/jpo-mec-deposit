@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service
-@ConditionalOnProperty(value = {"etx.enabled"}, havingValue = "true")
+@ConditionalOnProperty(value = {"mec-deposit.etx.enabled"}, havingValue = "true")
 public class EtxMqttService {
   private final MessageChannel mqttOutboundChannel;
   private final Executor executor;
@@ -45,11 +45,11 @@ public class EtxMqttService {
     this.mqttOutboundChannel = mqttOutboundChannel;
     this.maxMessagesPerSecond = mqttProperties.getMaxMessagesPerSecond();
 
-    this.rateLimitSkippedCounter = Counter.builder("etx.mqtt.ratelimit.skipped")
+    this.rateLimitSkippedCounter = Counter.builder("mec-deposit.etx.mqtt.ratelimit.skipped")
         .description("Number of messages skipped due to rate limiting").register(registry);
 
     // Add gauge metric for current publish rate
-    registry.gauge("etx.mqtt.publish.rate", currentRate);
+    registry.gauge("mec-deposit.etx.mqtt.publish.rate", currentRate);
 
     // Create a dedicated thread pool for MQTT publishing
     this.executor = new ThreadPoolExecutor(4, 8, 60L, TimeUnit.SECONDS,
@@ -73,33 +73,30 @@ public class EtxMqttService {
    * @param topic The MQTT topic to publish to
    * @param asn1Bytes The ASN.1 encoded message bytes
    * @param retain Whether to retain the message on the broker
-   * @return A CompletableFuture that completes when the message is published
    */
-  public CompletableFuture<Void> publishAsn1Bytes(String topic, byte[] asn1Bytes, boolean retain) {
-    return CompletableFuture.runAsync(() -> {
-      try {
-        // Check if we've exceeded our rate limit
-        if (messageCount.get() >= maxMessagesPerSecond) {
-          rateLimitSkippedCounter.increment();
-          log.warn("Skipping message publish - exceeded rate limit of {} Hz", maxMessagesPerSecond);
-          return;
-        }
-
-        Message<byte[]> message =
-            MessageBuilder.withPayload(asn1Bytes).setHeader(MqttHeaders.TOPIC, topic)
-                .setHeader(MqttHeaders.RETAINED, retain).setHeader(MqttHeaders.QOS, 0).build();
-
-        boolean sent = mqttOutboundChannel.send(message, 1000);
-        if (!sent) {
-          throw new RuntimeException("Failed to send message to MQTT channel");
-        }
-
-        messageCount.incrementAndGet();
-        log.debug("Successfully published message to topic: {}", topic);
-      } catch (Exception e) {
-        log.error("Error publishing message to topic {}: {}", topic, e.getMessage());
-        throw e;
+  public void publishAsn1Bytes(String topic, byte[] asn1Bytes, boolean retain) {
+    try {
+      // Check if we've exceeded our rate limit
+      if (messageCount.get() >= maxMessagesPerSecond) {
+        rateLimitSkippedCounter.increment();
+        log.warn("Skipping message publish - exceeded rate limit of {} Hz", maxMessagesPerSecond);
+        throw new RuntimeException("Message skipped - exceeded rate limit");
       }
-    }, executor);
+
+      Message<byte[]> message =
+          MessageBuilder.withPayload(asn1Bytes).setHeader(MqttHeaders.TOPIC, topic)
+              .setHeader(MqttHeaders.RETAINED, retain).setHeader(MqttHeaders.QOS, 0).build();
+
+      boolean sent = mqttOutboundChannel.send(message, 1000);
+      if (!sent) {
+        throw new RuntimeException("Failed to send message to MQTT channel");
+      }
+
+      messageCount.incrementAndGet();
+      log.debug("Successfully published message to topic: {}", topic);
+    } catch (Exception e) {
+      log.error("Error publishing message to topic {}: {}", topic, e.getMessage());
+      throw e;
+    }
   }
 }

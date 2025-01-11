@@ -25,7 +25,7 @@ public class MapRefPointCollector {
    *
    * @param message The JSON MAP message
    */
-  @KafkaListener(topics = "${etx.depositors.map.mqtt.kafka-topic}",
+  @KafkaListener(topics = "${mec-deposit.etx.depositors.map.mqtt.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-map-collector",
       concurrency = "${listen.concurrency:1}", properties = {"auto.offset.reset=earliest"})
   public void jsonMapListener(String message) {

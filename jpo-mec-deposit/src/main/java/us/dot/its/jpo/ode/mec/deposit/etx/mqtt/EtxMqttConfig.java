@@ -27,23 +27,23 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxConfigData;
  */
 @Slf4j
 @Configuration
-@ConditionalOnProperty(value = {"etx.enabled"}, havingValue = "true")
+@ConditionalOnProperty(value = {"mec-deposit.etx.enabled"}, havingValue = "true")
 public class EtxMqttConfig {
   private final EtxMqttProperties mqttProperties;
   private final EtxProperties etxProperties;
   private final EtxTokenManager tokenManager;
-  private final EtxApi impApi;
+  private final EtxApi etxApi;
   private EtxConfigData impConfig;
 
   /**
    * Constructs the MQTT configuration with required properties.
    *
-   * @param tokenManager The ETX token manager param impApi The ETX API
+   * @param tokenManager The ETX token manager param etxApi The ETX API
    */
-  public EtxMqttConfig(EtxTokenManager tokenManager, EtxApi impApi,
+  public EtxMqttConfig(EtxTokenManager tokenManager, EtxApi etxApi,
       EtxMqttProperties mqttProperties, EtxProperties etxProperties) {
     this.tokenManager = tokenManager;
-    this.impApi = impApi;
+    this.etxApi = etxApi;
     this.mqttProperties = mqttProperties;
     this.etxProperties = etxProperties;
   }
@@ -55,7 +55,7 @@ public class EtxMqttConfig {
   public void init() {
     try {
       String token = tokenManager.getValidToken();
-      this.impConfig = impApi.registerClientPartner(token);
+      this.impConfig = etxApi.registerClientPartner(token);
       if (this.impConfig == null || this.impConfig.getEtxMqttUri() == null) {
         throw new IllegalStateException("Failed to initialize ETX configuration");
       }

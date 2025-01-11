@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxApi;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxTokenManager;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.model.OdeTimData;
 
@@ -20,14 +20,15 @@ import us.dot.its.jpo.ode.model.OdeTimData;
  */
 @Component
 @Slf4j
-@ConditionalOnProperty(value = {"etx.depositors.tim.api.enabled", "etx.enabled"},
+@ConditionalOnProperty(
+    value = {"mec-deposit.etx.depositors.tim.api.enabled", "mec-deposit.etx.enabled"},
     havingValue = "true")
 public class ImpTimApiDepositor extends AbstractImpApiDepositor {
   private final DistributionType distributionType = DistributionType.TARGETED;
 
-  public ImpTimApiDepositor(EtxProperties properties, MeterRegistry meterRegistry, EtxApi impApi,
+  public ImpTimApiDepositor(EtxProperties properties, MeterRegistry meterRegistry, EtxApi etxApi,
       EtxTokenManager tokenManager) {
-    super(properties, EtxMqttMessageType.TIM, meterRegistry, impApi, tokenManager);
+    super(properties, EtxMessageType.TIM, meterRegistry, etxApi, tokenManager);
   }
 
 
@@ -37,7 +38,7 @@ public class ImpTimApiDepositor extends AbstractImpApiDepositor {
    * @param message The TIM message to deposit
    */
   @Async("kafkaListenerExecutor")
-  @KafkaListener(topics = "${etx.depositors.tim.api.kafka-topic}",
+  @KafkaListener(topics = "${mec-deposit.etx.depositors.tim.api.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-tim-api-depositor",
       concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
   public void timDepositListener(String message) {
