@@ -9,7 +9,6 @@ import com.google.protobuf.ByteString;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.GeoRoutedMsg;
-import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttProtobufBuilder;
 
 class EtxMqttProtobufBuilderTest {
 

@@ -3,9 +3,9 @@ package us.dot.its.jpo.ode.mec.deposit.services.base;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.kafka.core.KafkaTemplate;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxPartnerClient;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxTokenManager;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxDepositorType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 

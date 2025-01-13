@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit.etx;
+package us.dot.its.jpo.ode.mec.deposit.etx.partner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
@@ -16,7 +16,8 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.PartnerApiProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.AuthToken;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.AuthTokenRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClearRequest;
@@ -40,7 +41,7 @@ import org.springframework.lang.Nullable;
 public class EtxPartnerClient {
   private final ObjectMapper mapper;
   private final EtxProperties etxProperties;
-  private final PartnerApiProperties partnerApi;
+  private final EtxPartnerApiProperties partnerApiProperties;
   private final RestTemplate restTemplate;
 
   /**
@@ -48,9 +49,10 @@ public class EtxPartnerClient {
    *
    * @param properties The ETX configuration properties
    */
-  public EtxPartnerClient(EtxProperties properties, RestTemplate restTemplate) {
+  public EtxPartnerClient(EtxProperties properties, EtxPartnerApiProperties partnerApi,
+      RestTemplate restTemplate) {
     this.etxProperties = properties;
-    this.partnerApi = properties.getPartnerApi();
+    this.partnerApiProperties = partnerApi;
     this.restTemplate = restTemplate != null ? restTemplate : createDefaultRestTemplate();
     this.mapper = DateJsonMapper.getInstance();
   }
@@ -78,7 +80,7 @@ public class EtxPartnerClient {
     }
 
     try {
-      boolean cacheRegistration = etxProperties.isCacheRegistration();
+      boolean cacheRegistration = partnerApiProperties.isCacheRegistration();
       String configPath = buildConfigPath();
 
       if (!validRegistration(configPath) || !cacheRegistration) {
@@ -99,7 +101,7 @@ public class EtxPartnerClient {
    * @throws IllegalStateException if certificate path is not configured
    */
   private String buildConfigPath() {
-    String basePath = etxProperties.getCertificatePath();
+    String basePath = partnerApiProperties.getCertificatePath();
     if (!StringUtils.hasText(basePath)) {
       throw new IllegalStateException("Certificate path not configured");
     }
@@ -119,9 +121,9 @@ public class EtxPartnerClient {
       throws Exception {
     log.info("Initiating new client partner registration");
 
-    String caCertPath = etxProperties.getCertificatePath() + "/etx-ca.pem";
-    String certPath = etxProperties.getCertificatePath() + "/etx-cert.pem";
-    String keyPath = etxProperties.getCertificatePath() + "/etx-key.pem";
+    String caCertPath = partnerApiProperties.getCertificatePath() + "/etx-ca.pem";
+    String certPath = partnerApiProperties.getCertificatePath() + "/etx-cert.pem";
+    String keyPath = partnerApiProperties.getCertificatePath() + "/etx-key.pem";
 
     ClientRegistrationResponse registrationResponse = register(token);
     if (registrationResponse == null || registrationResponse.getDeviceID() == null) {
@@ -181,8 +183,8 @@ public class EtxPartnerClient {
   private RegistrationConfiguration buildConfigData(String configPath, String caCertPath,
       String certPath, String keyPath, String deviceId, URI uri) {
     return RegistrationConfiguration.builder().configFilePath(configPath).caCertPath(caCertPath)
-        .clientCertPath(certPath).keyFilePath(keyPath).impVendor(partnerApi.getVendor())
-        .networkType(partnerApi.getNetworkType()).etxMqttUri(uri).deviceID(deviceId)
+        .clientCertPath(certPath).keyFilePath(keyPath).impVendor(partnerApiProperties.getVendor())
+        .networkType(partnerApiProperties.getNetworkType()).etxMqttUri(uri).deviceID(deviceId)
         .etxSessionID(null).build();
   }
 
@@ -200,19 +202,20 @@ public class EtxPartnerClient {
    */
   @Nullable
   public AuthToken getToken() {
-    if (!StringUtils.hasText(partnerApi.getUsername())
-        || !StringUtils.hasText(partnerApi.getPassword())) {
+    if (!StringUtils.hasText(partnerApiProperties.getUsername())
+        || !StringUtils.hasText(partnerApiProperties.getPassword())) {
       log.error("Username or password not configured");
       return null;
     }
 
     try {
-      var request = new AuthTokenRequest(partnerApi.getUsername(), partnerApi.getPassword());
+      var request = new AuthTokenRequest(partnerApiProperties.getUsername(),
+          partnerApiProperties.getPassword());
       HttpHeaders headers = new HttpHeaders();
       headers.set("Content-Type", "application/json");
       HttpEntity<AuthTokenRequest> entity = new HttpEntity<>(request, headers);
 
-      return restTemplate.postForObject(partnerApi.getBaseUri() + "/auth/token", entity,
+      return restTemplate.postForObject(partnerApiProperties.getBaseUri() + "/auth/token", entity,
           AuthToken.class);
     } catch (Exception e) {
       log.error("Failed to obtain auth token", e);
@@ -238,8 +241,8 @@ public class EtxPartnerClient {
 
     try {
       ResponseEntity<ClientRegistrationResponse> response =
-          restTemplate.exchange(partnerApi.getBaseUri() + "/prd/v2/registration", HttpMethod.POST,
-              entity, ClientRegistrationResponse.class);
+          restTemplate.exchange(partnerApiProperties.getBaseUri() + "/prd/v2/registration",
+              HttpMethod.POST, entity, ClientRegistrationResponse.class);
 
       return response.getBody();
     } catch (HttpClientErrorException.Unauthorized e) {
@@ -256,8 +259,9 @@ public class EtxPartnerClient {
    * @return The connection response
    */
   public ClientConnectionResponse connection(String token, String deviceID) {
-    ClientConnectionPostRequest request = new ClientConnectionPostRequest(deviceID,
-        partnerApi.getMecLatitude(), partnerApi.getMecLongitude(), partnerApi.getNetworkType());
+    ClientConnectionPostRequest request =
+        new ClientConnectionPostRequest(deviceID, partnerApiProperties.getMecLatitude(),
+            partnerApiProperties.getMecLongitude(), partnerApiProperties.getNetworkType());
 
     HttpHeaders headers = new HttpHeaders();
     headers.set("Authorization", "Bearer " + token);
@@ -267,8 +271,8 @@ public class EtxPartnerClient {
 
     try {
       ResponseEntity<ClientConnectionResponse> response =
-          restTemplate.exchange(partnerApi.getBaseUri() + "/prd/v2/connection", HttpMethod.POST,
-              entity, ClientConnectionResponse.class);
+          restTemplate.exchange(partnerApiProperties.getBaseUri() + "/prd/v2/connection",
+              HttpMethod.POST, entity, ClientConnectionResponse.class);
 
       return response.getBody();
     } catch (HttpClientErrorException.Unauthorized e) {
@@ -293,7 +297,7 @@ public class EtxPartnerClient {
             mapper.readValue(configDataJson, RegistrationConfiguration.class);
 
         if (configData.getDeviceID() != null
-            && configData.getNetworkType() == partnerApi.getNetworkType()) {
+            && configData.getNetworkType() == partnerApiProperties.getNetworkType()) {
           valid = true;
         }
       } catch (IOException e) {
@@ -320,9 +324,9 @@ public class EtxPartnerClient {
     HttpEntity<DepositRequest> entity = new HttpEntity<>(request, headers);
 
     try {
-      ResponseEntity<Void> response =
-          restTemplate.exchange(partnerApi.getBaseUri() + "/prd/v2/configurations/deposit",
-              HttpMethod.POST, entity, Void.class);
+      ResponseEntity<Void> response = restTemplate.exchange(
+          partnerApiProperties.getBaseUri() + "/prd/v2/configurations/deposit", HttpMethod.POST,
+          entity, Void.class);
       HttpStatusCode responseCode = response.getStatusCode();
       if (responseCode.is2xxSuccessful()) {
         log.debug("Deposit response: " + responseCode);
@@ -348,7 +352,7 @@ public class EtxPartnerClient {
     HttpEntity<ClearRequest> entity = new HttpEntity<>(new ClearRequest(true), headers);
 
     ResponseEntity<Void> response =
-        restTemplate.exchange(partnerApi.getBaseUri() + "/prd/v2/configurations/clear",
+        restTemplate.exchange(partnerApiProperties.getBaseUri() + "/prd/v2/configurations/clear",
             HttpMethod.POST, entity, Void.class);
 
     HttpStatusCode responseCode = response.getStatusCode();

@@ -9,6 +9,7 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerApiProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttClientInfo;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
@@ -25,10 +26,10 @@ public class EtxMqttSubscriptionService {
   /**
    * Constructor for EtxMqttSubscriptionService.
    *
-   * @param etxProperties Properties containing configuration paths
+   * @param partnerApi Properties containing configuration paths
    */
-  public EtxMqttSubscriptionService(EtxProperties etxProperties) {
-    this.configPath = etxProperties.getCertificatePath() + "/config.json";
+  public EtxMqttSubscriptionService(EtxPartnerApiProperties partnerApi) {
+    this.configPath = partnerApi.getCertificatePath() + "/config.json";
     this.mapper = DateJsonMapper.getInstance();
   }
 

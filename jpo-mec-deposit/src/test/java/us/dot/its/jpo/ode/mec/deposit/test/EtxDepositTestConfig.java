@@ -12,9 +12,11 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.web.client.RestTemplate;
 import us.dot.its.jpo.ode.mec.deposit.config.mqtt.EtxMqttConfig;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxPartnerClient;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxTokenManager;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
+import org.springframework.messaging.MessageChannel;
+import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 
 @TestConfiguration
 public class EtxDepositTestConfig {
@@ -25,11 +27,11 @@ public class EtxDepositTestConfig {
     return Mockito.mock(EtxMqttConfig.class);
   }
 
-  @Bean
-  @Primary
-  public EtxMqttPublishService etxMqttService() {
-    return Mockito.mock(EtxMqttPublishService.class);
-  }
+  // @Bean
+  // @Primary
+  // public EtxMqttPublishService etxMqttService() {
+  // return Mockito.mock(EtxMqttPublishService.class);
+  // }
 
   @Bean
   @Primary
@@ -78,4 +80,18 @@ public class EtxDepositTestConfig {
   public ProducerFactory<String, String> producerFactory() {
     return Mockito.mock(ProducerFactory.class);
   }
+
+  // @Bean
+  // @Primary
+  // public MessageChannel mqttOutboundChannel() {
+  // return Mockito.mock(MessageChannel.class);
+  // }
+
+  // @Bean
+  // @Primary
+  // public EtxMqttProperties etxMqttProperties() {
+  // EtxMqttProperties properties = new EtxMqttProperties();
+  // properties.setMaxMessagesPerSecond(100);
+  // return properties;
+  // }
 }

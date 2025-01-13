@@ -39,111 +39,108 @@ import us.dot.its.jpo.ode.model.OdeTimData;
 @SpringBootTest
 @Import(EtxDepositTestConfig.class)
 @TestPropertySource(locations = "classpath:application.yaml", properties = {
-                "mec-deposit.etx.enabled=true", "mec-deposit.etx.depositors.tim.mqtt.enabled=true"})
+    "mec-deposit.etx.enabled=true", "mec-deposit.etx.depositors.tim.mqtt.enabled=true"})
 class EtxTimMqttDepositorTest {
 
-        private EtxTimMqttDepositor depositor;
-        private String sampleTimJson;
-        private ObjectMapper mapper;
+  private EtxTimMqttDepositor depositor;
+  private String sampleTimJson;
+  private ObjectMapper mapper;
 
-        @Autowired
-        private MecDepositProperties mecDepositProperties;
+  @Autowired
+  private MecDepositProperties mecDepositProperties;
 
-        @Autowired
-        private MeterRegistry meterRegistry;
+  @Autowired
+  private MeterRegistry meterRegistry;
 
-        @Autowired
-        private EtxProperties etxProperties;
+  @Autowired
+  private EtxProperties etxProperties;
 
-        @Mock
-        private EtxMqttPublishService mqttService;
+  @Mock
+  private EtxMqttPublishService mqttService;
 
-        @Mock
-        private KafkaTemplate<String, String> kafkaTemplate;
+  @Mock
+  private KafkaTemplate<String, String> kafkaTemplate;
 
-        @Mock
-        private EtxMqttProperties mqttProperties;
+  @Mock
+  private EtxMqttProperties mqttProperties;
 
-        @BeforeEach
-        void setUp() throws Exception {
-                MockitoAnnotations.openMocks(this);
-                mapper = new ObjectMapper();
+  @BeforeEach
+  void setUp() throws Exception {
+    MockitoAnnotations.openMocks(this);
+    mapper = new ObjectMapper();
 
-                doNothing().when(mqttService).publishAsn1Bytes(anyString(), any(), eq(false));
+    doNothing().when(mqttService).publishAsn1Bytes(anyString(), any(), eq(false));
 
-                depositor = new EtxTimMqttDepositor(mecDepositProperties, etxProperties,
-                                mqttService, meterRegistry, kafkaTemplate);
+    depositor = new EtxTimMqttDepositor(mecDepositProperties, etxProperties, mqttService,
+        meterRegistry, kafkaTemplate);
 
-                // Load sample TIM JSON from resources
-                sampleTimJson = new String(Files.readAllBytes(Paths.get(getClass().getClassLoader()
-                                .getResource("sample_messages/sample-ode-tim.json").toURI())));
-        }
+    // Load sample TIM JSON from resources
+    sampleTimJson = new String(Files.readAllBytes(Paths.get(
+        getClass().getClassLoader().getResource("sample_messages/sample-ode-tim.json").toURI())));
+  }
 
-        @Test
-        void testTimDepositListener_SuccessfulDeposit() throws Exception {
-                OdeTimData timData = mapper.readValue(sampleTimJson, OdeTimData.class);
-                timData.getMetadata().setOdeReceivedAt(LocalDateTime.now(ZoneOffset.UTC)
-                                .format(DateTimeFormatter.ISO_DATE_TIME));
-                String recentTimJson = mapper.writeValueAsString(timData);
+  @Test
+  void testTimDepositListener_SuccessfulDeposit() throws Exception {
+    OdeTimData timData = mapper.readValue(sampleTimJson, OdeTimData.class);
+    timData.getMetadata().setOdeReceivedAt(
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
+    String recentTimJson = mapper.writeValueAsString(timData);
 
-                depositor.timDepositListener(recentTimJson);
+    depositor.timDepositListener(recentTimJson);
 
-                verify(mqttService, times(1)).publishAsn1Bytes(anyString(), any(), eq(false));
-                verify(kafkaTemplate).send(anyString(), anyString());
-                assert (meterRegistry
-                                .timer("mec-deposit.etx.mqtt.processing", "message.type", "TIM")
-                                .count() > 0);
-        }
+    verify(mqttService, times(1)).publishAsn1Bytes(anyString(), any(), eq(false));
+    verify(kafkaTemplate).send(anyString(), anyString());
+    assert (meterRegistry.timer("mec-deposit.etx.mqtt.processing", "message.type", "TIM")
+        .count() > 0);
+  }
 
-        @Test
-        void testTimDepositListener_StaleMessage() throws Exception {
-                OdeTimData timData = mapper.readValue(sampleTimJson, OdeTimData.class);
-                timData.getMetadata().setOdeReceivedAt("2020-01-01T00:00:00.000Z");
-                String staleTimJson = mapper.writeValueAsString(timData);
+  @Test
+  void testTimDepositListener_StaleMessage() throws Exception {
+    OdeTimData timData = mapper.readValue(sampleTimJson, OdeTimData.class);
+    timData.getMetadata().setOdeReceivedAt("2020-01-01T00:00:00.000Z");
+    String staleTimJson = mapper.writeValueAsString(timData);
 
-                depositor.timDepositListener(staleTimJson);
+    depositor.timDepositListener(staleTimJson);
 
-                verify(mqttService, never()).publishAsn1Bytes(anyString(), any(), anyBoolean());
-                verify(kafkaTemplate, never()).send(anyString(), anyString());
-                assertEquals(1.0, meterRegistry
-                                .counter("mec-deposit.etx.mqtt.stale", "message.type", "TIM")
-                                .count());
-        }
+    verify(mqttService, never()).publishAsn1Bytes(anyString(), any(), anyBoolean());
+    verify(kafkaTemplate, never()).send(anyString(), anyString());
+    assertEquals(1.0,
+        meterRegistry.counter("mec-deposit.etx.mqtt.stale", "message.type", "TIM").count());
+  }
 
-        @Test
-        void testTimDepositListener_InvalidJson() {
-                depositor.timDepositListener("invalid json");
+  @Test
+  void testTimDepositListener_InvalidJson() {
+    depositor.timDepositListener("invalid json");
 
-                verify(mqttService, never()).publishAsn1Bytes(anyString(), any(), anyBoolean());
-                verify(kafkaTemplate).send(anyString(),
-                                argThat(metricsJson -> metricsJson.contains("\"success\":false")));
-        }
+    verify(mqttService, never()).publishAsn1Bytes(anyString(), any(), anyBoolean());
+    verify(kafkaTemplate).send(anyString(),
+        argThat(metricsJson -> metricsJson.contains("\"success\":false")));
+  }
 
-        @Test
-        void testTimDepositListener_NullMessage() {
-                depositor.timDepositListener(null);
+  @Test
+  void testTimDepositListener_NullMessage() {
+    depositor.timDepositListener(null);
 
-                verify(mqttService, never()).publishAsn1Bytes(anyString(), any(), anyBoolean());
-                verify(kafkaTemplate).send(anyString(),
-                                argThat(metricsJson -> metricsJson.contains("\"success\":false")));
-        }
+    verify(mqttService, never()).publishAsn1Bytes(anyString(), any(), anyBoolean());
+    verify(kafkaTemplate).send(anyString(),
+        argThat(metricsJson -> metricsJson.contains("\"success\":false")));
+  }
 
-        @Test
-        void testTimDepositListener_MqttFailure() throws Exception {
-                OdeTimData timData = mapper.readValue(sampleTimJson, OdeTimData.class);
-                timData.getMetadata().setOdeReceivedAt(LocalDateTime.now(ZoneOffset.UTC)
-                                .format(DateTimeFormatter.ISO_DATE_TIME));
-                String recentTimJson = mapper.writeValueAsString(timData);
+  @Test
+  void testTimDepositListener_MqttFailure() throws Exception {
+    OdeTimData timData = mapper.readValue(sampleTimJson, OdeTimData.class);
+    timData.getMetadata().setOdeReceivedAt(
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
+    String recentTimJson = mapper.writeValueAsString(timData);
 
-                doThrow(new RuntimeException("MQTT publish failed")).when(mqttService)
-                                .publishAsn1Bytes(anyString(), any(), eq(false));
+    doThrow(new RuntimeException("MQTT publish failed")).when(mqttService)
+        .publishAsn1Bytes(anyString(), any(), eq(false));
 
-                depositor.timDepositListener(recentTimJson);
+    depositor.timDepositListener(recentTimJson);
 
-                verify(mqttService, times(1)).publishAsn1Bytes(anyString(), any(), eq(false));
-                verify(kafkaTemplate).send(anyString(), argThat(metricsJson -> metricsJson
-                                .contains("\"success\":false")
-                                && metricsJson.contains(
-                                                "\"errorMessage\":\"MQTT publish failed\"")));
-        }
+    verify(mqttService, times(1)).publishAsn1Bytes(anyString(), any(), eq(false));
+    verify(kafkaTemplate).send(anyString(),
+        argThat(metricsJson -> metricsJson.contains("\"success\":false")
+            && metricsJson.contains("\"errorMessage\":\"MQTT publish failed\"")));
+  }
 }

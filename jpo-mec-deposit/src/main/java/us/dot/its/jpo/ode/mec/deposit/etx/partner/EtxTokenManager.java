@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit.etx;
+package us.dot.its.jpo.ode.mec.deposit.etx.partner;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -13,10 +13,10 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.AuthToken;
 public class EtxTokenManager {
   private String currentToken;
   private long expirationTime;
-  private final EtxPartnerClient etxApi;
+  private final EtxPartnerClient partnerApiClient;
 
   public EtxTokenManager(EtxPartnerClient etxApi) {
-    this.etxApi = etxApi;
+    this.partnerApiClient = etxApi;
   }
 
   /**
@@ -33,7 +33,7 @@ public class EtxTokenManager {
   }
 
   private void refreshToken() {
-    AuthToken authToken = etxApi.getToken();
+    AuthToken authToken = partnerApiClient.getToken();
     if (authToken != null) {
       currentToken = authToken.getAccessToken();
       // Set expiration 5 minutes before actual expiry to be safe

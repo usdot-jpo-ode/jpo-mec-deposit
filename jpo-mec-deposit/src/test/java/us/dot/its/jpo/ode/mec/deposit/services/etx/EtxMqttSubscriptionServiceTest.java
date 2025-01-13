@@ -20,17 +20,16 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerApiProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttClientInfo;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
-import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttSubscriptionService;
 
 @ExtendWith(MockitoExtension.class)
 class EtxMqttSubscriptionServiceTest {
 
   @Mock
-  private EtxProperties mockProperties;
+  private EtxPartnerApiProperties mockPartnerApiProperties;
 
   @Mock
   private Message<String> mockMessage;
@@ -49,7 +48,7 @@ class EtxMqttSubscriptionServiceTest {
     // Set up common mock behavior
     lenient().when(mockMessage.getHeaders()).thenReturn(mockHeaders);
     lenient().when(mockMessage.getPayload()).thenReturn("{}");
-    lenient().when(mockProperties.getCertificatePath()).thenReturn("/test/path");
+    lenient().when(mockPartnerApiProperties.getCertificatePath()).thenReturn("/test/path");
   }
 
   @Test

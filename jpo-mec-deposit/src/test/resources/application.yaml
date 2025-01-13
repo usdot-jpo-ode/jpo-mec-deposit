@@ -12,19 +12,19 @@ mec-deposit:
     kafka-topic: topic.MecDepositMetrics
   etx:
     enabled: false
-    vendor: "default-vendor"
-    network-type: "non-VZ"
-    cache-registration: false
-    certificate-path: "etx/"
     client-type: "Software"
     client-sub-type: "Application"
     partner-api:
+      vendor: "registration-vendor"
       base-uri: "http://localhost:8080"
       username: "test-user"
       password: "test-password"
       # used for the partner api registration to determine the MEC location
       mec-latitude: "00.0000"
       mec-longitude: "00.0000"
+      network-type: "non-VZ"
+      cache-registration: false
+      certificate-path: "etx/"
       clear-tim:
         enabled: false
         interval: 10

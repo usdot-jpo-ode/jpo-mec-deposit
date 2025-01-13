@@ -16,11 +16,11 @@ import org.springframework.integration.mqtt.core.Mqttv3ClientManager;
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
 import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.messaging.MessageChannel;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxPartnerClient;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerApiProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
 
 /**
@@ -31,7 +31,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfigurati
 @ConditionalOnProperty(value = {"mec-deposit.etx.enabled"}, havingValue = "true")
 public class EtxMqttConfig {
   private final EtxMqttProperties mqttProperties;
-  private final EtxProperties etxProperties;
+  private final EtxPartnerApiProperties partnerApiProperties;
   private final EtxTokenManager tokenManager;
   private final EtxPartnerClient etxApi;
   private RegistrationConfiguration impConfig;
@@ -42,11 +42,11 @@ public class EtxMqttConfig {
    * @param tokenManager The ETX token manager param etxApi The ETX API
    */
   public EtxMqttConfig(EtxTokenManager tokenManager, EtxPartnerClient etxApi,
-      EtxMqttProperties mqttProperties, EtxProperties etxProperties) {
+      EtxMqttProperties mqttProperties, EtxPartnerApiProperties partnerApi) {
     this.tokenManager = tokenManager;
     this.etxApi = etxApi;
     this.mqttProperties = mqttProperties;
-    this.etxProperties = etxProperties;
+    this.partnerApiProperties = partnerApi;
   }
 
   /**
@@ -75,7 +75,7 @@ public class EtxMqttConfig {
   @Bean
   public ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager() {
     RegistrationConfiguration impConfig =
-        EtxUtil.readConfigFile(etxProperties.getCertificatePath() + "/config.json");
+        EtxUtil.readConfigFile(partnerApiProperties.getCertificatePath() + "/config.json");
     String brokerUrl = impConfig.getEtxMqttUri().toString().replace("mqtt://", "ssl://");
 
     MqttConnectOptions options = new MqttConnectOptions();
@@ -90,7 +90,7 @@ public class EtxMqttConfig {
     options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
 
     Mqttv3ClientManager clientManager = new Mqttv3ClientManager(options, impConfig.getDeviceID());
-    String tmpDir = etxProperties.getCertificatePath() + "/mqtt-persistence";
+    String tmpDir = partnerApiProperties.getCertificatePath() + "/mqtt-persistence";
     clientManager.setPersistence(new MqttDefaultFilePersistence(tmpDir));
     return clientManager;
   }
@@ -115,10 +115,10 @@ public class EtxMqttConfig {
   @Bean
   public IntegrationFlow mqttInFlow(
       ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager,
-      EtxProperties etxProperties) {
+      EtxPartnerApiProperties partnerApi) {
 
     RegistrationConfiguration impConfig =
-        EtxUtil.readConfigFile(etxProperties.getCertificatePath() + "/config.json");
+        EtxUtil.readConfigFile(partnerApi.getCertificatePath() + "/config.json");
 
     log.info("Setting up MQTT inbound adapter with deviceID: {}", impConfig.getDeviceID());
     log.info("Subscribing to topics: {}", Arrays.toString(mqttProperties.getSubscriptions()));

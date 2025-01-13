@@ -12,8 +12,6 @@ mec-deposit:
     kafka-topic: ${METRICS_KAFKA_TOPIC:topic.MecDepositMetrics}
   etx:
     enabled: ${ETX_ENABLED:false}
-    cache-registration: ${ETX_CACHE_REGISTRATION}
-    certificate-path: ${ETX_CERT_PATH}
     client-type: ${ETX_CLIENT_TYPE}
     client-sub-type: ${ETX_CLIENT_SUB_TYPE}
     partner-api:
@@ -25,6 +23,8 @@ mec-deposit:
       mec-latitude: ${ETX_MEC_LATITUDE}
       mec-longitude: ${ETX_MEC_LONGITUDE}
       network-type: ${ETX_NETWORK_TYPE}
+      cache-registration: ${ETX_CACHE_REGISTRATION}
+      certificate-path: ${ETX_CERT_PATH}
       clear-tim:
         enabled: ${ETX_PARTNER_API_CLEAR_TIM_ENABLED:false}
         interval: ${ETX_PARTNER_API_CLEAR_TIM_INTERVAL:10}

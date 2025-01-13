@@ -43,126 +43,120 @@ import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 
 @SpringBootTest
 @Import(EtxDepositTestConfig.class)
-@TestPropertySource(locations = "classpath:application.yaml",
-                properties = {"mec-deposit.etx.enabled=true",
-                                "mec-deposit.etx.depositors.spat.mqtt.enabled=true"})
+@TestPropertySource(locations = "classpath:application.yaml", properties = {
+    "mec-deposit.etx.enabled=true", "mec-deposit.etx.depositors.spat.mqtt.enabled=true"})
 class EtxSpatMqttDepositorTest {
 
-        private EtxSpatMqttDepositor depositor;
-        private String sampleSpatJson;
-        private ObjectMapper mapper;
+  private EtxSpatMqttDepositor depositor;
+  private String sampleSpatJson;
+  private ObjectMapper mapper;
 
-        @Autowired
-        private MecDepositProperties mecDepositProperties;
+  @Autowired
+  private MecDepositProperties mecDepositProperties;
 
-        @Autowired
-        private MeterRegistry meterRegistry;
+  @Autowired
+  private MeterRegistry meterRegistry;
 
-        @Autowired
-        private EtxProperties etxProperties;
+  @Autowired
+  private EtxProperties etxProperties;
 
-        @Mock
-        private EtxMqttPublishService mqttService;
+  @Mock
+  private EtxMqttPublishService mqttService;
 
-        @Mock
-        private KafkaTemplate<String, String> kafkaTemplate;
+  @Mock
+  private KafkaTemplate<String, String> kafkaTemplate;
 
-        @Mock
-        private MapRefPointCollector mapDataCollector;
+  @Mock
+  private MapRefPointCollector mapDataCollector;
 
-        @Mock
-        private EtxMqttProperties mqttProperties;
+  @Mock
+  private EtxMqttProperties mqttProperties;
 
-        @BeforeEach
-        void setUp() throws Exception {
-                MockitoAnnotations.openMocks(this);
-                mapper = new ObjectMapper();
+  @BeforeEach
+  void setUp() throws Exception {
+    MockitoAnnotations.openMocks(this);
+    mapper = new ObjectMapper();
 
-                doNothing().when(mqttService).publishAsn1Bytes(anyString(), any(), eq(false));
+    doNothing().when(mqttService).publishAsn1Bytes(anyString(), any(), eq(false));
 
-                depositor = new EtxSpatMqttDepositor(mecDepositProperties, etxProperties,
-                                mqttService, meterRegistry, kafkaTemplate);
+    depositor = new EtxSpatMqttDepositor(mecDepositProperties, etxProperties, mqttService,
+        meterRegistry, kafkaTemplate);
 
-                // Inject the mock mapDataCollector
-                ReflectionTestUtils.setField(depositor, "mapDataCollector", mapDataCollector);
+    // Inject the mock mapDataCollector
+    ReflectionTestUtils.setField(depositor, "mapDataCollector", mapDataCollector);
 
-                // Mock the topic list response
-                when(mapDataCollector.getIntersectionRefPoint(anyString()))
-                                .thenReturn(new OdePosition3D(BigDecimal.valueOf(42.0),
-                                                BigDecimal.valueOf(-83.0),
-                                                BigDecimal.valueOf(10.0)));
+    // Mock the topic list response
+    when(mapDataCollector.getIntersectionRefPoint(anyString())).thenReturn(new OdePosition3D(
+        BigDecimal.valueOf(42.0), BigDecimal.valueOf(-83.0), BigDecimal.valueOf(10.0)));
 
-                // Load sample SPAT JSON from resources
-                sampleSpatJson = new String(Files.readAllBytes(Paths.get(getClass().getClassLoader()
-                                .getResource("sample_messages/sample-ode-spat.json").toURI())));
-        }
+    // Load sample SPAT JSON from resources
+    sampleSpatJson = new String(Files.readAllBytes(Paths.get(
+        getClass().getClassLoader().getResource("sample_messages/sample-ode-spat.json").toURI())));
+  }
 
-        @Test
-        void testSpatDepositListener_SuccessfulDeposit() throws Exception {
-                OdeSpatData spatData = mapper.readValue(sampleSpatJson, OdeSpatData.class);
-                spatData.getMetadata().setOdeReceivedAt(LocalDateTime.now(ZoneOffset.UTC)
-                                .format(DateTimeFormatter.ISO_DATE_TIME));
-                String recentSpatJson = mapper.writeValueAsString(spatData);
+  @Test
+  void testSpatDepositListener_SuccessfulDeposit() throws Exception {
+    OdeSpatData spatData = mapper.readValue(sampleSpatJson, OdeSpatData.class);
+    spatData.getMetadata().setOdeReceivedAt(
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
+    String recentSpatJson = mapper.writeValueAsString(spatData);
 
-                depositor.spatDepositListener(recentSpatJson);
+    depositor.spatDepositListener(recentSpatJson);
 
-                verify(mqttService, times(1)).publishAsn1Bytes(anyString(), any(), eq(false));
-                verify(kafkaTemplate).send(anyString(), anyString());
-                verify(mapDataCollector).getIntersectionRefPoint(anyString());
-                assert (meterRegistry
-                                .timer("mec-deposit.etx.mqtt.processing", "message.type", "SPAT")
-                                .count() > 0);
-        }
+    verify(mqttService, times(1)).publishAsn1Bytes(anyString(), any(), eq(false));
+    verify(kafkaTemplate).send(anyString(), anyString());
+    verify(mapDataCollector).getIntersectionRefPoint(anyString());
+    assert (meterRegistry.timer("mec-deposit.etx.mqtt.processing", "message.type", "SPAT")
+        .count() > 0);
+  }
 
-        @Test
-        void testSpatDepositListener_StaleMessage() throws Exception {
-                OdeSpatData spatData = mapper.readValue(sampleSpatJson, OdeSpatData.class);
-                spatData.getMetadata().setOdeReceivedAt("2020-01-01T00:00:00.000Z");
-                String staleSpatJson = mapper.writeValueAsString(spatData);
+  @Test
+  void testSpatDepositListener_StaleMessage() throws Exception {
+    OdeSpatData spatData = mapper.readValue(sampleSpatJson, OdeSpatData.class);
+    spatData.getMetadata().setOdeReceivedAt("2020-01-01T00:00:00.000Z");
+    String staleSpatJson = mapper.writeValueAsString(spatData);
 
-                depositor.spatDepositListener(staleSpatJson);
+    depositor.spatDepositListener(staleSpatJson);
 
-                verify(mqttService, never()).publishAsn1Bytes(anyString(), any(), anyBoolean());
-                verify(kafkaTemplate, never()).send(anyString(), anyString());
-                assertEquals(1.0, meterRegistry
-                                .counter("mec-deposit.etx.mqtt.stale", "message.type", "SPAT")
-                                .count());
-        }
+    verify(mqttService, never()).publishAsn1Bytes(anyString(), any(), anyBoolean());
+    verify(kafkaTemplate, never()).send(anyString(), anyString());
+    assertEquals(1.0,
+        meterRegistry.counter("mec-deposit.etx.mqtt.stale", "message.type", "SPAT").count());
+  }
 
-        @Test
-        void testSpatDepositListener_InvalidJson() {
-                depositor.spatDepositListener("invalid json");
+  @Test
+  void testSpatDepositListener_InvalidJson() {
+    depositor.spatDepositListener("invalid json");
 
-                verify(mqttService, never()).publishAsn1Bytes(anyString(), any(), anyBoolean());
-                verify(kafkaTemplate).send(anyString(),
-                                argThat(metricsJson -> metricsJson.contains("\"success\":false")));
-        }
+    verify(mqttService, never()).publishAsn1Bytes(anyString(), any(), anyBoolean());
+    verify(kafkaTemplate).send(anyString(),
+        argThat(metricsJson -> metricsJson.contains("\"success\":false")));
+  }
 
-        @Test
-        void testSpatDepositListener_NullMessage() {
-                depositor.spatDepositListener(null);
+  @Test
+  void testSpatDepositListener_NullMessage() {
+    depositor.spatDepositListener(null);
 
-                verify(mqttService, never()).publishAsn1Bytes(anyString(), any(), anyBoolean());
-                verify(kafkaTemplate).send(anyString(),
-                                argThat(metricsJson -> metricsJson.contains("\"success\":false")));
-        }
+    verify(mqttService, never()).publishAsn1Bytes(anyString(), any(), anyBoolean());
+    verify(kafkaTemplate).send(anyString(),
+        argThat(metricsJson -> metricsJson.contains("\"success\":false")));
+  }
 
-        @Test
-        void testSpatDepositListener_MqttFailure() throws Exception {
-                OdeSpatData spatData = mapper.readValue(sampleSpatJson, OdeSpatData.class);
-                spatData.getMetadata().setOdeReceivedAt(LocalDateTime.now(ZoneOffset.UTC)
-                                .format(DateTimeFormatter.ISO_DATE_TIME));
-                String recentSpatJson = mapper.writeValueAsString(spatData);
+  @Test
+  void testSpatDepositListener_MqttFailure() throws Exception {
+    OdeSpatData spatData = mapper.readValue(sampleSpatJson, OdeSpatData.class);
+    spatData.getMetadata().setOdeReceivedAt(
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
+    String recentSpatJson = mapper.writeValueAsString(spatData);
 
-                doThrow(new RuntimeException("MQTT publish failed")).when(mqttService)
-                                .publishAsn1Bytes(anyString(), any(), eq(false));
+    doThrow(new RuntimeException("MQTT publish failed")).when(mqttService)
+        .publishAsn1Bytes(anyString(), any(), eq(false));
 
-                depositor.spatDepositListener(recentSpatJson);
+    depositor.spatDepositListener(recentSpatJson);
 
-                verify(mqttService, times(1)).publishAsn1Bytes(anyString(), any(), eq(false));
-                verify(kafkaTemplate).send(anyString(), argThat(metricsJson -> metricsJson
-                                .contains("\"success\":false")
-                                && metricsJson.contains(
-                                                "\"errorMessage\":\"MQTT publish failed\"")));
-        }
+    verify(mqttService, times(1)).publishAsn1Bytes(anyString(), any(), eq(false));
+    verify(kafkaTemplate).send(anyString(),
+        argThat(metricsJson -> metricsJson.contains("\"success\":false")
+            && metricsJson.contains("\"errorMessage\":\"MQTT publish failed\"")));
+  }
 }

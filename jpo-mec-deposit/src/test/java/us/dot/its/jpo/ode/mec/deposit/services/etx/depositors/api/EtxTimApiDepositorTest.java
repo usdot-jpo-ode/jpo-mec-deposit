@@ -27,9 +27,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.TestPropertySource;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxPartnerClient;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxTokenManager;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.depositors.api.EtxTimApiDepositor;
 import us.dot.its.jpo.ode.mec.deposit.test.EtxDepositTestConfig;
@@ -38,135 +38,135 @@ import us.dot.its.jpo.ode.model.OdeTimData;
 @SpringBootTest
 @Import(EtxDepositTestConfig.class)
 @TestPropertySource(locations = "classpath:application.yaml", properties = {
-        "mec-deposit.etx.enabled=true", "mec-deposit.etx.depositors.tim.api.enabled=true"})
+    "mec-deposit.etx.enabled=true", "mec-deposit.etx.depositors.tim.api.enabled=true"})
 class EtxTimApiDepositorTest {
 
-    private EtxTimApiDepositor depositor;
-    private String sampleTimJson;
-    private ObjectMapper mapper;
+  private EtxTimApiDepositor depositor;
+  private String sampleTimJson;
+  private ObjectMapper mapper;
 
-    @Autowired
-    private MecDepositProperties mecDepositProperties;
+  @Autowired
+  private MecDepositProperties mecDepositProperties;
 
-    @Autowired
-    private EtxProperties etxProperties;
+  @Autowired
+  private EtxProperties etxProperties;
 
-    @Autowired
-    private MeterRegistry meterRegistry;
+  @Autowired
+  private MeterRegistry meterRegistry;
 
-    @Mock
-    private EtxPartnerClient etxApi;
+  @Mock
+  private EtxPartnerClient etxApi;
 
-    @Mock
-    private EtxTokenManager tokenManager;
+  @Mock
+  private EtxTokenManager tokenManager;
 
-    @Mock
-    private KafkaTemplate<String, String> kafkaTemplate;
+  @Mock
+  private KafkaTemplate<String, String> kafkaTemplate;
 
-    @BeforeEach
-    void setUp() throws Exception {
-        MockitoAnnotations.openMocks(this);
-        mapper = new ObjectMapper();
+  @BeforeEach
+  void setUp() throws Exception {
+    MockitoAnnotations.openMocks(this);
+    mapper = new ObjectMapper();
 
-        when(tokenManager.getValidToken()).thenReturn("mock-token");
+    when(tokenManager.getValidToken()).thenReturn("mock-token");
 
-        depositor = new EtxTimApiDepositor(mecDepositProperties, etxProperties, etxApi,
-                tokenManager, meterRegistry, kafkaTemplate);
+    depositor = new EtxTimApiDepositor(mecDepositProperties, etxProperties, etxApi, tokenManager,
+        meterRegistry, kafkaTemplate);
 
-        // Load sample TIM JSON from resources
-        sampleTimJson = new String(Files.readAllBytes(Paths.get(getClass().getClassLoader()
-                .getResource("sample_messages/sample-ode-tim.json").toURI())));
-    }
+    // Load sample TIM JSON from resources
+    sampleTimJson = new String(Files.readAllBytes(Paths.get(
+        getClass().getClassLoader().getResource("sample_messages/sample-ode-tim.json").toURI())));
+  }
 
-    @Test
-    void testTimDepositListener_SuccessfulDeposit() throws Exception {
-        OdeTimData timData = mapper.readValue(sampleTimJson, OdeTimData.class);
-        timData.getMetadata().setOdeReceivedAt(
-                LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
-        String recentTimJson = mapper.writeValueAsString(timData);
+  @Test
+  void testTimDepositListener_SuccessfulDeposit() throws Exception {
+    OdeTimData timData = mapper.readValue(sampleTimJson, OdeTimData.class);
+    timData.getMetadata().setOdeReceivedAt(
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
+    String recentTimJson = mapper.writeValueAsString(timData);
 
-        depositor.timDepositListener(recentTimJson);
+    depositor.timDepositListener(recentTimJson);
 
-        verify(tokenManager).getValidToken();
-        verify(etxApi).deposit(eq("mock-token"), anyString(), eq(DistributionType.TARGETED));
-        verify(kafkaTemplate).send(anyString(), anyString());
+    verify(tokenManager).getValidToken();
+    verify(etxApi).deposit(eq("mock-token"), anyString(), eq(DistributionType.TARGETED));
+    verify(kafkaTemplate).send(anyString(), anyString());
 
-        assert (meterRegistry.timer("mec-deposit.etx.api.processing", "message.type", "TIM")
-                .count() > 0);
-    }
+    assert (meterRegistry.timer("mec-deposit.etx.api.processing", "message.type", "TIM")
+        .count() > 0);
+  }
 
-    @Test
-    void testTimDepositListener_ApiError() throws Exception {
-        OdeTimData timData = mapper.readValue(sampleTimJson, OdeTimData.class);
-        timData.getMetadata().setOdeReceivedAt(
-                LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
-        String recentTimJson = mapper.writeValueAsString(timData);
+  @Test
+  void testTimDepositListener_ApiError() throws Exception {
+    OdeTimData timData = mapper.readValue(sampleTimJson, OdeTimData.class);
+    timData.getMetadata().setOdeReceivedAt(
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
+    String recentTimJson = mapper.writeValueAsString(timData);
 
-        // Simulate API error
-        doThrow(new RuntimeException("API Error")).when(etxApi).deposit(anyString(), anyString(),
-                any());
+    // Simulate API error
+    doThrow(new RuntimeException("API Error")).when(etxApi).deposit(anyString(), anyString(),
+        any());
 
-        depositor.timDepositListener(recentTimJson);
+    depositor.timDepositListener(recentTimJson);
 
-        verify(tokenManager).getValidToken();
-        verify(etxApi).deposit(anyString(), anyString(), any());
-        // Verify error metrics were published
-        verify(kafkaTemplate).send(anyString(),
-                argThat(metricsJson -> metricsJson.contains("\"success\":false")
-                        && metricsJson.contains("\"errorMessage\":\"API Error\"")));
-    }
+    verify(tokenManager).getValidToken();
+    verify(etxApi).deposit(anyString(), anyString(), any());
+    // Verify error metrics were published
+    verify(kafkaTemplate).send(anyString(),
+        argThat(metricsJson -> metricsJson.contains("\"success\":false")
+            && metricsJson.contains("\"errorMessage\":\"API Error\"")));
+  }
 
-    @Test
-    void testTimDepositListener_TokenError() throws Exception {
-        OdeTimData timData = mapper.readValue(sampleTimJson, OdeTimData.class);
-        timData.getMetadata().setOdeReceivedAt(
-                LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
-        String recentTimJson = mapper.writeValueAsString(timData);
+  @Test
+  void testTimDepositListener_TokenError() throws Exception {
+    OdeTimData timData = mapper.readValue(sampleTimJson, OdeTimData.class);
+    timData.getMetadata().setOdeReceivedAt(
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
+    String recentTimJson = mapper.writeValueAsString(timData);
 
-        // Simulate token error
-        when(tokenManager.getValidToken()).thenThrow(new RuntimeException("Token Error"));
+    // Simulate token error
+    when(tokenManager.getValidToken()).thenThrow(new RuntimeException("Token Error"));
 
-        depositor.timDepositListener(recentTimJson);
+    depositor.timDepositListener(recentTimJson);
 
-        verify(tokenManager).getValidToken();
-        verify(etxApi, never()).deposit(anyString(), anyString(), any());
-        // Verify error metrics were published
-        verify(kafkaTemplate).send(anyString(),
-                argThat(metricsJson -> metricsJson.contains("\"success\":false")
-                        && metricsJson.contains("\"errorMessage\":\"Token Error\"")));
-    }
+    verify(tokenManager).getValidToken();
+    verify(etxApi, never()).deposit(anyString(), anyString(), any());
+    // Verify error metrics were published
+    verify(kafkaTemplate).send(anyString(),
+        argThat(metricsJson -> metricsJson.contains("\"success\":false")
+            && metricsJson.contains("\"errorMessage\":\"Token Error\"")));
+  }
 
-    @Test
-    void testTimDepositListener_StaleMessage() throws Exception {
-        OdeTimData timData = mapper.readValue(sampleTimJson, OdeTimData.class);
-        timData.getMetadata().setOdeReceivedAt("2020-01-01T00:00:00.000Z");
-        String staleTimJson = mapper.writeValueAsString(timData);
+  @Test
+  void testTimDepositListener_StaleMessage() throws Exception {
+    OdeTimData timData = mapper.readValue(sampleTimJson, OdeTimData.class);
+    timData.getMetadata().setOdeReceivedAt("2020-01-01T00:00:00.000Z");
+    String staleTimJson = mapper.writeValueAsString(timData);
 
-        depositor.timDepositListener(staleTimJson);
+    depositor.timDepositListener(staleTimJson);
 
-        verify(etxApi, never()).deposit(anyString(), anyString(), any());
-        verify(kafkaTemplate, never()).send(anyString(), anyString());
-        assertEquals(1.0,
-                meterRegistry.counter("mec-deposit.etx.api.stale", "message.type", "TIM").count());
-    }
+    verify(etxApi, never()).deposit(anyString(), anyString(), any());
+    verify(kafkaTemplate, never()).send(anyString(), anyString());
+    assertEquals(1.0,
+        meterRegistry.counter("mec-deposit.etx.api.stale", "message.type", "TIM").count());
+  }
 
-    @Test
-    void testTimDepositListener_InvalidJson() {
-        depositor.timDepositListener("invalid json");
+  @Test
+  void testTimDepositListener_InvalidJson() {
+    depositor.timDepositListener("invalid json");
 
-        verify(etxApi, never()).deposit(anyString(), anyString(), any());
-        // Verify error metrics were published
-        verify(kafkaTemplate).send(anyString(),
-                argThat(metricsJson -> metricsJson.contains("\"success\":false")));
-    }
+    verify(etxApi, never()).deposit(anyString(), anyString(), any());
+    // Verify error metrics were published
+    verify(kafkaTemplate).send(anyString(),
+        argThat(metricsJson -> metricsJson.contains("\"success\":false")));
+  }
 
-    @Test
-    void testTimDepositListener_NullMessage() {
-        depositor.timDepositListener(null);
+  @Test
+  void testTimDepositListener_NullMessage() {
+    depositor.timDepositListener(null);
 
-        verify(etxApi, never()).deposit(anyString(), anyString(), any());
-        // Verify error metrics were published
-        verify(kafkaTemplate).send(anyString(),
-                argThat(metricsJson -> metricsJson.contains("\"success\":false")));
-    }
+    verify(etxApi, never()).deposit(anyString(), anyString(), any());
+    // Verify error metrics were published
+    verify(kafkaTemplate).send(anyString(),
+        argThat(metricsJson -> metricsJson.contains("\"success\":false")));
+  }
 }
