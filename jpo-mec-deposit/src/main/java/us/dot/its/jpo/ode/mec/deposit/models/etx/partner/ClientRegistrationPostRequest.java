@@ -91,8 +91,8 @@ public class ClientRegistrationPostRequest {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ClientRegistrationPostRequest {\n");
-    sb.append("    clientType: ").append(toIndentedString(clientType)).append("\n");
-    sb.append("    clientSubtype: ").append(toIndentedString(clientSubtype)).append("\n");
+    sb.append("  clientType: ").append(toIndentedString(clientType)).append("\n");
+    sb.append("  clientSubtype: ").append(toIndentedString(clientSubtype)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -104,6 +104,6 @@ public class ClientRegistrationPostRequest {
     if (o == null) {
       return "null";
     }
-    return o.toString().replace("\n", "\n    ");
+    return o.toString().replace("\n", "\n  ");
   }
 }

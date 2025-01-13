@@ -92,8 +92,8 @@ public class ClientRegistrationPendingResponse {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ClientRegistrationPendingResponse {\n");
-    sb.append("    deviceID: ").append(toIndentedString(deviceID)).append("\n");
-    sb.append("    message: ").append(toIndentedString(message)).append("\n");
+    sb.append("  deviceID: ").append(toIndentedString(deviceID)).append("\n");
+    sb.append("  message: ").append(toIndentedString(message)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -105,6 +105,6 @@ public class ClientRegistrationPendingResponse {
     if (o == null) {
       return "null";
     }
-    return o.toString().replace("\n", "\n    ");
+    return o.toString().replace("\n", "\n  ");
   }
 }

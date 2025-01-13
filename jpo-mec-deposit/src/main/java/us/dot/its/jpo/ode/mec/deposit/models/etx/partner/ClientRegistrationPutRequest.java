@@ -67,7 +67,7 @@ public class ClientRegistrationPutRequest {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ClientRegistrationPutRequest {\n");
-    sb.append("    deviceID: ").append(toIndentedString(deviceID)).append("\n");
+    sb.append("  deviceID: ").append(toIndentedString(deviceID)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -79,6 +79,6 @@ public class ClientRegistrationPutRequest {
     if (o == null) {
       return "null";
     }
-    return o.toString().replace("\n", "\n    ");
+    return o.toString().replace("\n", "\n  ");
   }
 }

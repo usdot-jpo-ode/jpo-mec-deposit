@@ -114,9 +114,9 @@ public class CertificateResponse {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class CertificateResponse {\n");
-    sb.append("    certPem: ").append(toIndentedString(certPem)).append("\n");
-    sb.append("    keyPem: ").append(toIndentedString(keyPem)).append("\n");
-    sb.append("    caPem: ").append(toIndentedString(caPem)).append("\n");
+    sb.append("  certPem: ").append(toIndentedString(certPem)).append("\n");
+    sb.append("  keyPem: ").append(toIndentedString(keyPem)).append("\n");
+    sb.append("  caPem: ").append(toIndentedString(caPem)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -128,6 +128,6 @@ public class CertificateResponse {
     if (o == null) {
       return "null";
     }
-    return o.toString().replace("\n", "\n    ");
+    return o.toString().replace("\n", "\n  ");
   }
 }

@@ -67,7 +67,7 @@ public class ClientConnectionResponse {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ClientConnectionResponse {\n");
-    sb.append("    mqttURL: ").append(toIndentedString(mqttURL)).append("\n");
+    sb.append("  mqttURL: ").append(toIndentedString(mqttURL)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -79,6 +79,6 @@ public class ClientConnectionResponse {
     if (o == null) {
       return "null";
     }
-    return o.toString().replace("\n", "\n    ");
+    return o.toString().replace("\n", "\n  ");
   }
 }

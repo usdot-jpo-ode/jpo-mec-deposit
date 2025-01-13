@@ -261,15 +261,15 @@ public class AuthToken {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class AuthToken {\n");
-    sb.append("    accessToken: ").append(toIndentedString(accessToken)).append("\n");
-    sb.append("    expiresIn: ").append(toIndentedString(expiresIn)).append("\n");
-    sb.append("    refreshExpiresIn: ").append(toIndentedString(refreshExpiresIn)).append("\n");
-    sb.append("    refreshToken: ").append(toIndentedString(refreshToken)).append("\n");
-    sb.append("    tokenType: ").append(toIndentedString(tokenType)).append("\n");
-    sb.append("    idToken: ").append(toIndentedString(idToken)).append("\n");
-    sb.append("    notBeforePolicy: ").append(toIndentedString(notBeforePolicy)).append("\n");
-    sb.append("    sessionState: ").append(toIndentedString(sessionState)).append("\n");
-    sb.append("    scope: ").append(toIndentedString(scope)).append("\n");
+    sb.append("  accessToken: ").append(toIndentedString(accessToken)).append("\n");
+    sb.append("  expiresIn: ").append(toIndentedString(expiresIn)).append("\n");
+    sb.append("  refreshExpiresIn: ").append(toIndentedString(refreshExpiresIn)).append("\n");
+    sb.append("  refreshToken: ").append(toIndentedString(refreshToken)).append("\n");
+    sb.append("  tokenType: ").append(toIndentedString(tokenType)).append("\n");
+    sb.append("  idToken: ").append(toIndentedString(idToken)).append("\n");
+    sb.append("  notBeforePolicy: ").append(toIndentedString(notBeforePolicy)).append("\n");
+    sb.append("  sessionState: ").append(toIndentedString(sessionState)).append("\n");
+    sb.append("  scope: ").append(toIndentedString(scope)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -281,6 +281,6 @@ public class AuthToken {
     if (o == null) {
       return "null";
     }
-    return o.toString().replace("\n", "\n    ");
+    return o.toString().replace("\n", "\n  ");
   }
 }

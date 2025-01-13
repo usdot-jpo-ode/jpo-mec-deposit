@@ -12,19 +12,19 @@ mec-deposit:
     kafka-topic: ${METRICS_KAFKA_TOPIC:topic.MecDepositMetrics}
   etx:
     enabled: ${ETX_ENABLED:false}
-    vendor: ${ETX_VENDOR}
-    network-type: ${ETX_NETWORK_TYPE}
     cache-registration: ${ETX_CACHE_REGISTRATION}
     certificate-path: ${ETX_CERT_PATH}
     client-type: ${ETX_CLIENT_TYPE}
     client-sub-type: ${ETX_CLIENT_SUB_TYPE}
     partner-api:
+      vendor: ${ETX_REGISTRATION_VENDOR}
       base-uri: ${ETX_PARTNER_API_BASE_URI}
       username: ${ETX_PARTNER_API_USERNAME}
       password: ${ETX_PARTNER_API_PASSWORD}
       # used for the partner api registration to determine the MEC location
       mec-latitude: ${ETX_MEC_LATITUDE}
       mec-longitude: ${ETX_MEC_LONGITUDE}
+      network-type: ${ETX_NETWORK_TYPE}
       clear-tim:
         enabled: ${ETX_PARTNER_API_CLEAR_TIM_ENABLED:false}
         interval: ${ETX_PARTNER_API_CLEAR_TIM_INTERVAL:10}

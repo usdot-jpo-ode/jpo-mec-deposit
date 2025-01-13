@@ -90,8 +90,8 @@ public class AuthTokenRequest {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class AuthTokenRequest {\n");
-    sb.append("    username: ").append(toIndentedString(username)).append("\n");
-    sb.append("    password: ").append(toIndentedString(password)).append("\n");
+    sb.append("  username: ").append(toIndentedString(username)).append("\n");
+    sb.append("  password: ").append(toIndentedString(password)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -103,6 +103,6 @@ public class AuthTokenRequest {
     if (o == null) {
       return "null";
     }
-    return o.toString().replace("\n", "\n    ");
+    return o.toString().replace("\n", "\n  ");
   }
 }

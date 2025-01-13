@@ -91,8 +91,8 @@ public class ClientCompleteResponse {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ClientCompleteResponse {\n");
-    sb.append("    registration: ").append(toIndentedString(registration)).append("\n");
-    sb.append("    connection: ").append(toIndentedString(connection)).append("\n");
+    sb.append("  registration: ").append(toIndentedString(registration)).append("\n");
+    sb.append("  connection: ").append(toIndentedString(connection)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -104,6 +104,6 @@ public class ClientCompleteResponse {
     if (o == null) {
       return "null";
     }
-    return o.toString().replace("\n", "\n    ");
+    return o.toString().replace("\n", "\n  ");
   }
 }

@@ -212,13 +212,13 @@ public class AuthUserInfo {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class AuthUserInfo {\n");
-    sb.append("    sub: ").append(toIndentedString(sub)).append("\n");
-    sb.append("    emailVerified: ").append(toIndentedString(emailVerified)).append("\n");
-    sb.append("    name: ").append(toIndentedString(name)).append("\n");
-    sb.append("    preferredUsername: ").append(toIndentedString(preferredUsername)).append("\n");
-    sb.append("    givenName: ").append(toIndentedString(givenName)).append("\n");
-    sb.append("    familyName: ").append(toIndentedString(familyName)).append("\n");
-    sb.append("    email: ").append(toIndentedString(email)).append("\n");
+    sb.append("  sub: ").append(toIndentedString(sub)).append("\n");
+    sb.append("  emailVerified: ").append(toIndentedString(emailVerified)).append("\n");
+    sb.append("  name: ").append(toIndentedString(name)).append("\n");
+    sb.append("  preferredUsername: ").append(toIndentedString(preferredUsername)).append("\n");
+    sb.append("  givenName: ").append(toIndentedString(givenName)).append("\n");
+    sb.append("  familyName: ").append(toIndentedString(familyName)).append("\n");
+    sb.append("  email: ").append(toIndentedString(email)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -230,6 +230,6 @@ public class AuthUserInfo {
     if (o == null) {
       return "null";
     }
-    return o.toString().replace("\n", "\n    ");
+    return o.toString().replace("\n", "\n  ");
   }
 }

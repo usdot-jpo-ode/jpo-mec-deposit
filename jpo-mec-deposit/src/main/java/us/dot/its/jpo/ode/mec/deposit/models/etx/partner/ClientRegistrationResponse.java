@@ -91,8 +91,8 @@ public class ClientRegistrationResponse {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ClientRegistrationResponse {\n");
-    sb.append("    deviceID: ").append(toIndentedString(deviceID)).append("\n");
-    sb.append("    certificate: ").append(toIndentedString(certificate)).append("\n");
+    sb.append("  deviceID: ").append(toIndentedString(deviceID)).append("\n");
+    sb.append("  certificate: ").append(toIndentedString(certificate)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -104,6 +104,6 @@ public class ClientRegistrationResponse {
     if (o == null) {
       return "null";
     }
-    return o.toString().replace("\n", "\n    ");
+    return o.toString().replace("\n", "\n  ");
   }
 }

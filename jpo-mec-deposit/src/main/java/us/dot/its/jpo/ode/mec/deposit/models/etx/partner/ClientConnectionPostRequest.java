@@ -19,7 +19,7 @@ public class ClientConnectionPostRequest {
 
   private BigDecimal _long;
 
-  private EtxNetworkType networkType;
+  private NetworkType networkType;
 
   public ClientConnectionPostRequest() {
     super();
@@ -29,7 +29,7 @@ public class ClientConnectionPostRequest {
    * Constructor with only required parameters
    */
   public ClientConnectionPostRequest(String deviceID, BigDecimal lat, BigDecimal _long,
-      EtxNetworkType networkType) {
+      NetworkType networkType) {
     this.deviceID = deviceID;
     this.lat = lat;
     this._long = _long;
@@ -96,7 +96,7 @@ public class ClientConnectionPostRequest {
     this._long = _long;
   }
 
-  public ClientConnectionPostRequest networkType(EtxNetworkType networkType) {
+  public ClientConnectionPostRequest networkType(NetworkType networkType) {
     this.networkType = networkType;
     return this;
   }
@@ -108,11 +108,11 @@ public class ClientConnectionPostRequest {
    */
   @Schema(name = "NetworkType", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("NetworkType")
-  public EtxNetworkType getNetworkType() {
+  public NetworkType getNetworkType() {
     return networkType;
   }
 
-  public void setNetworkType(EtxNetworkType networkType) {
+  public void setNetworkType(NetworkType networkType) {
     this.networkType = networkType;
   }
 
@@ -140,10 +140,10 @@ public class ClientConnectionPostRequest {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ClientConnectionPostRequest {\n");
-    sb.append("    deviceID: ").append(toIndentedString(deviceID)).append("\n");
-    sb.append("    lat: ").append(toIndentedString(lat)).append("\n");
-    sb.append("    _long: ").append(toIndentedString(_long)).append("\n");
-    sb.append("    networkType: ").append(toIndentedString(networkType)).append("\n");
+    sb.append("  deviceID: ").append(toIndentedString(deviceID)).append("\n");
+    sb.append("  lat: ").append(toIndentedString(lat)).append("\n");
+    sb.append("  _long: ").append(toIndentedString(_long)).append("\n");
+    sb.append("  networkType: ").append(toIndentedString(networkType)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -155,6 +155,6 @@ public class ClientConnectionPostRequest {
     if (o == null) {
       return "null";
     }
-    return o.toString().replace("\n", "\n    ");
+    return o.toString().replace("\n", "\n  ");
   }
 }

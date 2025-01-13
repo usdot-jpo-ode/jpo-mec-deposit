@@ -16,7 +16,7 @@ public class ClientRegistrationConnectionPostRequest {
 
   private BigDecimal deviceFixedLocationLong;
 
-  private EtxNetworkType networkType;
+  private NetworkType networkType;
 
   public ClientRegistrationConnectionPostRequest() {
     super();
@@ -26,7 +26,7 @@ public class ClientRegistrationConnectionPostRequest {
    * Constructor with only required parameters
    */
   public ClientRegistrationConnectionPostRequest(String clientType, String clientSubtype,
-      BigDecimal lat, BigDecimal _long, EtxNetworkType networkType) {
+      BigDecimal lat, BigDecimal _long, NetworkType networkType) {
     this.clientType = clientType;
     this.clientSubtype = clientSubtype;
     this.deviceFixedLocationLat = lat;
@@ -114,7 +114,7 @@ public class ClientRegistrationConnectionPostRequest {
     this.deviceFixedLocationLong = _long;
   }
 
-  public ClientRegistrationConnectionPostRequest networkType(EtxNetworkType networkType) {
+  public ClientRegistrationConnectionPostRequest networkType(NetworkType networkType) {
     this.networkType = networkType;
     return this;
   }
@@ -126,11 +126,11 @@ public class ClientRegistrationConnectionPostRequest {
    */
   @Schema(name = "NetworkType", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("NetworkType")
-  public EtxNetworkType getNetworkType() {
+  public NetworkType getNetworkType() {
     return networkType;
   }
 
-  public void setNetworkType(EtxNetworkType networkType) {
+  public void setNetworkType(NetworkType networkType) {
     this.networkType = networkType;
   }
 
@@ -163,11 +163,11 @@ public class ClientRegistrationConnectionPostRequest {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ClientRegistrationConnectionPostRequest {\n");
-    sb.append("    clientType: ").append(toIndentedString(clientType)).append("\n");
-    sb.append("    clientSubtype: ").append(toIndentedString(clientSubtype)).append("\n");
-    sb.append("    lat: ").append(toIndentedString(deviceFixedLocationLat)).append("\n");
-    sb.append("    _long: ").append(toIndentedString(deviceFixedLocationLong)).append("\n");
-    sb.append("    networkType: ").append(toIndentedString(networkType)).append("\n");
+    sb.append("  clientType: ").append(toIndentedString(clientType)).append("\n");
+    sb.append("  clientSubtype: ").append(toIndentedString(clientSubtype)).append("\n");
+    sb.append("  lat: ").append(toIndentedString(deviceFixedLocationLat)).append("\n");
+    sb.append("  _long: ").append(toIndentedString(deviceFixedLocationLong)).append("\n");
+    sb.append("  networkType: ").append(toIndentedString(networkType)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -179,6 +179,6 @@ public class ClientRegistrationConnectionPostRequest {
     if (o == null) {
       return "null";
     }
-    return o.toString().replace("\n", "\n    ");
+    return o.toString().replace("\n", "\n  ");
   }
 }

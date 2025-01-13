@@ -66,7 +66,7 @@ public class AuthRefreshTokenRequest {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class AuthRefreshTokenRequest {\n");
-    sb.append("    refreshToken: ").append(toIndentedString(refreshToken)).append("\n");
+    sb.append("  refreshToken: ").append(toIndentedString(refreshToken)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -78,6 +78,6 @@ public class AuthRefreshTokenRequest {
     if (o == null) {
       return "null";
     }
-    return o.toString().replace("\n", "\n    ");
+    return o.toString().replace("\n", "\n  ");
   }
 }

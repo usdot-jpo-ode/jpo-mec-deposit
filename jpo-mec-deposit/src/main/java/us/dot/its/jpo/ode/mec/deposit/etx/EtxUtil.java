@@ -12,7 +12,7 @@ import javax.net.ssl.X509ExtendedTrustManager;
 import lombok.extern.slf4j.Slf4j;
 import nl.altindag.ssl.SSLFactory;
 import nl.altindag.ssl.pem.util.PemUtils;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxConfigData;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 
 /**
@@ -90,10 +90,10 @@ public class EtxUtil {
    * @param filePath Path to config file
    * @return Parsed config data or null if error occurs
    */
-  public static EtxConfigData readConfigFile(String filePath) {
+  public static RegistrationConfiguration readConfigFile(String filePath) {
     try {
       String fileContent = new String(Files.readAllBytes(Paths.get(filePath)));
-      return mapper.readValue(fileContent, EtxConfigData.class);
+      return mapper.readValue(fileContent, RegistrationConfiguration.class);
     } catch (IOException e) {
       log.error("writeToFile IOException: " + e.getStackTrace());
       return null;

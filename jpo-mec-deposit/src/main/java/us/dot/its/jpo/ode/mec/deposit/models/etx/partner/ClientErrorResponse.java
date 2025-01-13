@@ -91,8 +91,8 @@ public class ClientErrorResponse {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ClientErrorResponse {\n");
-    sb.append("    error: ").append(toIndentedString(error)).append("\n");
-    sb.append("    description: ").append(toIndentedString(description)).append("\n");
+    sb.append("  error: ").append(toIndentedString(error)).append("\n");
+    sb.append("  description: ").append(toIndentedString(description)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -104,6 +104,6 @@ public class ClientErrorResponse {
     if (o == null) {
       return "null";
     }
-    return o.toString().replace("\n", "\n    ");
+    return o.toString().replace("\n", "\n  ");
   }
 }

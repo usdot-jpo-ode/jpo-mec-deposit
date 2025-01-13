@@ -13,9 +13,9 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.AuthToken;
 public class EtxTokenManager {
   private String currentToken;
   private long expirationTime;
-  private final EtxApi etxApi;
+  private final EtxPartnerClient etxApi;
 
-  public EtxTokenManager(EtxApi etxApi) {
+  public EtxTokenManager(EtxPartnerClient etxApi) {
     this.etxApi = etxApi;
   }
 

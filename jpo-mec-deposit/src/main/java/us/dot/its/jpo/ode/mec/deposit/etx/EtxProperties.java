@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.EtxNetworkType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.NetworkType;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 
 
@@ -20,8 +20,6 @@ import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 @Data
 public class EtxProperties {
   private boolean enabled;
-  private String vendor;
-  private EtxNetworkType networkType;
   private boolean cacheRegistration;
   private String certificatePath;
   private EtxClientType clientType;
@@ -35,11 +33,13 @@ public class EtxProperties {
    */
   @Data
   public static class PartnerApiProperties {
+    private String vendor;
     private String baseUri;
     private String username;
     private String password;
     private BigDecimal mecLatitude;
     private BigDecimal mecLongitude;
+    private NetworkType networkType;
     private ClearTimProperties clearTim;
   }
 
