@@ -37,8 +37,8 @@ import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
 public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
 
   public EtxBsmMqttDepositor(MecDepositProperties mecDepositProperties, EtxProperties etxProperties,
-                             EtxMqttProperties mqttProperties, EtxMqttPublishService mqttService, MeterRegistry registry,
-                             KafkaTemplate<String, String> kafkaTemplate) {
+      EtxMqttProperties mqttProperties, EtxMqttPublishService mqttService, MeterRegistry registry,
+      KafkaTemplate<String, String> kafkaTemplate) {
     super(mecDepositProperties, etxProperties, mqttProperties, EtxMessageType.BSM, mqttService,
         registry, kafkaTemplate);
   }
@@ -56,9 +56,11 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
     boolean retain = false;
     String topic = null;
     String odeReceivedAt = null;
+    String asn1Hex = "";
     try {
       OdeBsmData msg = mapper.readValue(message, OdeBsmData.class);
       odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
+      asn1Hex = msg.getMetadata().getAsn1();
 
       if (isMessageStale(odeReceivedAt)) {
         return;
@@ -87,11 +89,11 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
       mqttService.publishAsn1Bytes(topic, messageBytes, retain);
       log.info("Successfully sent BSM message to MQTT topic: {}", topic);
 
-      handleProcessingSuccess(Set.of(topic), null, odeReceivedAt,
-          LocalDateTime.now(ZoneOffset.UTC));
+      handleProcessingSuccess(Set.of(topic), null, odeReceivedAt, LocalDateTime.now(ZoneOffset.UTC),
+          asn1Hex);
     } catch (Exception e) {
       handleProcessingError(e, Set.of(topic), null,
-          odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0);
+          odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);
     }
   }
 }

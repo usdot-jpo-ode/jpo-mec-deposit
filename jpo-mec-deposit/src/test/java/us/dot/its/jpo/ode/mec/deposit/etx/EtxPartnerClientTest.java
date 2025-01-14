@@ -171,6 +171,7 @@ class EtxPartnerClientTest {
 
     // Create expected config that matches test-config.json
     RegistrationConfiguration expectedConfig = new RegistrationConfiguration();
+    expectedConfig.setEtxVendor("testVendor");
     expectedConfig.setDeviceID("test-device-id");
     expectedConfig.setNetworkType(NetworkType.NON_VZ);
     expectedConfig.setClientType(EtxClientType.SOFTWARE);
@@ -185,6 +186,7 @@ class EtxPartnerClientTest {
     when(mockPartnerApiProperties.getNetworkType()).thenReturn(NetworkType.NON_VZ);
     when(mockPartnerApiProperties.getMecLatitude()).thenReturn(BigDecimal.valueOf(0.0));
     when(mockPartnerApiProperties.getMecLongitude()).thenReturn(BigDecimal.valueOf(0.0));
+    when(mockPartnerApiProperties.getVendor()).thenReturn("testVendor");
     when(mockEtxProperties.getClientType()).thenReturn(EtxClientType.SOFTWARE);
     when(mockEtxProperties.getClientSubType()).thenReturn(EtxClientSubType.APPLICATION);
 

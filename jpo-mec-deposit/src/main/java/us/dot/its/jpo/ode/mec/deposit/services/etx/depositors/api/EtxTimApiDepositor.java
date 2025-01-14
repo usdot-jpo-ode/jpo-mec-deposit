@@ -34,15 +34,15 @@ public class EtxTimApiDepositor extends AbstractEtxApiDepositor {
    * Constructs a new EtxTimApiDepositor.
    *
    * @param mecDepositProperties Configuration properties for MEC deposit
-   * @param etxProperties        ETX-specific configuration properties
-   * @param etxApi               Service for interacting with ETX API
-   * @param tokenManager         Manager for ETX authentication tokens
-   * @param meterRegistry        Registry for metrics collection
-   * @param kafkaTemplate        Template for Kafka operations
+   * @param etxProperties ETX-specific configuration properties
+   * @param etxApi Service for interacting with ETX API
+   * @param tokenManager Manager for ETX authentication tokens
+   * @param meterRegistry Registry for metrics collection
+   * @param kafkaTemplate Template for Kafka operations
    */
   public EtxTimApiDepositor(MecDepositProperties mecDepositProperties, EtxProperties etxProperties,
-                            EtxPartnerClient etxApi, EtxTokenManager tokenManager, MeterRegistry meterRegistry,
-                            KafkaTemplate<String, String> kafkaTemplate) {
+      EtxPartnerClient etxApi, EtxTokenManager tokenManager, MeterRegistry meterRegistry,
+      KafkaTemplate<String, String> kafkaTemplate) {
     super(mecDepositProperties, etxProperties, etxApi, tokenManager, meterRegistry, kafkaTemplate,
         EtxMessageType.TIM);
     this.distributionType = etxProperties.getDepositors().getTim().getApi().getDistributionType();
@@ -60,6 +60,7 @@ public class EtxTimApiDepositor extends AbstractEtxApiDepositor {
       concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
   public void timDepositListener(String message) {
     String odeReceivedAt = null;
+    String asn1Hex = "";
     try {
       OdeTimData msg = mapper.readValue(message, OdeTimData.class);
       odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
@@ -68,17 +69,17 @@ public class EtxTimApiDepositor extends AbstractEtxApiDepositor {
         return;
       }
 
-      String asn1String = msg.getMetadata().getAsn1();
+      asn1Hex = msg.getMetadata().getAsn1();
 
       String token = tokenManager.getValidToken();
       log.info("Depositing TIM message to ETX API");
-      partnerApi.deposit(token, asn1String, distributionType);
+      partnerApi.deposit(token, asn1Hex, distributionType);
 
       handleProcessingSuccess(null, distributionType, odeReceivedAt,
-          LocalDateTime.now(ZoneOffset.UTC));
+          LocalDateTime.now(ZoneOffset.UTC), asn1Hex);
     } catch (Exception e) {
       handleProcessingError(e, null, distributionType,
-          odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0);
+          odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);
     }
   }
 }

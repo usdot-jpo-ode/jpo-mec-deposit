@@ -36,8 +36,8 @@ import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerInformation;
 public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
 
   public EtxTimMqttDepositor(MecDepositProperties mecDepositProperties, EtxProperties etxProperties,
-                             EtxMqttProperties mqttProperties, EtxMqttPublishService mqttService, MeterRegistry registry,
-                             KafkaTemplate<String, String> kafkaTemplate) {
+      EtxMqttProperties mqttProperties, EtxMqttPublishService mqttService, MeterRegistry registry,
+      KafkaTemplate<String, String> kafkaTemplate) {
     super(mecDepositProperties, etxProperties, mqttProperties, EtxMessageType.TIM, mqttService,
         registry, kafkaTemplate);
   }
@@ -55,9 +55,11 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
     boolean retain = false;
     Set<String> topicSet = null;
     String odeReceivedAt = null;
+    String asn1Hex = "";
     try {
       OdeTimData msg = mapper.readValue(message, OdeTimData.class);
       odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
+      asn1Hex = msg.getMetadata().getAsn1();
 
       if (isMessageStale(odeReceivedAt)) {
         return;
@@ -84,10 +86,11 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
         log.info("Sending TIM message to MQTT topics: {}", topic);
       }
 
-      handleProcessingSuccess(topicSet, null, odeReceivedAt, LocalDateTime.now(ZoneOffset.UTC));
+      handleProcessingSuccess(topicSet, null, odeReceivedAt, LocalDateTime.now(ZoneOffset.UTC),
+          asn1Hex);
     } catch (Exception e) {
       handleProcessingError(e, topicSet, null,
-          odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0);
+          odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);
     }
   }
 }

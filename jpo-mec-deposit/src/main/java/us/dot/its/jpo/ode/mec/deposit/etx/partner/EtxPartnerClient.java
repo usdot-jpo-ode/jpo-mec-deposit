@@ -49,7 +49,7 @@ public class EtxPartnerClient {
    * @param properties The ETX configuration properties
    */
   public EtxPartnerClient(EtxProperties properties, EtxPartnerApiProperties partnerApi,
-                          RestTemplate restTemplate, ObjectMapper mapper) {
+      RestTemplate restTemplate, ObjectMapper mapper) {
     this.etxProperties = properties;
     this.partnerApiProperties = partnerApi;
     this.restTemplate = restTemplate != null ? restTemplate : createDefaultRestTemplate();
@@ -111,7 +111,7 @@ public class EtxPartnerClient {
    * Handles the registration of a new client partner with the ETX system. This includes certificate
    * generation and connection establishment.
    *
-   * @param token      Authentication token for the API
+   * @param token Authentication token for the API
    * @param configPath Path where configuration should be stored
    * @return Configuration data for the new registration
    * @throws Exception if registration, certificate writing, or connection fails
@@ -138,8 +138,13 @@ public class EtxPartnerClient {
     }
 
     URI uri = new URI(connectionResponse.getMqttURL());
-    RegistrationConfiguration configData =
-        buildConfigData(configPath, caCertPath, certPath, keyPath, deviceId, uri);
+    RegistrationConfiguration configData = RegistrationConfiguration.builder()
+        .configFilePath(configPath).caCertPath(caCertPath).clientCertPath(certPath)
+        .keyFilePath(keyPath).etxVendor(partnerApiProperties.getVendor())
+        .clientType(etxProperties.getClientType()).clientSubType(etxProperties.getClientSubType())
+        .networkType(partnerApiProperties.getNetworkType()).etxMqttUri(uri).deviceID(deviceId)
+        .mecLatitude(partnerApiProperties.getMecLatitude())
+        .mecLongitude(partnerApiProperties.getMecLongitude()).build();
 
     String configDataJson = mapper.writeValueAsString(configData);
     EtxUtil.writeToFile(configPath, configDataJson);
@@ -150,15 +155,15 @@ public class EtxPartnerClient {
   /**
    * Writes the certificate data received during registration to files.
    *
-   * @param response   Registration response containing certificate data
+   * @param response Registration response containing certificate data
    * @param caCertPath Path where CA certificate should be written
-   * @param certPath   Path where client certificate should be written
-   * @param keyPath    Path where private key should be written
-   * @throws IOException      if writing certificates fails
+   * @param certPath Path where client certificate should be written
+   * @param keyPath Path where private key should be written
+   * @throws IOException if writing certificates fails
    * @throws RuntimeException if certificate data is missing from response
    */
   private void writeCertificates(ClientRegistrationResponse response, String caCertPath,
-                                 String certPath, String keyPath) throws IOException {
+      String certPath, String keyPath) throws IOException {
     if (response.getCertificate() == null) {
       throw new RuntimeException("Registration response missing certificate data");
     }
@@ -166,25 +171,6 @@ public class EtxPartnerClient {
     EtxUtil.writeToFile(caCertPath, response.getCertificate().getCaPem());
     EtxUtil.writeToFile(certPath, response.getCertificate().getCertPem());
     EtxUtil.writeToFile(keyPath, response.getCertificate().getKeyPem());
-  }
-
-  /**
-   * Constructs configuration data object from registration and connection information.
-   *
-   * @param configPath Path to configuration file
-   * @param caCertPath Path to CA certificate
-   * @param certPath   Path to client certificate
-   * @param keyPath    Path to private key
-   * @param deviceId   Device identifier from registration
-   * @param uri        MQTT URI from connection response
-   * @return Constructed configuration data object
-   */
-  private RegistrationConfiguration buildConfigData(String configPath, String caCertPath,
-                                                    String certPath, String keyPath, String deviceId, URI uri) {
-    return RegistrationConfiguration.builder().configFilePath(configPath).caCertPath(caCertPath)
-        .clientCertPath(certPath).keyFilePath(keyPath).etxVendor(partnerApiProperties.getVendor())
-        .networkType(partnerApiProperties.getNetworkType()).etxMqttUri(uri).deviceID(deviceId)
-        .etxSessionID(null).build();
   }
 
   private RegistrationConfiguration loadExistingConfiguration(String configPath)
@@ -253,7 +239,7 @@ public class EtxPartnerClient {
   /**
    * Establishes a connection with the ETX Partner API.
    *
-   * @param token    Authentication token
+   * @param token Authentication token
    * @param deviceID Device identifier
    * @return The connection response
    */
@@ -296,13 +282,12 @@ public class EtxPartnerClient {
             mapper.readValue(configDataJson, RegistrationConfiguration.class);
 
         if (configData.getDeviceID() != null
-            && configData.getNetworkType() == partnerApiProperties.getNetworkType()
-            && configData.getClientType() == etxProperties.getClientType()
-            && configData.getClientSubType() == etxProperties.getClientSubType()
-            && configData.getMecLatitude().doubleValue() == partnerApiProperties.getMecLatitude()
-            .doubleValue()
-            && configData.getMecLongitude().doubleValue() == partnerApiProperties.getMecLongitude()
-            .doubleValue()) {
+            && configData.getEtxVendor().equals(partnerApiProperties.getVendor())
+            && configData.getNetworkType().equals(partnerApiProperties.getNetworkType())
+            && configData.getClientType().equals(etxProperties.getClientType())
+            && configData.getClientSubType().equals(etxProperties.getClientSubType())
+            && configData.getMecLatitude().equals(partnerApiProperties.getMecLatitude())
+            && configData.getMecLongitude().equals(partnerApiProperties.getMecLongitude())) {
           valid = true;
         }
       } catch (IOException e) {
@@ -315,8 +300,8 @@ public class EtxPartnerClient {
   /**
    * Deposits data to the ETX Partner API.
    *
-   * @param token            Authentication token
-   * @param asn1Hex          ASN.1 hex string to deposit
+   * @param token Authentication token
+   * @param asn1Hex ASN.1 hex string to deposit
    * @param distributionType Type of distribution
    */
   public void deposit(String token, String asn1Hex, DistributionType distributionType) {

@@ -71,9 +71,11 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
     boolean retain = false;
     Set<String> topicSet = null;
     String odeReceivedAt = null;
+    String asn1Hex = "";
     try {
       OdeSpatData msg = mapper.readValue(message, OdeSpatData.class);
       odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
+      asn1Hex = msg.getMetadata().getAsn1();
 
       if (isMessageStale(odeReceivedAt)) {
         return;
@@ -100,10 +102,11 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
         log.info("Successfully sent SPaT message to MQTT topic: {}", topic);
       }
 
-      handleProcessingSuccess(topicSet, null, odeReceivedAt, LocalDateTime.now(ZoneOffset.UTC));
+      handleProcessingSuccess(topicSet, null, odeReceivedAt, LocalDateTime.now(ZoneOffset.UTC),
+          asn1Hex);
     } catch (Exception e) {
       handleProcessingError(e, topicSet, null,
-          odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0);
+          odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);
     }
   }
 }

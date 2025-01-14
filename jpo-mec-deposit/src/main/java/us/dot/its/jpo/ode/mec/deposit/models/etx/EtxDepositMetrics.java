@@ -25,4 +25,5 @@ public class EtxDepositMetrics {
   private String errorMessage;
   private Set<String> topics;
   private DistributionType distributionType;
+  private String asn1Hex;
 }
