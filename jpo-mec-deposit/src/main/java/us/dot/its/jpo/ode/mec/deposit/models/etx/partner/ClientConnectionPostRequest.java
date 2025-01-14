@@ -1,10 +1,9 @@
 package us.dot.its.jpo.ode.mec.deposit.models.etx.partner;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.math.BigDecimal;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.math.BigDecimal;
+import java.util.Objects;
 
 
 /**
@@ -29,7 +28,7 @@ public class ClientConnectionPostRequest {
    * Constructor with only required parameters
    */
   public ClientConnectionPostRequest(String deviceID, BigDecimal lat, BigDecimal _long,
-      NetworkType networkType) {
+                                     NetworkType networkType) {
     this.deviceID = deviceID;
     this.lat = lat;
     this._long = _long;
@@ -43,7 +42,7 @@ public class ClientConnectionPostRequest {
 
   /**
    * Get deviceID
-   * 
+   *
    * @return deviceID
    */
   @Schema(name = "DeviceID", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -63,7 +62,7 @@ public class ClientConnectionPostRequest {
 
   /**
    * Get lat
-   * 
+   *
    * @return lat
    */
   @Schema(name = "lat", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -83,7 +82,7 @@ public class ClientConnectionPostRequest {
 
   /**
    * Get _long
-   * 
+   *
    * @return _long
    */
   @Schema(name = "long", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -103,7 +102,7 @@ public class ClientConnectionPostRequest {
 
   /**
    * Get networkType
-   * 
+   *
    * @return networkType
    */
   @Schema(name = "NetworkType", requiredMode = Schema.RequiredMode.REQUIRED)

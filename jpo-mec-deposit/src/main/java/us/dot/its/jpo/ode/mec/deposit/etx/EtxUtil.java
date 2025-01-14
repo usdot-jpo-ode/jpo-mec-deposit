@@ -25,13 +25,13 @@ public class EtxUtil {
   /**
    * Creates an SSL socket factory from certificate files.
    *
-   * @param caCertPath Path to CA certificate
+   * @param caCertPath     Path to CA certificate
    * @param clientCertPath Path to client certificate
    * @param privateKeyPath Path to private key
    * @return Configured SSL socket factory
    */
   public static SSLSocketFactory createSocketFactory(String caCertPath, String clientCertPath,
-      String privateKeyPath) {
+                                                     String privateKeyPath) {
     // Convert to absolute paths
     String absoluteCaCertPath = Paths.get(caCertPath).toAbsolutePath().toString();
     String absoluteClientCertPath = Paths.get(clientCertPath).toAbsolutePath().toString();
@@ -71,7 +71,7 @@ public class EtxUtil {
    * Writes content to a file.
    *
    * @param filePath Path to target file
-   * @param content Content to write
+   * @param content  Content to write
    */
   public static void writeToFile(String filePath, String content) {
     try {

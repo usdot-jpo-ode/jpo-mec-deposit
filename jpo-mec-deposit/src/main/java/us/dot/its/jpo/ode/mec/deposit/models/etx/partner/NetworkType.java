@@ -1,7 +1,7 @@
 package us.dot.its.jpo.ode.mec.deposit.models.etx.partner;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
  * Gets or Sets NetworkType
@@ -19,16 +19,6 @@ public enum NetworkType {
     this.value = value;
   }
 
-  @JsonValue
-  public String getValue() {
-    return value;
-  }
-
-  @Override
-  public String toString() {
-    return String.valueOf(value);
-  }
-
   @JsonCreator
   public static NetworkType fromValue(String value) {
     for (NetworkType b : NetworkType.values()) {
@@ -37,5 +27,15 @@ public enum NetworkType {
       }
     }
     throw new IllegalArgumentException("Unexpected value '" + value + "'");
+  }
+
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  @Override
+  public String toString() {
+    return String.valueOf(value);
   }
 }

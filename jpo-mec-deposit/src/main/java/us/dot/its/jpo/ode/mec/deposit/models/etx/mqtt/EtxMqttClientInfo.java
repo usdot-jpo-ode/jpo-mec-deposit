@@ -14,7 +14,9 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class EtxMqttClientInfo {
-  /** The session ID of the MQTT client. */
+  /**
+   * The session ID of the MQTT client.
+   */
   @JsonProperty("SessionID")
   private String sessionId;
 }

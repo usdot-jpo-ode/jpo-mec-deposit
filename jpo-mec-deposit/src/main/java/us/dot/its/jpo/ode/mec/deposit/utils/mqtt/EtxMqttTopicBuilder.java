@@ -4,14 +4,13 @@ import ch.hsr.geohash.GeoHash;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttRegionalTopic;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
+import us.dot.its.jpo.ode.mec.deposit.utils.PositionConversionUtil;
 import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionState;
 import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
 import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
@@ -19,11 +18,14 @@ import us.dot.its.jpo.ode.plugin.j2735.common.Position3D;
 import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.GeographicalPath;
 import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerDataFrame;
 import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerDataFrameList;
-import us.dot.its.jpo.ode.mec.deposit.utils.PositionConversionUtil;
 
 /**
- * Utility class for building MQTT topics according to ETX specifications. Handles topic
- * construction for regional messages and geohash-based routing.
+ * Utility class for building MQTT topics according to ETX specifications. This class handles topic
+ * construction for regional messages and geohash-based routing. Topics are constructed in the
+ * format: vzimp/1/namespace/geohash/clientType/clientSubType/vendorId/messageFormat/messageType
+ *
+ * <p>
+ * The geohash component is formatted as individual characters separated by forward slashes.
  */
 @Slf4j
 public class EtxMqttTopicBuilder {
@@ -32,10 +34,12 @@ public class EtxMqttTopicBuilder {
   private static final String MQTT_PUB_WILDCARD = "-";
 
   /**
-   * Constructs a regional MQTT topic string from the given topic components.
+   * Constructs a regional MQTT topic string from the given topic components. The resulting topic
+   * follows the format:
+   * vzimp/1/namespace/geohash/clientType/clientSubType/vendorId/messageFormat/messageType
    *
-   * @param topic The regional topic components
-   * @return Formatted MQTT topic string
+   * @param topic The regional topic components encapsulated in an EtxMqttRegionalTopic object
+   * @return Formatted MQTT topic string with all components properly separated by forward slashes
    */
   public static String getRegionalTopic(EtxMqttRegionalTopic topic) {
     return String.format("%s/%s/%s/%s/%s/%s/%s/%s/%s", MQTT_PREFIX, MQTT_SCHEMA_VERSION,
@@ -45,11 +49,13 @@ public class EtxMqttTopicBuilder {
   }
 
   /**
-   * Formats a geohash string for use in MQTT topic paths.
+   * Formats a geohash string for use in MQTT topic paths by splitting it into individual characters
+   * separated by forward slashes. The geohash is processed to ensure it meets the required length
+   * and precision requirements.
    *
-   * @param geoHash The geohash to format
-   * @param precision The required precision (6-8)
-   * @return Formatted geohash string for MQTT topic
+   * @param geoHash The base32 geohash string to format
+   * @param precision The required precision (must be between 6 and 8)
+   * @return Formatted geohash string with characters separated by forward slashes
    * @throws IllegalArgumentException if geoHash is null/empty or precision is invalid
    */
   public static String getPubTopicGeoHash(String geoHash, int precision) {
@@ -76,12 +82,13 @@ public class EtxMqttTopicBuilder {
   }
 
   /**
-   * Generates a formatted geohash string from latitude/longitude coordinates.
+   * Generates a formatted geohash string from latitude/longitude coordinates. The resulting geohash
+   * is formatted for use in MQTT topics with characters separated by slashes.
    *
-   * @param latitude The latitude coordinate
-   * @param longitude The longitude coordinate
-   * @param precision The required geohash precision
-   * @return Formatted geohash string for MQTT topic
+   * @param latitude The latitude coordinate in decimal degrees
+   * @param longitude The longitude coordinate in decimal degrees
+   * @param precision The required geohash precision (must be between 6 and 8)
+   * @return Formatted geohash string for MQTT topic with characters separated by slashes
    */
   public static String getPubGeoHash(double latitude, double longitude, int precision) {
     String geoHash = GeoHash.withCharacterPrecision(latitude, longitude, precision).toBase32();
@@ -89,14 +96,18 @@ public class EtxMqttTopicBuilder {
   }
 
   /**
-   * Builds a regional topic for the given message type and coordinates.
+   * Builds a complete regional topic string for the given message type and coordinates. Combines
+   * all necessary components including geohash, client information, and message details.
    *
-   * @param messageType The type of message
-   * @param latitude The latitude coordinate
-   * @param longitude The longitude coordinate
-   * @param precision The geohash precision
-   * @param etxProperties The ETX configuration properties
-   * @return The formatted topic string
+   * @param messageType The type of message (e.g., TIM, SPAT)
+   * @param latitude The latitude coordinate in decimal degrees
+   * @param longitude The longitude coordinate in decimal degrees
+   * @param precision The geohash precision (must be between 6 and 8)
+   * @param mqttVendorId The vendor identifier for the MQTT message
+   * @param messageFormat The format of the message content
+   * @param clientType The type of client sending the message
+   * @param clientSubType The subtype of the client sending the message
+   * @return The complete formatted topic string
    */
   public static String buildRegionalTopic(EtxMessageType messageType, double latitude,
       double longitude, int precision, String mqttVendorId, EtxMqttMessageFormat messageFormat,
@@ -109,11 +120,16 @@ public class EtxMqttTopicBuilder {
   }
 
   /**
-   * Gets a list of topics for TIM messages.
+   * Generates a set of MQTT topics for TIM (Traveler Information Message) messages. Creates topics
+   * based on the geographical regions specified in the TIM data frames.
    *
-   * @param dataFramesList The TIM data frames
-   * @param etxProperties The ETX configuration properties
-   * @return Set of topic strings
+   * @param dataFramesList The list of TIM data frames containing region information
+   * @param mqttVendorId The vendor identifier for the MQTT message
+   * @param precision The geohash precision to use
+   * @param messageFormat The format of the message content
+   * @param clientType The type of client sending the message
+   * @param clientSubType The subtype of the client sending the message
+   * @return Set of topic strings, one for each valid region in the TIM message
    */
   public static Set<String> getTimTopicList(TravelerDataFrameList dataFramesList,
       String mqttVendorId, int precision, EtxMqttMessageFormat messageFormat,
@@ -139,12 +155,17 @@ public class EtxMqttTopicBuilder {
   }
 
   /**
-   * Gets a list of topics for SPAT messages.
+   * Generates a set of MQTT topics for SPAT (Signal Phase and Timing) messages. Creates topics
+   * based on the intersection locations referenced in the SPAT message.
    *
-   * @param spatMsg The SPAT message
-   * @param etxProperties The ETX configuration properties
-   * @param mapDataCollector The map reference point collector
-   * @return Set of topic strings
+   * @param spatMsg The SPAT message containing intersection information
+   * @param mapDataCollector The collector containing intersection reference points
+   * @param mqttVendorId The vendor identifier for the MQTT message
+   * @param precision The geohash precision to use
+   * @param messageFormat The format of the message content
+   * @param clientType The type of client sending the message
+   * @param clientSubType The subtype of the client sending the message
+   * @return Set of topic strings, one for each intersection with valid reference points
    */
   public static Set<String> getSpatTopicList(J2735SPAT spatMsg,
       MapRefPointCollector mapDataCollector, String mqttVendorId, int precision,

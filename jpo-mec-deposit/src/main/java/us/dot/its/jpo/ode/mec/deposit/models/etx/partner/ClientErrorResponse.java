@@ -1,10 +1,8 @@
 package us.dot.its.jpo.ode.mec.deposit.models.etx.partner;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
 
 
 /**
@@ -36,7 +34,7 @@ public class ClientErrorResponse {
 
   /**
    * Get error
-   * 
+   *
    * @return error
    */
   @Schema(name = "error", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -56,7 +54,7 @@ public class ClientErrorResponse {
 
   /**
    * Get description
-   * 
+   *
    * @return description
    */
   @Schema(name = "description", requiredMode = Schema.RequiredMode.REQUIRED)

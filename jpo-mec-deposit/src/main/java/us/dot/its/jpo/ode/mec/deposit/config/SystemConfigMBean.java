@@ -6,13 +6,6 @@ package us.dot.its.jpo.ode.mec.deposit.config;
 public interface SystemConfigMBean {
 
   /**
-   * Sets the number of threads for the system.
-   *
-   * @param noOfThreads The number of threads to set
-   */
-  public void setThreadCount(int noOfThreads);
-
-  /**
    * Gets the number of threads for the system.
    *
    * @return The number of threads
@@ -20,11 +13,11 @@ public interface SystemConfigMBean {
   public int getThreadCount();
 
   /**
-   * Sets the schema name for the system.
+   * Sets the number of threads for the system.
    *
-   * @param schemaName The schema name to set
+   * @param noOfThreads The number of threads to set
    */
-  public void setSchemaName(String schemaName);
+  public void setThreadCount(int noOfThreads);
 
   /**
    * Gets the schema name for the system.
@@ -32,6 +25,13 @@ public interface SystemConfigMBean {
    * @return The schema name
    */
   public String getSchemaName();
+
+  /**
+   * Sets the schema name for the system.
+   *
+   * @param schemaName The schema name to set
+   */
+  public void setSchemaName(String schemaName);
 
   /**
    * Performs a configuration operation.

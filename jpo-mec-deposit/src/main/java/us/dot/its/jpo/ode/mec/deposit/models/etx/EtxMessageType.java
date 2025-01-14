@@ -21,21 +21,6 @@ public enum EtxMessageType {
   }
 
   /**
-   * Gets the string value of this message type.
-   *
-   * @return The string representation
-   */
-  @JsonValue
-  public String getValue() {
-    return value;
-  }
-
-  @Override
-  public String toString() {
-    return String.valueOf(value);
-  }
-
-  /**
    * Creates a message type from its string value.
    *
    * @param value The string representation
@@ -50,5 +35,20 @@ public enum EtxMessageType {
       }
     }
     throw new IllegalArgumentException("Unexpected value '" + value + "'");
+  }
+
+  /**
+   * Gets the string value of this message type.
+   *
+   * @return The string representation
+   */
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  @Override
+  public String toString() {
+    return String.valueOf(value);
   }
 }

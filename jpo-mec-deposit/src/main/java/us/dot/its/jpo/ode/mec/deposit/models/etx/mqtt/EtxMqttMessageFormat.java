@@ -22,21 +22,6 @@ public enum EtxMqttMessageFormat {
   }
 
   /**
-   * Gets the string value of this message format.
-   *
-   * @return The string representation
-   */
-  @JsonValue
-  public String getValue() {
-    return value;
-  }
-
-  @Override
-  public String toString() {
-    return String.valueOf(value);
-  }
-
-  /**
    * Creates a message format from its string value.
    *
    * @param value The string representation
@@ -51,5 +36,20 @@ public enum EtxMqttMessageFormat {
       }
     }
     throw new IllegalArgumentException("Unexpected value '" + value + "'");
+  }
+
+  /**
+   * Gets the string value of this message format.
+   *
+   * @return The string representation
+   */
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  @Override
+  public String toString() {
+    return String.valueOf(value);
   }
 }

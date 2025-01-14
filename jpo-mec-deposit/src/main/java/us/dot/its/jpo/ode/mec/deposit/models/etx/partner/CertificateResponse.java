@@ -1,9 +1,8 @@
 package us.dot.its.jpo.ode.mec.deposit.models.etx.partner;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
 
 
 /**
@@ -38,7 +37,7 @@ public class CertificateResponse {
 
   /**
    * Get certPem
-   * 
+   *
    * @return certPem
    */
   @Schema(name = "cert.pem", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -58,7 +57,7 @@ public class CertificateResponse {
 
   /**
    * Get keyPem
-   * 
+   *
    * @return keyPem
    */
   @Schema(name = "key.pem", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -78,7 +77,7 @@ public class CertificateResponse {
 
   /**
    * Get caPem
-   * 
+   *
    * @return caPem
    */
   @Schema(name = "ca.pem", requiredMode = Schema.RequiredMode.REQUIRED)

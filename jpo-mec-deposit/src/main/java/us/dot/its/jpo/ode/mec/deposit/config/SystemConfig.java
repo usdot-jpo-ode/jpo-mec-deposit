@@ -14,23 +14,23 @@ public class SystemConfig implements SystemConfigMBean {
   }
 
   @Override
-  public void setThreadCount(int noOfThreads) {
-    this.threadCount = noOfThreads;
-  }
-
-  @Override
   public int getThreadCount() {
     return this.threadCount;
   }
 
   @Override
-  public void setSchemaName(String schemaName) {
-    this.schemaName = schemaName;
+  public void setThreadCount(int noOfThreads) {
+    this.threadCount = noOfThreads;
   }
 
   @Override
   public String getSchemaName() {
     return this.schemaName;
+  }
+
+  @Override
+  public void setSchemaName(String schemaName) {
+    this.schemaName = schemaName;
   }
 
   @Override

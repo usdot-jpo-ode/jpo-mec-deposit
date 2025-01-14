@@ -1,7 +1,7 @@
 package us.dot.its.jpo.ode.mec.deposit.models.etx.partner;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
  * Gets or Sets EtxEnvironmentName
@@ -23,16 +23,6 @@ public enum EnvironmentName {
     this.value = value;
   }
 
-  @JsonValue
-  public String getValue() {
-    return value;
-  }
-
-  @Override
-  public String toString() {
-    return String.valueOf(value);
-  }
-
   @JsonCreator
   public static EnvironmentName fromValue(String value) {
     for (EnvironmentName b : EnvironmentName.values()) {
@@ -41,5 +31,15 @@ public enum EnvironmentName {
       }
     }
     throw new IllegalArgumentException("Unexpected value '" + value + "'");
+  }
+
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  @Override
+  public String toString() {
+    return String.valueOf(value);
   }
 }

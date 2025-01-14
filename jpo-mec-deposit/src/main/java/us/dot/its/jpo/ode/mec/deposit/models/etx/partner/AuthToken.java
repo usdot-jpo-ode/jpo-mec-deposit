@@ -1,9 +1,8 @@
 package us.dot.its.jpo.ode.mec.deposit.models.etx.partner;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
 
 
 /**
@@ -38,8 +37,8 @@ public class AuthToken {
    * Constructor with only required parameters
    */
   public AuthToken(String accessToken, Integer expiresIn, Integer refreshExpiresIn,
-      String refreshToken, String tokenType, String idToken, Integer notBeforePolicy,
-      String sessionState, String scope) {
+                   String refreshToken, String tokenType, String idToken, Integer notBeforePolicy,
+                   String sessionState, String scope) {
     this.accessToken = accessToken;
     this.expiresIn = expiresIn;
     this.refreshExpiresIn = refreshExpiresIn;
@@ -58,7 +57,7 @@ public class AuthToken {
 
   /**
    * Get accessToken
-   * 
+   *
    * @return accessToken
    */
   @Schema(name = "access_token", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -78,7 +77,7 @@ public class AuthToken {
 
   /**
    * Get expiresIn
-   * 
+   *
    * @return expiresIn
    */
   @Schema(name = "expires_in", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -98,7 +97,7 @@ public class AuthToken {
 
   /**
    * Get refreshExpiresIn
-   * 
+   *
    * @return refreshExpiresIn
    */
   @Schema(name = "refresh_expires_in", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -118,7 +117,7 @@ public class AuthToken {
 
   /**
    * Get refreshToken
-   * 
+   *
    * @return refreshToken
    */
   @Schema(name = "refresh_token", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -138,7 +137,7 @@ public class AuthToken {
 
   /**
    * Get tokenType
-   * 
+   *
    * @return tokenType
    */
   @Schema(name = "token_type", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -158,7 +157,7 @@ public class AuthToken {
 
   /**
    * Get idToken
-   * 
+   *
    * @return idToken
    */
   @Schema(name = "id_token", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -178,7 +177,7 @@ public class AuthToken {
 
   /**
    * Get notBeforePolicy
-   * 
+   *
    * @return notBeforePolicy
    */
   @Schema(name = "not-before-policy", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -198,7 +197,7 @@ public class AuthToken {
 
   /**
    * Get sessionState
-   * 
+   *
    * @return sessionState
    */
   @Schema(name = "session_state", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -218,7 +217,7 @@ public class AuthToken {
 
   /**
    * Get scope
-   * 
+   *
    * @return scope
    */
   @Schema(name = "scope", requiredMode = Schema.RequiredMode.REQUIRED)

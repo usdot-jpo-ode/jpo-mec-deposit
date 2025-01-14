@@ -14,18 +14,32 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 @Data
 @Builder
 public class EtxMqttRegionalTopic {
-  /** Geohash for the regional topic. */
-  private String mqttGeohash;
-  /** Vendor identifier. */
-  private String vendorId;
-  /** Format of the MQTT message. */
-  private EtxMqttMessageFormat messageFormat;
-  /** Type of the MQTT message. */
-  private EtxMessageType messageType;
-  /** Type of the ETX client. */
-  private EtxClientType clientType;
-  /** Subtype of the ETX client. */
-  private EtxClientSubType clientSubType;
-  /** Namespace for the MQTT topic, always REGIONAL. */
+  /**
+   * Namespace for the MQTT topic, always REGIONAL.
+   */
   private final EtxMqttNamespace namespace = EtxMqttNamespace.REGIONAL;
+  /**
+   * Geohash for the regional topic.
+   */
+  private String mqttGeohash;
+  /**
+   * Vendor identifier.
+   */
+  private String vendorId;
+  /**
+   * Format of the MQTT message.
+   */
+  private EtxMqttMessageFormat messageFormat;
+  /**
+   * Type of the MQTT message.
+   */
+  private EtxMessageType messageType;
+  /**
+   * Type of the ETX client.
+   */
+  private EtxClientType clientType;
+  /**
+   * Subtype of the ETX client.
+   */
+  private EtxClientSubType clientSubType;
 }

@@ -109,7 +109,6 @@ public class EtxMqttConfig {
    * Creates and configures the MQTT inbound message flow.
    *
    * @param clientManager The MQTT client manager
-   * @param etxProperties ETX configuration properties
    * @return Configured IntegrationFlow for inbound MQTT messages
    */
   @Bean

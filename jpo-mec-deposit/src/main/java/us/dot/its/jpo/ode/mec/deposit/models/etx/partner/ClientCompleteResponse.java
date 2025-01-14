@@ -1,9 +1,8 @@
 package us.dot.its.jpo.ode.mec.deposit.models.etx.partner;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
 
 
 /**
@@ -24,7 +23,7 @@ public class ClientCompleteResponse {
    * Constructor with only required parameters
    */
   public ClientCompleteResponse(ClientRegistrationResponse registration,
-      ClientConnectionResponse connection) {
+                                ClientConnectionResponse connection) {
     this.registration = registration;
     this.connection = connection;
   }
@@ -36,7 +35,7 @@ public class ClientCompleteResponse {
 
   /**
    * Get registration
-   * 
+   *
    * @return registration
    */
   @Schema(name = "registration", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -56,7 +55,7 @@ public class ClientCompleteResponse {
 
   /**
    * Get connection
-   * 
+   *
    * @return connection
    */
   @Schema(name = "connection", requiredMode = Schema.RequiredMode.REQUIRED)

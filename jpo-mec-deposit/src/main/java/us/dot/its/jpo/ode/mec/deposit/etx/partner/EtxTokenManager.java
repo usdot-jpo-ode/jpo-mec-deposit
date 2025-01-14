@@ -11,9 +11,9 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.AuthToken;
 @Slf4j
 @Component
 public class EtxTokenManager {
+  private final EtxPartnerClient partnerApiClient;
   private String currentToken;
   private long expirationTime;
-  private final EtxPartnerClient partnerApiClient;
 
   public EtxTokenManager(EtxPartnerClient etxApi) {
     this.partnerApiClient = etxApi;
@@ -21,7 +21,6 @@ public class EtxTokenManager {
 
   /**
    * Gets a valid authentication token, refreshing if necessary.
-   * 
    *
    * @return Valid authentication token
    */

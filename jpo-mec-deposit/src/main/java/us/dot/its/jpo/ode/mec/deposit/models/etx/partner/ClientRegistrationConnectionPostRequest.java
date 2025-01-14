@@ -1,10 +1,9 @@
 package us.dot.its.jpo.ode.mec.deposit.models.etx.partner;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.math.BigDecimal;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.math.BigDecimal;
+import java.util.Objects;
 
 public class ClientRegistrationConnectionPostRequest {
 
@@ -26,7 +25,7 @@ public class ClientRegistrationConnectionPostRequest {
    * Constructor with only required parameters
    */
   public ClientRegistrationConnectionPostRequest(String clientType, String clientSubtype,
-      BigDecimal lat, BigDecimal _long, NetworkType networkType) {
+                                                 BigDecimal lat, BigDecimal _long, NetworkType networkType) {
     this.clientType = clientType;
     this.clientSubtype = clientSubtype;
     this.deviceFixedLocationLat = lat;
@@ -41,7 +40,7 @@ public class ClientRegistrationConnectionPostRequest {
 
   /**
    * Get clientType
-   * 
+   *
    * @return clientType
    */
   @Schema(name = "ClientType", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -61,7 +60,7 @@ public class ClientRegistrationConnectionPostRequest {
 
   /**
    * Get clientSubtype
-   * 
+   *
    * @return clientSubtype
    */
   @Schema(name = "ClientSubtype", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -81,7 +80,7 @@ public class ClientRegistrationConnectionPostRequest {
 
   /**
    * Get lat
-   * 
+   *
    * @return lat
    */
   @Schema(name = "lat", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -101,7 +100,7 @@ public class ClientRegistrationConnectionPostRequest {
 
   /**
    * Get _long
-   * 
+   *
    * @return _long
    */
   @Schema(name = "long", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -121,7 +120,7 @@ public class ClientRegistrationConnectionPostRequest {
 
   /**
    * Get networkType
-   * 
+   *
    * @return networkType
    */
   @Schema(name = "NetworkType", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -147,9 +146,9 @@ public class ClientRegistrationConnectionPostRequest {
     return Objects.equals(this.clientType, clientRegistrationConnectionPostRequest.clientType)
         && Objects.equals(this.clientSubtype, clientRegistrationConnectionPostRequest.clientSubtype)
         && Objects.equals(this.deviceFixedLocationLat,
-            clientRegistrationConnectionPostRequest.deviceFixedLocationLat)
+        clientRegistrationConnectionPostRequest.deviceFixedLocationLat)
         && Objects.equals(this.deviceFixedLocationLong,
-            clientRegistrationConnectionPostRequest.deviceFixedLocationLong)
+        clientRegistrationConnectionPostRequest.deviceFixedLocationLong)
         && Objects.equals(this.networkType, clientRegistrationConnectionPostRequest.networkType);
   }
 

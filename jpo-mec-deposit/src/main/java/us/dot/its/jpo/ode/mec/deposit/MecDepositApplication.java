@@ -29,11 +29,11 @@ public class MecDepositApplication {
    * Application entry point.
    *
    * @param args Command line arguments
-   * @throws MalformedObjectNameException If MBean object name is invalid
-   * @throws InterruptedException If thread is interrupted
+   * @throws MalformedObjectNameException   If MBean object name is invalid
+   * @throws InterruptedException           If thread is interrupted
    * @throws InstanceAlreadyExistsException If MBean instance already exists
-   * @throws MBeanRegistrationException If MBean registration fails
-   * @throws NotCompliantMBeanException If MBean is not compliant
+   * @throws MBeanRegistrationException     If MBean registration fails
+   * @throws NotCompliantMBeanException     If MBean is not compliant
    */
   public static void main(String[] args) throws MalformedObjectNameException, InterruptedException,
       InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException {

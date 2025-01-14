@@ -1,10 +1,8 @@
 package us.dot.its.jpo.ode.mec.deposit.models.etx.partner;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
 
 
 /**
@@ -35,7 +33,7 @@ public class AuthUserInfo {
    * Constructor with only required parameters
    */
   public AuthUserInfo(String sub, Boolean emailVerified, String name, String preferredUsername,
-      String givenName, String familyName, String email) {
+                      String givenName, String familyName, String email) {
     this.sub = sub;
     this.emailVerified = emailVerified;
     this.name = name;
@@ -52,7 +50,7 @@ public class AuthUserInfo {
 
   /**
    * Get sub
-   * 
+   *
    * @return sub
    */
   @Schema(name = "sub", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -72,7 +70,7 @@ public class AuthUserInfo {
 
   /**
    * Get emailVerified
-   * 
+   *
    * @return emailVerified
    */
   @Schema(name = "email_verified", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -92,7 +90,7 @@ public class AuthUserInfo {
 
   /**
    * Get name
-   * 
+   *
    * @return name
    */
   @Schema(name = "name", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -112,7 +110,7 @@ public class AuthUserInfo {
 
   /**
    * Get preferredUsername
-   * 
+   *
    * @return preferredUsername
    */
   @Schema(name = "preferred_username", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -132,7 +130,7 @@ public class AuthUserInfo {
 
   /**
    * Get givenName
-   * 
+   *
    * @return givenName
    */
   @Schema(name = "given_name", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -152,7 +150,7 @@ public class AuthUserInfo {
 
   /**
    * Get familyName
-   * 
+   *
    * @return familyName
    */
   @Schema(name = "family_name", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -172,7 +170,7 @@ public class AuthUserInfo {
 
   /**
    * Get email
-   * 
+   *
    * @return email
    */
   @Schema(name = "email", requiredMode = Schema.RequiredMode.REQUIRED)

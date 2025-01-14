@@ -2,7 +2,6 @@ package us.dot.its.jpo.ode.mec.deposit.services.etx;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -38,11 +37,11 @@ public class EtxMqttPublishService {
    * Constructs an EtxMqttService with the specified parameters.
    *
    * @param mqttOutboundChannel The channel for outbound MQTT messages
-   * @param mqttProperties MQTT configuration properties
-   * @param registry Metrics registry for monitoring
+   * @param mqttProperties      MQTT configuration properties
+   * @param registry            Metrics registry for monitoring
    */
   public EtxMqttPublishService(MessageChannel mqttOutboundChannel, EtxMqttProperties mqttProperties,
-      MeterRegistry registry) {
+                               MeterRegistry registry) {
     this.mqttOutboundChannel = mqttOutboundChannel;
     this.maxMessagesPerSecond = mqttProperties.getMaxMessagesPerSecond();
 
@@ -71,9 +70,9 @@ public class EtxMqttPublishService {
   /**
    * Publishes ASN.1 encoded bytes to the specified MQTT topic.
    *
-   * @param topic The MQTT topic to publish to
+   * @param topic     The MQTT topic to publish to
    * @param asn1Bytes The ASN.1 encoded message bytes
-   * @param retain Whether to retain the message on the broker
+   * @param retain    Whether to retain the message on the broker
    */
   public void publishAsn1Bytes(String topic, byte[] asn1Bytes, boolean retain) {
     try {

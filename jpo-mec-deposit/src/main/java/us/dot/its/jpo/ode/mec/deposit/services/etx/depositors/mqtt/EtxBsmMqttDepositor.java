@@ -4,7 +4,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
@@ -13,15 +12,14 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.GeoRoutedMsg;
-import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxMqttDepositor;
-import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxDepositMetrics;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.GeoRoutedMsg;
+import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxMqttDepositor;
+import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttProtobufBuilder;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
 import us.dot.its.jpo.ode.model.OdeBsmData;
@@ -39,8 +37,8 @@ import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
 public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
 
   public EtxBsmMqttDepositor(MecDepositProperties mecDepositProperties, EtxProperties etxProperties,
-      EtxMqttProperties mqttProperties, EtxMqttPublishService mqttService, MeterRegistry registry,
-      KafkaTemplate<String, String> kafkaTemplate) {
+                             EtxMqttProperties mqttProperties, EtxMqttPublishService mqttService, MeterRegistry registry,
+                             KafkaTemplate<String, String> kafkaTemplate) {
     super(mecDepositProperties, etxProperties, mqttProperties, EtxMessageType.BSM, mqttService,
         registry, kafkaTemplate);
   }

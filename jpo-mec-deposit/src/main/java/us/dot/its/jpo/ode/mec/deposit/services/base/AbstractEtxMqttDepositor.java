@@ -18,9 +18,9 @@ public abstract class AbstractEtxMqttDepositor extends AbstractEtxDepositor {
   protected final EtxMqttProperties mqttProperties;
 
   protected AbstractEtxMqttDepositor(MecDepositProperties mecDepositProperties,
-      EtxProperties etxProperties, EtxMqttProperties mqttProperties, EtxMessageType messageType,
-      EtxMqttPublishService mqttService, MeterRegistry registry,
-      KafkaTemplate<String, String> kafkaTemplate) {
+                                     EtxProperties etxProperties, EtxMqttProperties mqttProperties, EtxMessageType messageType,
+                                     EtxMqttPublishService mqttService, MeterRegistry registry,
+                                     KafkaTemplate<String, String> kafkaTemplate) {
     super(mecDepositProperties, etxProperties, messageType, registry, "mec-deposit.etx.mqtt",
         kafkaTemplate);
     this.mqttService = mqttService;

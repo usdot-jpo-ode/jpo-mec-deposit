@@ -4,7 +4,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -15,7 +14,6 @@ import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxDepositMetrics;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxApiDepositor;
@@ -36,15 +34,15 @@ public class EtxTimApiDepositor extends AbstractEtxApiDepositor {
    * Constructs a new EtxTimApiDepositor.
    *
    * @param mecDepositProperties Configuration properties for MEC deposit
-   * @param etxProperties ETX-specific configuration properties
-   * @param etxApi Service for interacting with ETX API
-   * @param tokenManager Manager for ETX authentication tokens
-   * @param meterRegistry Registry for metrics collection
-   * @param kafkaTemplate Template for Kafka operations
+   * @param etxProperties        ETX-specific configuration properties
+   * @param etxApi               Service for interacting with ETX API
+   * @param tokenManager         Manager for ETX authentication tokens
+   * @param meterRegistry        Registry for metrics collection
+   * @param kafkaTemplate        Template for Kafka operations
    */
   public EtxTimApiDepositor(MecDepositProperties mecDepositProperties, EtxProperties etxProperties,
-      EtxPartnerClient etxApi, EtxTokenManager tokenManager, MeterRegistry meterRegistry,
-      KafkaTemplate<String, String> kafkaTemplate) {
+                            EtxPartnerClient etxApi, EtxTokenManager tokenManager, MeterRegistry meterRegistry,
+                            KafkaTemplate<String, String> kafkaTemplate) {
     super(mecDepositProperties, etxProperties, etxApi, tokenManager, meterRegistry, kafkaTemplate,
         EtxMessageType.TIM);
     this.distributionType = etxProperties.getDepositors().getTim().getApi().getDistributionType();

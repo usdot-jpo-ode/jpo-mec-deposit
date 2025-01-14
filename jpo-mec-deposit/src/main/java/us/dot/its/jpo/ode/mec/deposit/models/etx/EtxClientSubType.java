@@ -9,13 +9,15 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum EtxClientSubType {
   PASSENGER_CAR("PassengerCar"), TRUCK("Truck"), BUS("Bus"), EMERGENCY_VEHICLE(
       "EmergencyVehicle"), SCHOOL_BUS("SchoolBus"), MAINTENANCE_VEHICLE(
-          "MaintenanceVehicle"), PEDESTRIAN("Pedestrian"), BICYCLE("Bicycle"), SCOOTER(
-              "Scooter"), MOTORCYCLE("Motorcycle"), ROAD_SIDE_UNIT("RoadSideUnit"), CAMERA(
-                  "Camera"), LIDAR("Lidar"), RADAR("Radar"), INDUCTIVE_LOOP(
-                      "InductiveLoop"), MAGNETIC_SENSOR("MagneticSensor"), PLATFORM(
-                          "Platform"), APPLICATION("Application"), NA("NA");
+      "MaintenanceVehicle"), PEDESTRIAN("Pedestrian"), BICYCLE("Bicycle"), SCOOTER(
+      "Scooter"), MOTORCYCLE("Motorcycle"), ROAD_SIDE_UNIT("RoadSideUnit"), CAMERA(
+      "Camera"), LIDAR("Lidar"), RADAR("Radar"), INDUCTIVE_LOOP(
+      "InductiveLoop"), MAGNETIC_SENSOR("MagneticSensor"), PLATFORM(
+      "Platform"), APPLICATION("Application"), NA("NA");
 
-  /** String value of the client subtype. */
+  /**
+   * String value of the client subtype.
+   */
   private String value;
 
   /**
@@ -25,16 +27,6 @@ public enum EtxClientSubType {
    */
   EtxClientSubType(String value) {
     this.value = value;
-  }
-
-  /**
-   * Gets the string value of this client subtype.
-   *
-   * @return The string representation
-   */
-  @JsonValue
-  public String getValue() {
-    return value;
   }
 
   /**
@@ -52,6 +44,16 @@ public enum EtxClientSubType {
       }
     }
     throw new IllegalArgumentException("Unexpected value '" + value + "'");
+  }
+
+  /**
+   * Gets the string value of this client subtype.
+   *
+   * @return The string representation
+   */
+  @JsonValue
+  public String getValue() {
+    return value;
   }
 
   @Override

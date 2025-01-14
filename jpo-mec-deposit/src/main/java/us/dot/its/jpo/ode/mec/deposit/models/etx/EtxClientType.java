@@ -10,9 +10,11 @@ public enum EtxClientType {
   // "Vehicle""VulnerableRoadUser""TrafficLightController""InfrastructureSensor""OnboardSensor""Software"
   VEHICLE("Vehicle"), VULNERABLE_ROAD_USER("VulnerableRoadUser"), TRAFFIC_LIGHT_CONTROLLER(
       "TrafficLightController"), INFRASTRUCTURE_SENSOR(
-          "InfrastructureSensor"), ONBOARD_SENSOR("OnboardSensor"), SOFTWARE("Software");
+      "InfrastructureSensor"), ONBOARD_SENSOR("OnboardSensor"), SOFTWARE("Software");
 
-  /** String value of the client type. */
+  /**
+   * String value of the client type.
+   */
   private String value;
 
   /**
@@ -22,21 +24,6 @@ public enum EtxClientType {
    */
   EtxClientType(String value) {
     this.value = value;
-  }
-
-  /**
-   * Gets the string value of this client type.
-   *
-   * @return The string representation
-   */
-  @JsonValue
-  public String getValue() {
-    return value;
-  }
-
-  @Override
-  public String toString() {
-    return String.valueOf(value);
   }
 
   /**
@@ -54,5 +41,20 @@ public enum EtxClientType {
       }
     }
     throw new IllegalArgumentException("Unexpected value '" + value + "'");
+  }
+
+  /**
+   * Gets the string value of this client type.
+   *
+   * @return The string representation
+   */
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  @Override
+  public String toString() {
+    return String.valueOf(value);
   }
 }

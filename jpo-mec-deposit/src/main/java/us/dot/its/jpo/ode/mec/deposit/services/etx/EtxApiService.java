@@ -7,7 +7,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
 
 /**
  * Service responsible for handling ETX client registration and Clear TIM operations.
@@ -23,7 +22,7 @@ public class EtxApiService {
   /**
    * Creates a new ETX registration service and attempts to register the client.
    *
-   * @param etxApi The ETX API client
+   * @param etxApi       The ETX API client
    * @param tokenManager The token manager for authentication
    */
   public EtxApiService(EtxPartnerClient etxApi, EtxTokenManager tokenManager) {

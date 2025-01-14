@@ -15,16 +15,6 @@ public enum EtxMqttNamespace {
     this.value = value;
   }
 
-  @JsonValue
-  public String getValue() {
-    return value;
-  }
-
-  @Override
-  public String toString() {
-    return String.valueOf(value);
-  }
-
   /**
    * Creates a namespace from its string value.
    *
@@ -40,6 +30,16 @@ public enum EtxMqttNamespace {
       }
     }
     throw new IllegalArgumentException("Unexpected value '" + value + "'");
+  }
+
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  @Override
+  public String toString() {
+    return String.valueOf(value);
   }
 
 }

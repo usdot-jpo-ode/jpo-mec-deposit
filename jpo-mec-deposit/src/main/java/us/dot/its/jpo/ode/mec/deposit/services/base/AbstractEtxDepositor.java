@@ -37,8 +37,8 @@ public abstract class AbstractEtxDepositor {
   protected final KafkaTemplate<String, String> kafkaTemplate;
 
   protected AbstractEtxDepositor(MecDepositProperties mecDepositProperties,
-      EtxProperties etxProperties, EtxMessageType messageType, MeterRegistry registry,
-      String metricsPrefix, KafkaTemplate<String, String> kafkaTemplate) {
+                                 EtxProperties etxProperties, EtxMessageType messageType, MeterRegistry registry,
+                                 String metricsPrefix, KafkaTemplate<String, String> kafkaTemplate) {
     this.mecDepositProperties = mecDepositProperties;
     this.etxProperties = etxProperties;
     this.messageType = messageType;
@@ -92,7 +92,7 @@ public abstract class AbstractEtxDepositor {
   protected abstract EtxDepositorType getDepositorType();
 
   protected void handleProcessingError(Exception e, Set<String> topics,
-      DistributionType distributionType, long odeReceivedAtMillis) {
+                                       DistributionType distributionType, long odeReceivedAtMillis) {
     String errorMessage = e.getMessage();
     log.error("Error processing {} message", messageType, e);
 
@@ -107,7 +107,7 @@ public abstract class AbstractEtxDepositor {
   }
 
   protected void handleProcessingSuccess(Set<String> topics, DistributionType distributionType,
-      String odeReceivedAt, LocalDateTime depositedAt) {
+                                         String odeReceivedAt, LocalDateTime depositedAt) {
     // Convert ISO timestamp string to epoch millis
     long odeReceivedAtMillis = Instant.parse(odeReceivedAt).toEpochMilli();
     long depositedAtMillis = depositedAt.toInstant(ZoneOffset.UTC).toEpochMilli();

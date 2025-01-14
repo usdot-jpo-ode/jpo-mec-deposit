@@ -1,9 +1,8 @@
 package us.dot.its.jpo.ode.mec.deposit.models.etx.partner;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
 
 
 /**
@@ -35,7 +34,7 @@ public class AuthTokenRequest {
 
   /**
    * Get username
-   * 
+   *
    * @return username
    */
   @Schema(name = "username", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -55,7 +54,7 @@ public class AuthTokenRequest {
 
   /**
    * Get password
-   * 
+   *
    * @return password
    */
   @Schema(name = "password", requiredMode = Schema.RequiredMode.REQUIRED)
