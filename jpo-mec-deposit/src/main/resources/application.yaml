@@ -41,7 +41,7 @@ mec-deposit:
       subscriptions:
         - "vzimp/1/ClientInfo"
     depositors:
-      stale-message-threshold: 250
+      stale-message-threshold: ${ETX_DEPOSITORS_STALE_MESSAGE_THRESHOLD:250}
       bsm:
         mqtt:
           enabled: ${ETX_DEPOSITORS_BSM_MQTT_ENABLED:true}

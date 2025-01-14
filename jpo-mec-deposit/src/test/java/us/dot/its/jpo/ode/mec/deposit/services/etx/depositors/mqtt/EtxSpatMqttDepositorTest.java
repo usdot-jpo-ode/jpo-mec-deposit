@@ -89,6 +89,7 @@ class EtxSpatMqttDepositorTest {
     // Configure MecDepositProperties metrics
     MecDepositMetrics metrics = new MecDepositMetrics();
     metrics.setKafkaTopic("test-metrics-topic");
+    metrics.setEnabled(true);
     when(mecDepositProperties.getMetrics()).thenReturn(metrics);
 
     // Configure stale message threshold

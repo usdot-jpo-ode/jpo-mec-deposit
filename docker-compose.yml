@@ -20,9 +20,16 @@ services:
         limits:
           cpus: "1"
           memory: 2G
+    depends_on:
+      kafka:
+        condition: service_healthy
+        required: false
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      KAFKA_BOOTSTRAP_SERVERS: ${DOCKER_HOST_IP:?error}:9092
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:?error}
+      CONFLUENT_KEY: ${CONFLUENT_KEY}
+      CONFLUENT_SECRET: ${CONFLUENT_SECRET}
+
       LOGGING_LEVEL: ${LOGGING_LEVEL}
 
       ETX_ENABLED: ${ETX_ENABLED}
@@ -61,4 +68,4 @@ services:
         max-size: "10m"
         max-file: "5"
     volumes:
-      - ${DOCKER_SHARED_VOLUME}/resources:/home/resources
+      - ./resources:/home/resources
