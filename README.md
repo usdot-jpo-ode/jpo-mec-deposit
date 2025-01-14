@@ -6,14 +6,31 @@ This project is intended to serve as a consumer application to subscribe to a Ka
 
 - [Release Notes](#release-notes)
 - [Usage](#usage)
-- [Installation](#installation)
 - [Configuration](#configuration)
-- [Debugging](#debugging)
+- [Development Setup](#development-setup)
 - [Testing](#testing)
+
+<!--
+#############################################
+############# Release Notes #############
+#############################################
+ -->
+
+<a name="release-notes"></a>
 
 ## Release Notes
 
 The current version and release history of the jpo-mec-deposit: [jpo-mec-deposit Release Notes](<docs/Release_notes.md>)
+
+[Back to top](#table-of-contents)
+
+<!--
+#############################################
+############# Usage #############
+#############################################
+ -->
+
+<a name="usage"></a>
 
 ## Usage
 
@@ -42,6 +59,16 @@ A launch.json file with some launch configurations have been included to allow d
 
 To run the project through the launch configuration and start debugging, the developer can navigate to the Run panel (View->Run or Ctrl+Shift+D), select the configuration at the top, and click the green arrow or press F5 to begin.
 
+[Back to top](#table-of-contents)
+
+<!--
+#############################################
+############# Configuration #############
+#############################################
+ -->
+
+<a name="configuration"></a>
+
 ## Configuration
 
 ### Confluent Cloud Integration
@@ -63,6 +90,47 @@ This has only been tested with Confluent Cloud but technically all SASL authenti
 ### ETX MEC Deposit
 
 The ETX MEC Deposit is a feature that allows the depositor to deposit messages to an ETX MEC. This is done by setting the `ETX_ENABLED` environment variable to `True` and providing the necessary ETX configuration. Please refer to the [sample.env](./sample.env) file for the necessary environment variables.
+
+[Back to top](#table-of-contents)
+
+<!--
+#############################################
+############# Development Setup #############
+#############################################
+ -->
+
+<a name="development-setup"></a>
+
+## Development Setup
+
+### Integrated Development Environment (IDE)
+
+Install the IDE of your choice:
+
+- VSCode (Recommended): [https://code.visualstudio.com/](https://code.visualstudio.com/)
+- Eclipse: [https://eclipse.org/](https://eclipse.org/)
+- STS: [https://spring.io/tools/sts/all](https://spring.io/tools/sts/all)
+- IntelliJ: [https://www.jetbrains.com/idea/](https://www.jetbrains.com/idea/)
+
+### Dev Container Environment
+
+The project can be reopened inside a dev container in VSCode. This environment should have all the necessary dependencies to debug the ODE and its submodules. When attempting to run scripts in this environment, it may be necessary to make them executable with "chmod +x" first.
+
+### Checkstyle configuration
+
+This project uses [Checkstyle](https://github.com/checkstyle/checkstyle) with a modified version
+of Google's Java Style guide to weakly enforce style standards. To configure Checkstyle with your
+chosen IDE follow one of the following guides. This repo's checkstyle configuration file can be found
+[here](checkstyle.xml). For a quick guide to Checkstyle, check out this short [article](https://www.baeldung.com/checkstyle-java).
+
+- [Intellij](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea)
+- [VSCode](https://code.visualstudio.com/docs/java/java-linting#_checkstyle)
+- [Eclipse](https://checkstyle.org/eclipse-cs/#!/project-setup)
+
+If you prefer the command line for your checkstyle output. You can run `mvn checkstyle:check` to
+check the whole project. See [Checkstyle's Github](https://github.com/checkstyle/checkstyle) for more info.
+
+[Back to top](#table-of-contents)
 
 ## Testing
 
