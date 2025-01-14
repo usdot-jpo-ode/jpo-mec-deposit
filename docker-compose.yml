@@ -6,7 +6,7 @@ services:
   mec-deposit:
     profiles:
       - all
-      - mec_deposit
+      - mec_deposit_base
       - mec_deposit_full
     build:
       context: .
@@ -66,7 +66,6 @@ services:
       ETX_DEPOSITORS_MAP_MQTT_KAFKA_TOPIC: ${ETX_DEPOSITORS_MAP_MQTT_KAFKA_TOPIC}
       ETX_DEPOSITORS_MAP_API_ENABLED: ${ETX_DEPOSITORS_MAP_API_ENABLED}
       ETX_DEPOSITORS_MAP_API_KAFKA_TOPIC: ${ETX_DEPOSITORS_MAP_API_KAFKA_TOPIC}
-      ETX_METRICS_TOPIC_NAME: ${ETX_METRICS_TOPIC_NAME}
     logging:
       options:
         max-size: "10m"
