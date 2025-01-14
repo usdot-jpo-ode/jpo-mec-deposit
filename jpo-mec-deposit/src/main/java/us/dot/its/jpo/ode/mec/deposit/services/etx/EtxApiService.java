@@ -32,20 +32,6 @@ public class EtxApiService {
   }
 
   /**
-   * Registers this client with the ETX partner service.
-   */
-  public void registerClientPartner() {
-    String token = tokenManager.getValidToken();
-    RegistrationConfiguration response = partnerApi.registerClientPartner(token);
-
-    if (response != null) {
-      log.info("ETX registration successful");
-    } else {
-      log.error("ETX registration failed with response: {}", response);
-    }
-  }
-
-  /**
    * Clears the inactive API deployed TIMs that are on the ETX Partner API.
    */
   @ConditionalOnProperty(value = "mec-deposit.etx.partner-api.clear-tim.enabled",

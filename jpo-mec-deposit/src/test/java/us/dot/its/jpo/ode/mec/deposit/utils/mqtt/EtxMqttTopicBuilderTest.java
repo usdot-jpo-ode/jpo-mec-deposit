@@ -1,30 +1,25 @@
 package us.dot.its.jpo.ode.mec.deposit.utils.mqtt;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
-import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
 import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
 import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
 import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerDataFrameList;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for the EtxMqttTopicBuilder class. Tests topic construction and formatting for various

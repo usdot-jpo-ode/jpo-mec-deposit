@@ -74,7 +74,7 @@ public class EtxPartnerClient {
    * @return Configuration data for the registered client
    */
   @Nullable
-  public RegistrationConfiguration registerClientPartner(String token) {
+  public RegistrationConfiguration registerClientPartner(String token) throws Exception {
     if (!StringUtils.hasText(token)) {
       throw new IllegalArgumentException("Token cannot be null or empty");
     }
@@ -90,7 +90,7 @@ public class EtxPartnerClient {
       }
     } catch (Exception e) {
       log.error("Failed to register client partner", e);
-      return null;
+      throw e;
     }
   }
 
@@ -183,7 +183,7 @@ public class EtxPartnerClient {
   private RegistrationConfiguration buildConfigData(String configPath, String caCertPath,
       String certPath, String keyPath, String deviceId, URI uri) {
     return RegistrationConfiguration.builder().configFilePath(configPath).caCertPath(caCertPath)
-        .clientCertPath(certPath).keyFilePath(keyPath).impVendor(partnerApiProperties.getVendor())
+        .clientCertPath(certPath).keyFilePath(keyPath).etxVendor(partnerApiProperties.getVendor())
         .networkType(partnerApiProperties.getNetworkType()).etxMqttUri(uri).deviceID(deviceId)
         .etxSessionID(null).build();
   }
@@ -297,7 +297,13 @@ public class EtxPartnerClient {
             mapper.readValue(configDataJson, RegistrationConfiguration.class);
 
         if (configData.getDeviceID() != null
-            && configData.getNetworkType() == partnerApiProperties.getNetworkType()) {
+            && configData.getNetworkType() == partnerApiProperties.getNetworkType()
+            && configData.getClientType() == etxProperties.getClientType()
+            && configData.getClientSubType() == etxProperties.getClientSubType()
+            && configData.getMecLatitude().doubleValue() == partnerApiProperties.getMecLatitude()
+                .doubleValue()
+            && configData.getMecLongitude().doubleValue() == partnerApiProperties.getMecLongitude()
+                .doubleValue()) {
           valid = true;
         }
       } catch (IOException e) {

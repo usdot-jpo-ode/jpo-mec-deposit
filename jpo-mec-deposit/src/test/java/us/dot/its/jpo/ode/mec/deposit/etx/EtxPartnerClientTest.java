@@ -5,11 +5,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mockStatic;
+
+import java.io.File;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +42,8 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientRegistrationRespo
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.NetworkType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.CertificateResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Unit tests for the ETX API client. Tests the interaction with the ETX Partner API endpoints
@@ -49,12 +61,18 @@ class EtxPartnerClientTest {
   @Mock
   private EtxPartnerApiProperties mockPartnerApiProperties;
 
+  @Mock
+  private ObjectMapper mockMapper;
+
   private EtxPartnerClient etxApi;
 
   @BeforeEach
   void setUp() {
     when(mockEtxProperties.getPartnerApi()).thenReturn(mockPartnerApiProperties);
-    etxApi = new EtxPartnerClient(mockEtxProperties, mockPartnerApiProperties, mockRestTemplate);
+    when(mockEtxProperties.getClientType()).thenReturn(EtxClientType.SOFTWARE);
+    when(mockEtxProperties.getClientSubType()).thenReturn(EtxClientSubType.APPLICATION);
+    etxApi = new EtxPartnerClient(mockEtxProperties, mockPartnerApiProperties, mockRestTemplate,
+        mockMapper);
   }
 
   @Test
@@ -155,20 +173,47 @@ class EtxPartnerClientTest {
   }
 
   @Test
-  void validRegistration_WithValidConfig_ReturnsTrue() {
+  void validRegistration_WithValidConfig_ReturnsTrue() throws IOException {
     // Arrange
-    String configPath = "src/test/resources/test-config.json";
-    when(mockPartnerApiProperties.getNetworkType()).thenReturn(NetworkType.NON_VZ);
+    String configPath = "src/test/resources/certs/test-config.json";
 
-    // Create a temporary test config file
-    RegistrationConfiguration testConfig = RegistrationConfiguration.builder()
-        .deviceID("testDevice").networkType(NetworkType.NON_VZ).build();
+    // Create expected config that matches test-config.json
+    RegistrationConfiguration expectedConfig = new RegistrationConfiguration();
+    expectedConfig.setDeviceID("test-device-id");
+    expectedConfig.setNetworkType(NetworkType.NON_VZ);
+    expectedConfig.setClientType(EtxClientType.SOFTWARE);
+    expectedConfig.setClientSubType(EtxClientSubType.APPLICATION);
+    expectedConfig.setMecLatitude(BigDecimal.valueOf(0.0));
+    expectedConfig.setMecLongitude(BigDecimal.valueOf(0.0));
+
+    // Mock the ObjectMapper to return our expected config
+    when(mockMapper.readValue(any(String.class), eq(RegistrationConfiguration.class)))
+        .thenReturn(expectedConfig);
+
+    when(mockPartnerApiProperties.getNetworkType()).thenReturn(NetworkType.NON_VZ);
+    when(mockPartnerApiProperties.getMecLatitude()).thenReturn(BigDecimal.valueOf(0.0));
+    when(mockPartnerApiProperties.getMecLongitude()).thenReturn(BigDecimal.valueOf(0.0));
+    when(mockEtxProperties.getClientType()).thenReturn(EtxClientType.SOFTWARE);
+    when(mockEtxProperties.getClientSubType()).thenReturn(EtxClientSubType.APPLICATION);
 
     // Act
     boolean result = etxApi.validRegistration(configPath);
 
     // Assert
-    assertFalse(result); // Will be false because test file doesn't exist
+    assertTrue(result);
+  }
+
+  @Test
+  void validRegistration_WithInvalidConfig_ReturnsFalse() {
+    // Arrange
+    String configPath = "src/test/resources/non-existent-config.json";
+    when(mockPartnerApiProperties.getNetworkType()).thenReturn(NetworkType.NON_VZ);
+
+    // Act
+    boolean result = etxApi.validRegistration(configPath);
+
+    // Assert
+    assertFalse(result); // Will be false because test config is not the same as the mock config
   }
 
   @Test
@@ -182,5 +227,39 @@ class EtxPartnerClientTest {
 
     // Assert
     assertNull(result);
+  }
+
+  @Test
+  void registerClientPartner_WithNullToken_ThrowsException() {
+    // Act & Assert
+    assertThrows(IllegalArgumentException.class, () -> etxApi.registerClientPartner(null));
+    assertThrows(IllegalArgumentException.class, () -> etxApi.registerClientPartner(""));
+    assertThrows(IllegalArgumentException.class, () -> etxApi.registerClientPartner("  "));
+  }
+
+  @Test
+  void registerClientPartner_WithMissingCertPath_ThrowsException() {
+    // Test null path
+    when(mockPartnerApiProperties.getCertificatePath()).thenReturn(null);
+    assertThrows(IllegalStateException.class, () -> etxApi.registerClientPartner("valid-token"));
+
+    // Test empty path
+    when(mockPartnerApiProperties.getCertificatePath()).thenReturn("");
+    assertThrows(IllegalStateException.class, () -> etxApi.registerClientPartner("valid-token"));
+  }
+
+  @Test
+  void registerClientPartner_WithRegistrationFailure_ReturnsNull() {
+    // Arrange
+    String token = "valid-token";
+    String certPath = "src/test/resources/certs";
+    when(mockPartnerApiProperties.getCertificatePath()).thenReturn(certPath);
+    when(mockPartnerApiProperties.isCacheRegistration()).thenReturn(false);
+
+    when(mockRestTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class),
+        eq(ClientRegistrationResponse.class))).thenReturn(null);
+
+    // Act & Assert
+    assertThrows(RuntimeException.class, () -> etxApi.registerClientPartner(token));
   }
 }

@@ -34,7 +34,7 @@ public class EtxMqttConfig {
   private final EtxPartnerApiProperties partnerApiProperties;
   private final EtxTokenManager tokenManager;
   private final EtxPartnerClient etxApi;
-  private RegistrationConfiguration impConfig;
+  private RegistrationConfiguration etxConfig;
 
   /**
    * Constructs the MQTT configuration with required properties.
@@ -56,8 +56,8 @@ public class EtxMqttConfig {
   public void init() {
     try {
       String token = tokenManager.getValidToken();
-      this.impConfig = etxApi.registerClientPartner(token);
-      if (this.impConfig == null || this.impConfig.getEtxMqttUri() == null) {
+      this.etxConfig = etxApi.registerClientPartner(token);
+      if (this.etxConfig == null || this.etxConfig.getEtxMqttUri() == null) {
         throw new IllegalStateException("Failed to initialize ETX configuration");
       }
       log.info("ETX MQTT configuration initialized successfully");
@@ -74,22 +74,22 @@ public class EtxMqttConfig {
    */
   @Bean
   public ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager() {
-    RegistrationConfiguration impConfig =
+    RegistrationConfiguration etxConfig =
         EtxUtil.readConfigFile(partnerApiProperties.getCertificatePath() + "/config.json");
-    String brokerUrl = impConfig.getEtxMqttUri().toString().replace("mqtt://", "ssl://");
+    String brokerUrl = etxConfig.getEtxMqttUri().toString().replace("mqtt://", "ssl://");
 
     MqttConnectOptions options = new MqttConnectOptions();
     options.setServerURIs(new String[] {brokerUrl});
     options.setCleanSession(true);
-    options.setSocketFactory(EtxUtil.createSocketFactory(impConfig.getCaCertPath(),
-        impConfig.getClientCertPath(), impConfig.getKeyFilePath()));
+    options.setSocketFactory(EtxUtil.createSocketFactory(etxConfig.getCaCertPath(),
+        etxConfig.getClientCertPath(), etxConfig.getKeyFilePath()));
     options.setConnectionTimeout(10);
     options.setKeepAliveInterval(30);
     options.setAutomaticReconnect(true);
     options.setMaxInflight(mqttProperties.getMaxInflight());
     options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
 
-    Mqttv3ClientManager clientManager = new Mqttv3ClientManager(options, impConfig.getDeviceID());
+    Mqttv3ClientManager clientManager = new Mqttv3ClientManager(options, etxConfig.getDeviceID());
     String tmpDir = partnerApiProperties.getCertificatePath() + "/mqtt-persistence";
     clientManager.setPersistence(new MqttDefaultFilePersistence(tmpDir));
     return clientManager;
@@ -117,10 +117,10 @@ public class EtxMqttConfig {
       ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager,
       EtxPartnerApiProperties partnerApi) {
 
-    RegistrationConfiguration impConfig =
+    RegistrationConfiguration etxConfig =
         EtxUtil.readConfigFile(partnerApi.getCertificatePath() + "/config.json");
 
-    log.info("Setting up MQTT inbound adapter with deviceID: {}", impConfig.getDeviceID());
+    log.info("Setting up MQTT inbound adapter with deviceID: {}", etxConfig.getDeviceID());
     log.info("Subscribing to topics: {}", Arrays.toString(mqttProperties.getSubscriptions()));
 
     MqttPahoMessageDrivenChannelAdapter messageProducer =

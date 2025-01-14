@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- * Gets or Sets ImpEnvironmentName
+ * Gets or Sets EtxEnvironmentName
  */
 
 public enum EnvironmentName {
