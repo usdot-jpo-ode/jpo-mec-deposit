@@ -114,7 +114,7 @@ class EtxTimApiDepositorTest {
     // Prepare test data
     OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
     String currentTimestamp =
-        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME);
+        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
     timData.getMetadata().setOdeReceivedAt(currentTimestamp);
 
     // Execute
@@ -150,7 +150,7 @@ class EtxTimApiDepositorTest {
     // Prepare test data
     OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
     String currentTimestamp =
-        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME);
+        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
     timData.getMetadata().setOdeReceivedAt(currentTimestamp);
 
     // Simulate API error

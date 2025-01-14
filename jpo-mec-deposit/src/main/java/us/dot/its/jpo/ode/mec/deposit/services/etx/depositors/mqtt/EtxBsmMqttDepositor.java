@@ -88,25 +88,12 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
       // This will now block until the message is published or throws an exception
       mqttService.publishAsn1Bytes(topic, messageBytes, retain);
       log.info("Successfully sent BSM message to MQTT topic: {}", topic);
-      LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
 
-      // Only publish success metrics after confirmed MQTT publish
-      publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
-          .messageType(messageType).odeReceivedAt(odeReceivedAt)
-          .depositedAt(depositedAt.format(DateTimeFormatter.ISO_DATE_TIME))
-          .latencyMs(recordLatency(odeReceivedAt, depositedAt).toMillis()).success(true)
-          .topics(Set.of(topic)).build());
+      handleProcessingSuccess(Set.of(topic), null, odeReceivedAt,
+          LocalDateTime.now(ZoneOffset.UTC));
     } catch (Exception e) {
-      String errorMessage = e.getMessage();
-      log.error("Error processing BSM message", e);
-
-      // Publish failure metrics with the attempted topic if available
-      publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
-          .messageType(messageType).odeReceivedAt(odeReceivedAt)
-          .depositedAt(LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME))
-          .success(false).errorMessage(errorMessage).topics(topic != null ? Set.of(topic) : null)
-          .build());
-      errorCounter.increment();
+      handleProcessingError(e, Set.of(topic), null,
+          odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0);
     }
   }
 }

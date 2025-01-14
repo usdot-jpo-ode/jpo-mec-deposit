@@ -18,8 +18,8 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 public class EtxDepositMetrics {
   private EtxDepositorType depositorType;
   private EtxMessageType messageType;
-  private String odeReceivedAt;
-  private String depositedAt;
+  private long odeReceivedAt;
+  private long mecDepositedAt;
   private long latencyMs;
   private boolean success;
   private String errorMessage;

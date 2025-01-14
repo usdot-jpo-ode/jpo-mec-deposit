@@ -160,7 +160,7 @@ class EtxMapApiDepositorTest {
     // Prepare test data
     OdeMapData mapData = objectMapper.readValue(sampleMapJson, OdeMapData.class);
     String currentTimestamp =
-        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME);
+        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
     mapData.getMetadata().setOdeReceivedAt(currentTimestamp);
 
     // Execute
@@ -196,7 +196,7 @@ class EtxMapApiDepositorTest {
     // Prepare test data
     OdeMapData mapData = objectMapper.readValue(sampleMapJson, OdeMapData.class);
     String currentTimestamp =
-        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME);
+        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
     mapData.getMetadata().setOdeReceivedAt(currentTimestamp);
 
     // Simulate API error

@@ -6,9 +6,11 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
@@ -16,6 +18,7 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxDepositMetrics;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxDepositorType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 
 /**
@@ -87,4 +90,34 @@ public abstract class AbstractEtxDepositor {
   }
 
   protected abstract EtxDepositorType getDepositorType();
+
+  protected void handleProcessingError(Exception e, Set<String> topics,
+      DistributionType distributionType, long odeReceivedAtMillis) {
+    String errorMessage = e.getMessage();
+    log.error("Error processing {} message", messageType, e);
+
+    long nowMillis = Instant.now().toEpochMilli();
+
+    // Publish failure metrics with the attempted topic if available
+    publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
+        .messageType(messageType).odeReceivedAt(odeReceivedAtMillis).mecDepositedAt(nowMillis)
+        .success(false).errorMessage(errorMessage).distributionType(distributionType)
+        .topics(topics != null ? topics : null).build());
+    errorCounter.increment();
+  }
+
+  protected void handleProcessingSuccess(Set<String> topics, DistributionType distributionType,
+      String odeReceivedAt, LocalDateTime depositedAt) {
+    // Convert ISO timestamp string to epoch millis
+    long odeReceivedAtMillis = Instant.parse(odeReceivedAt).toEpochMilli();
+    long depositedAtMillis = depositedAt.toInstant(ZoneOffset.UTC).toEpochMilli();
+
+    // Publish success metrics
+    publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
+        .messageType(messageType).odeReceivedAt(odeReceivedAtMillis)
+        .mecDepositedAt(depositedAtMillis).latencyMs(depositedAtMillis - odeReceivedAtMillis)
+        .success(true).distributionType(distributionType).topics(topics).build());
+    recordLatency(odeReceivedAt, depositedAt);
+  }
 }
+

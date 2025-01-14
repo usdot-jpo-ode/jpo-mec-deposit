@@ -92,25 +92,10 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
         log.info("Successfully sent SPaT message to MQTT topic: {}", topic);
       }
 
-      LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
-
-      // Only publish success metrics after confirmed MQTT publish
-      publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
-          .messageType(messageType).odeReceivedAt(odeReceivedAt)
-          .depositedAt(depositedAt.format(DateTimeFormatter.ISO_DATE_TIME))
-          .latencyMs(recordLatency(odeReceivedAt, depositedAt).toMillis()).success(true)
-          .topics(topicSet).build());
+      handleProcessingSuccess(topicSet, null, odeReceivedAt, LocalDateTime.now(ZoneOffset.UTC));
     } catch (Exception e) {
-      String errorMessage = e.getMessage();
-      log.error("Error processing SPaT message", e);
-
-      // Publish failure metrics with the attempted topic if available
-      publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
-          .messageType(messageType).odeReceivedAt(odeReceivedAt)
-          .depositedAt(LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME))
-          .success(false).errorMessage(errorMessage).topics(topicSet != null ? topicSet : null)
-          .build());
-      errorCounter.increment();
+      handleProcessingError(e, topicSet, null,
+          odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0);
     }
   }
 }

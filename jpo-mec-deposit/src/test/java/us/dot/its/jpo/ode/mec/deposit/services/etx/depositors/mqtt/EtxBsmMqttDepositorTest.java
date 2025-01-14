@@ -128,7 +128,8 @@ class EtxBsmMqttDepositorTest {
   void testBsmDepositListener() throws Exception {
     // Arrange
     OdeBsmData bsmData = objectMapper.readValue(sampleBsmJson, OdeBsmData.class);
-    String currentTime = LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME);
+    String currentTime =
+        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
     bsmData.getMetadata().setOdeReceivedAt(currentTime);
     String message = objectMapper.writeValueAsString(bsmData);
 

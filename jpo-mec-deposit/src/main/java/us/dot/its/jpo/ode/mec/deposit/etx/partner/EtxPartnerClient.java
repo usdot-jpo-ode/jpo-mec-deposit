@@ -50,11 +50,11 @@ public class EtxPartnerClient {
    * @param properties The ETX configuration properties
    */
   public EtxPartnerClient(EtxProperties properties, EtxPartnerApiProperties partnerApi,
-      RestTemplate restTemplate) {
+      RestTemplate restTemplate, ObjectMapper mapper) {
     this.etxProperties = properties;
     this.partnerApiProperties = partnerApi;
     this.restTemplate = restTemplate != null ? restTemplate : createDefaultRestTemplate();
-    this.mapper = DateJsonMapper.getInstance();
+    this.mapper = mapper;
   }
 
   /**

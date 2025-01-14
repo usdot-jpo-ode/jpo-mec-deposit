@@ -141,7 +141,8 @@ class EtxSpatMqttDepositorTest {
   void testSpatDepositListener() throws Exception {
     // Arrange
     OdeSpatData spatData = objectMapper.readValue(sampleSpatJson, OdeSpatData.class);
-    String currentTime = LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME);
+    String currentTime =
+        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
     spatData.getMetadata().setOdeReceivedAt(currentTime);
     String message = objectMapper.writeValueAsString(spatData);
 
@@ -158,8 +159,8 @@ class EtxSpatMqttDepositorTest {
   @Test
   void testSpatDepositListenerWithGeoRoutedFormat() throws Exception {
     // Arrange
-    String currentTime = LocalDateTime.now(ZoneOffset.UTC)
-        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
+    String currentTime =
+        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
     OdeSpatData spatData = objectMapper.readValue(sampleSpatJson, OdeSpatData.class);
     spatData.getMetadata().setOdeReceivedAt(currentTime);
     String message = objectMapper.writeValueAsString(spatData);

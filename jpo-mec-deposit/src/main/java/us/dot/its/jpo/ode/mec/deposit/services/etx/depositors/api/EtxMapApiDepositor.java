@@ -1,6 +1,7 @@
 package us.dot.its.jpo.ode.mec.deposit.services.etx.depositors.api;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -76,20 +77,12 @@ public class EtxMapApiDepositor extends AbstractEtxApiDepositor {
       partnerApi.deposit(token, asn1String, distributionType);
       log.info("Depositing MAP message to ETX API");
 
-      LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
-      publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
-          .messageType(messageType).odeReceivedAt(odeReceivedAt)
-          .depositedAt(depositedAt.format(DateTimeFormatter.ISO_DATE_TIME))
-          .latencyMs(recordLatency(odeReceivedAt, depositedAt).toMillis()).success(true)
-          .distributionType(distributionType).build());
+      handleProcessingSuccess(null, distributionType, odeReceivedAt,
+          LocalDateTime.now(ZoneOffset.UTC));
     } catch (Exception e) {
-      log.error("Error depositing MAP message", e);
-
-      publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
-          .messageType(messageType).odeReceivedAt(odeReceivedAt)
-          .depositedAt(LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME))
-          .success(false).errorMessage(e.getMessage()).distributionType(distributionType).build());
-      errorCounter.increment();
+      handleProcessingError(e, null, distributionType,
+          odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0);
     }
   }
 }
+

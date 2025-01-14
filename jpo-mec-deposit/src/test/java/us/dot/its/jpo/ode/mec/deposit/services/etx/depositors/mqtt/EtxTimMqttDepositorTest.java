@@ -139,7 +139,8 @@ class EtxTimMqttDepositorTest {
   void testTimDepositListener() throws Exception {
     // Arrange
     OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
-    String currentTime = LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME);
+    String currentTime =
+        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
     timData.getMetadata().setOdeReceivedAt(currentTime);
     String message = objectMapper.writeValueAsString(timData);
 
