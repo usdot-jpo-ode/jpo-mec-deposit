@@ -62,7 +62,7 @@ This has only been tested with Confluent Cloud but technically all SASL authenti
 
 ### ETX MEC Deposit
 
-The ETX MEC Deposit is a feature that allows the depositor to deposit messages to an ETX MEC. This is done by setting the `ETX_ENABLED` environment variable to `True` and providing the necessary ETX configuration. Please refer to the [ETX README](./docs/ETX_README.md) for more information.
+The ETX MEC Deposit is a feature that allows the depositor to deposit messages to an ETX MEC. This is done by setting the `ETX_ENABLED` environment variable to `True` and providing the necessary ETX configuration. Please refer to the [sample.env](./sample.env) file for the necessary environment variables.
 
 ## Testing
 
