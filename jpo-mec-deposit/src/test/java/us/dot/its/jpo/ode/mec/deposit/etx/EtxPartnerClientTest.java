@@ -167,8 +167,6 @@ class EtxPartnerClientTest {
   @Test
   void validRegistration_WithValidConfig_ReturnsTrue() throws IOException {
     // Arrange
-    String configPath = "src/test/resources/certs/test-config.json";
-
     // Create expected config that matches test-config.json
     RegistrationConfiguration expectedConfig = new RegistrationConfiguration();
     expectedConfig.setEtxVendor("testVendor");
@@ -191,6 +189,7 @@ class EtxPartnerClientTest {
     when(mockEtxProperties.getClientSubType()).thenReturn(EtxClientSubType.APPLICATION);
 
     // Act
+    String configPath = "src/test/resources/certs/test-config.json";
     boolean result = etxApi.validRegistration(configPath);
 
     // Assert
