@@ -72,11 +72,11 @@ public class EtxMapApiDepositor extends AbstractEtxApiDepositor {
       asn1Hex = msg.getMetadata().getAsn1();
       String token = tokenManager.getValidToken();
 
+      LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
       partnerApi.deposit(token, asn1Hex, distributionType);
       log.info("Depositing MAP message to ETX API");
 
-      handleProcessingSuccess(null, distributionType, odeReceivedAt,
-          LocalDateTime.now(ZoneOffset.UTC), asn1Hex);
+      handleProcessingSuccess(null, distributionType, odeReceivedAt, depositedAt, asn1Hex);
     } catch (Exception e) {
       handleProcessingError(e, null, distributionType,
           odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);

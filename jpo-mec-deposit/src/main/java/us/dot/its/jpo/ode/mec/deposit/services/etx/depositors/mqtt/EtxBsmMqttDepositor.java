@@ -85,12 +85,12 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
               mqttProperties.getVendor(), mqttProperties.getMessageFormat(),
               etxProperties.getClientType(), etxProperties.getClientSubType());
 
+      LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
       // This will now block until the message is published or throws an exception
       mqttService.publishAsn1Bytes(topic, messageBytes, retain);
       log.info("Successfully sent BSM message to MQTT topic: {}", topic);
 
-      handleProcessingSuccess(Set.of(topic), null, odeReceivedAt, LocalDateTime.now(ZoneOffset.UTC),
-          asn1Hex);
+      handleProcessingSuccess(Set.of(topic), null, odeReceivedAt, depositedAt, asn1Hex);
     } catch (Exception e) {
       handleProcessingError(e, Set.of(topic), null,
           odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);

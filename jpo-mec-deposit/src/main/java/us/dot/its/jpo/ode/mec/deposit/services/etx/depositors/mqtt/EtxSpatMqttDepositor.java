@@ -97,13 +97,13 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
           mqttProperties.getMessageFormat(), etxProperties.getClientType(),
           etxProperties.getClientSubType());
 
+      LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
       for (String topic : topicSet) {
         mqttService.publishAsn1Bytes(topic, messageBytes, retain);
         log.info("Successfully sent SPaT message to MQTT topic: {}", topic);
       }
 
-      handleProcessingSuccess(topicSet, null, odeReceivedAt, LocalDateTime.now(ZoneOffset.UTC),
-          asn1Hex);
+      handleProcessingSuccess(topicSet, null, odeReceivedAt, depositedAt, asn1Hex);
     } catch (Exception e) {
       handleProcessingError(e, topicSet, null,
           odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);

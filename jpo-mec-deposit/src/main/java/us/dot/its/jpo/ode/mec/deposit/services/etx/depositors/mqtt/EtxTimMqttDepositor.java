@@ -81,13 +81,13 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
           mqttProperties.getPrecision(), mqttProperties.getMessageFormat(),
           etxProperties.getClientType(), etxProperties.getClientSubType());
 
+      LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
       for (String topic : topicSet) {
         mqttService.publishAsn1Bytes(topic, messageBytes, retain);
         log.info("Sending TIM message to MQTT topics: {}", topic);
       }
 
-      handleProcessingSuccess(topicSet, null, odeReceivedAt, LocalDateTime.now(ZoneOffset.UTC),
-          asn1Hex);
+      handleProcessingSuccess(topicSet, null, odeReceivedAt, depositedAt, asn1Hex);
     } catch (Exception e) {
       handleProcessingError(e, topicSet, null,
           odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);
