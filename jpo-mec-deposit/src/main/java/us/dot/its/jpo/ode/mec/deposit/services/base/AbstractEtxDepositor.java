@@ -26,6 +26,7 @@ public abstract class AbstractEtxDepositor {
   protected final ObjectMapper mapper;
   protected final Timer processingTimer;
   protected final Counter staleMessageCounter;
+  protected final Counter errorCounter;
   protected final MecDepositProperties mecDepositProperties;
   protected final EtxProperties etxProperties;
   protected final EtxMessageType messageType;
@@ -38,7 +39,7 @@ public abstract class AbstractEtxDepositor {
     this.mecDepositProperties = mecDepositProperties;
     this.etxProperties = etxProperties;
     this.messageType = messageType;
-    this.staleMessageThreshold = etxProperties.getMqtt().getStaleMessageThreshold();
+    this.staleMessageThreshold = etxProperties.getDepositors().getStaleMessageThreshold();
     this.processingTimer =
         Timer.builder(metricsPrefix + ".processing").tag("message.type", messageType.name())
             .description("Time taken to process " + messageType.name() + " messages")
@@ -46,6 +47,10 @@ public abstract class AbstractEtxDepositor {
     this.staleMessageCounter =
         Counter.builder(metricsPrefix + ".stale").tag("message.type", messageType.name())
             .description("Number of stale " + messageType.name() + " messages").register(registry);
+    this.errorCounter =
+        Counter.builder(metricsPrefix + ".error").tag("message.type", messageType.name())
+            .description("Number of " + messageType.name() + " messages with errors")
+            .register(registry);
     this.mapper = DateJsonMapper.getInstance();
     this.kafkaTemplate = kafkaTemplate;
   }

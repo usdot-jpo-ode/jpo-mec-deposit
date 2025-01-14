@@ -20,6 +20,7 @@ import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttProtobufBuilder;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxDepositMetrics;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
@@ -37,10 +38,10 @@ import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerInformation;
 public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
 
   public EtxTimMqttDepositor(MecDepositProperties mecDepositProperties, EtxProperties etxProperties,
-      EtxMqttPublishService mqttService, MeterRegistry registry,
+      EtxMqttProperties mqttProperties, EtxMqttPublishService mqttService, MeterRegistry registry,
       KafkaTemplate<String, String> kafkaTemplate) {
-    super(mecDepositProperties, etxProperties, EtxMessageType.TIM, mqttService, registry,
-        kafkaTemplate);
+    super(mecDepositProperties, etxProperties, mqttProperties, EtxMessageType.TIM, mqttService,
+        registry, kafkaTemplate);
   }
 
   /**
@@ -68,7 +69,7 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
       var timMsg = (TravelerInformation) msg.getPayload().getData();
 
       // If the message format is J2735_GR, we need to convert the message to a GeoRoutedMsg
-      if (etxProperties.getMqtt().getMessageFormat() == EtxMqttMessageFormat.J2735_GR) {
+      if (mqttProperties.getMessageFormat() == EtxMqttMessageFormat.J2735_GR) {
         Instant timestamp = Instant.parse(odeReceivedAt);
         GeoRoutedMsg geoRoutedMsg =
             EtxMqttProtobufBuilder.buildGeoRoutedMsg(messageBytes, timestamp);
@@ -76,7 +77,9 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
       }
 
       var dataFramesList = timMsg.getDataFrames();
-      topicSet = EtxMqttTopicBuilder.getTimTopicList(dataFramesList, etxProperties);
+      topicSet = EtxMqttTopicBuilder.getTimTopicList(dataFramesList, mqttProperties.getVendor(),
+          mqttProperties.getPrecision(), mqttProperties.getMessageFormat(),
+          etxProperties.getClientType(), etxProperties.getClientSubType());
 
       for (String topic : topicSet) {
         mqttService.publishAsn1Bytes(topic, messageBytes, retain);
@@ -101,6 +104,7 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
           .depositedAt(LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME))
           .success(false).errorMessage(errorMessage).topics(topicSet != null ? topicSet : null)
           .build());
+      errorCounter.increment();
     }
   }
 }

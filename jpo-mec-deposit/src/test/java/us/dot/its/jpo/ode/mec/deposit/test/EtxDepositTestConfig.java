@@ -27,11 +27,11 @@ public class EtxDepositTestConfig {
     return Mockito.mock(EtxMqttConfig.class);
   }
 
-  // @Bean
-  // @Primary
-  // public EtxMqttPublishService etxMqttService() {
-  // return Mockito.mock(EtxMqttPublishService.class);
-  // }
+  @Bean
+  @Primary
+  public EtxMqttPublishService etxMqttService() {
+    return Mockito.mock(EtxMqttPublishService.class);
+  }
 
   @Bean
   @Primary

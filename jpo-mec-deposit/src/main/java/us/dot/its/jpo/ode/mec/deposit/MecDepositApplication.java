@@ -12,7 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import us.dot.its.jpo.ode.mec.deposit.utils.SystemConfig;
+import us.dot.its.jpo.ode.mec.deposit.config.SystemConfig;
 
 /**
  * Main application class for the MEC Deposit service.

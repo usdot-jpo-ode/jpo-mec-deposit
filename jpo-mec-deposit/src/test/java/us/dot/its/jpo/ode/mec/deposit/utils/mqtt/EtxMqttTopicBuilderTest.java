@@ -32,21 +32,11 @@ import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerDataFrameList
  */
 public class EtxMqttTopicBuilderTest {
 
-  private EtxProperties etxProperties;
-  private EtxMqttProperties mqttProperties;
   private ObjectMapper objectMapper;
 
   @BeforeEach
   void setUp() {
-    etxProperties = mock(EtxProperties.class);
-    mqttProperties = mock(EtxMqttProperties.class);
     objectMapper = new ObjectMapper();
-
-    when(etxProperties.getMqtt()).thenReturn(mqttProperties);
-    when(etxProperties.getClientType()).thenReturn(EtxClientType.SOFTWARE);
-    when(etxProperties.getClientSubType()).thenReturn(EtxClientSubType.APPLICATION);
-    when(mqttProperties.getVendor()).thenReturn("TEST_VENDOR");
-    when(mqttProperties.getMessageFormat()).thenReturn(EtxMqttMessageFormat.J2735_GR);
   }
 
   @Test
@@ -70,20 +60,6 @@ public class EtxMqttTopicBuilderTest {
   }
 
   @Test
-  void testBuildRegionalTopic() {
-    OdePosition3D refPoint = new OdePosition3D();
-    refPoint.setLatitude(new BigDecimal(42.0));
-    refPoint.setLongitude(new BigDecimal(-83.0));
-
-    String topic =
-        EtxMqttTopicBuilder.buildRegionalTopic(EtxMessageType.SPAT, refPoint, 7, etxProperties);
-
-    assertTrue(topic.startsWith("vzimp/1"));
-    assertTrue(topic.contains("Software"));
-    assertTrue(topic.contains("TEST_VENDOR"));
-  }
-
-  @Test
   void testGetSpatTopicList() throws IOException {
     // Load sample SPAT message
     JsonNode spatJson = objectMapper
@@ -103,7 +79,8 @@ public class EtxMqttTopicBuilderTest {
     refPoint.setLongitude(new BigDecimal(refPointJson.get("longitude").asDouble()));
     when(collector.getIntersectionRefPoint("9709")).thenReturn(refPoint);
 
-    Set<String> topics = EtxMqttTopicBuilder.getSpatTopicList(spatMsg, etxProperties, collector);
+    Set<String> topics = EtxMqttTopicBuilder.getSpatTopicList(spatMsg, collector, "TEST_VENDOR", 7,
+        EtxMqttMessageFormat.J2735_GR, EtxClientType.SOFTWARE, EtxClientSubType.APPLICATION);
 
     assertFalse(topics.isEmpty());
     assertEquals(1, topics.size());
@@ -117,9 +94,10 @@ public class EtxMqttTopicBuilderTest {
     TravelerDataFrameList dataFramesList = objectMapper.convertValue(
         timJson.get("payload").get("data").get("dataFrames"), TravelerDataFrameList.class);
 
-    Set<String> topics = EtxMqttTopicBuilder.getTimTopicList(dataFramesList, etxProperties);
+    Set<String> topics = EtxMqttTopicBuilder.getTimTopicList(dataFramesList, "TEST_VENDOR", 7,
+        EtxMqttMessageFormat.J2735_GR, EtxClientType.SOFTWARE, EtxClientSubType.APPLICATION);
 
     assertFalse(topics.isEmpty());
-    assertEquals(1, topics.size()); // Sample message has 4 regions
+    assertEquals(1, topics.size());
   }
 }

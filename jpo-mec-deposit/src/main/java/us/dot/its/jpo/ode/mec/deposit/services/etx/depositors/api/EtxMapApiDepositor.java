@@ -73,7 +73,7 @@ public class EtxMapApiDepositor extends AbstractEtxApiDepositor {
       String asn1String = msg.getMetadata().getAsn1();
       String token = tokenManager.getValidToken();
 
-      this.partnerApi.deposit(token, asn1String, this.distributionType);
+      partnerApi.deposit(token, asn1String, distributionType);
       log.info("Depositing MAP message to ETX API");
 
       LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
@@ -89,6 +89,7 @@ public class EtxMapApiDepositor extends AbstractEtxApiDepositor {
           .messageType(messageType).odeReceivedAt(odeReceivedAt)
           .depositedAt(LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME))
           .success(false).errorMessage(e.getMessage()).distributionType(distributionType).build());
+      errorCounter.increment();
     }
   }
 }

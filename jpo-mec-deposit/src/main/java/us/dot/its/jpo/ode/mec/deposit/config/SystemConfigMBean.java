@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit.utils;
+package us.dot.its.jpo.ode.mec.deposit.config;
 
 /**
  * Interface for the SystemConfigMBean, which provides methods for configuring the system.

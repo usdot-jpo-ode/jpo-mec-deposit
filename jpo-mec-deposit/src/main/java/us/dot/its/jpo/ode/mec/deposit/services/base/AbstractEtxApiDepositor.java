@@ -18,12 +18,12 @@ public abstract class AbstractEtxApiDepositor extends AbstractEtxDepositor {
   protected final EtxTokenManager tokenManager;
 
   protected AbstractEtxApiDepositor(MecDepositProperties mecDepositProperties,
-      EtxProperties etxProperties, EtxPartnerClient etxApi, EtxTokenManager tokenManager,
+      EtxProperties etxProperties, EtxPartnerClient etxApiClient, EtxTokenManager tokenManager,
       MeterRegistry registry, KafkaTemplate<String, String> kafkaTemplate,
       EtxMessageType messageType) {
     super(mecDepositProperties, etxProperties, messageType, registry, "mec-deposit.etx.api",
         kafkaTemplate);
-    this.partnerApi = etxApi;
+    this.partnerApi = etxApiClient;
     this.tokenManager = tokenManager;
   }
 

@@ -18,8 +18,8 @@ public class EtxMqttProperties {
   private int keepAliveInterval;
   private int completionTimeout;
   private int maxMessagesPerSecond;
-  private int staleMessageThreshold;
   private String vendor;
+  private int precision;
   private EtxMqttMessageFormat messageFormat;
   private String[] subscriptions;
 }

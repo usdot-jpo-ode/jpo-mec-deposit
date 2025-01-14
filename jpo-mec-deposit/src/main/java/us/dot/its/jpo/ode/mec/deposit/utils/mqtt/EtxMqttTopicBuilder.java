@@ -6,7 +6,10 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttRegionalTopic;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionState;
@@ -16,6 +19,7 @@ import us.dot.its.jpo.ode.plugin.j2735.common.Position3D;
 import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.GeographicalPath;
 import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerDataFrame;
 import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerDataFrameList;
+import us.dot.its.jpo.ode.mec.deposit.utils.PositionConversionUtil;
 
 /**
  * Utility class for building MQTT topics according to ETX specifications. Handles topic
@@ -85,27 +89,6 @@ public class EtxMqttTopicBuilder {
   }
 
   /**
-   * Builds a complete regional MQTT topic string using message type, position, and properties.
-   *
-   * @param messageType The type of message being published
-   * @param refPoint Reference position for geohash calculation
-   * @param precision Desired geohash precision
-   * @param etxProperties ETX configuration properties
-   * @return Complete MQTT topic string
-   */
-  public static String buildRegionalTopic(EtxMessageType messageType, OdePosition3D refPoint,
-      int precision, EtxProperties etxProperties) {
-    String geoHash = getPubGeoHash(refPoint.getLatitude().doubleValue(),
-        refPoint.getLongitude().doubleValue(), precision);
-    EtxMqttProperties mqttProperties = etxProperties.getMqtt();
-    EtxMqttRegionalTopic topic = EtxMqttRegionalTopic.builder().mqttGeohash(geoHash)
-        .vendorId(mqttProperties.getVendor()).messageFormat(mqttProperties.getMessageFormat())
-        .messageType(messageType).clientType(etxProperties.getClientType())
-        .clientSubType(etxProperties.getClientSubType()).build();
-    return getRegionalTopic(topic);
-  }
-
-  /**
    * Builds a regional topic for the given message type and coordinates.
    *
    * @param messageType The type of message
@@ -116,13 +99,12 @@ public class EtxMqttTopicBuilder {
    * @return The formatted topic string
    */
   public static String buildRegionalTopic(EtxMessageType messageType, double latitude,
-      double longitude, int precision, EtxProperties etxProperties) {
+      double longitude, int precision, String mqttVendorId, EtxMqttMessageFormat messageFormat,
+      EtxClientType clientType, EtxClientSubType clientSubType) {
     String geoHash = getPubGeoHash(latitude, longitude, precision);
-    EtxMqttProperties mqttProperties = etxProperties.getMqtt();
     EtxMqttRegionalTopic topic = EtxMqttRegionalTopic.builder().mqttGeohash(geoHash)
-        .vendorId(mqttProperties.getVendor()).messageFormat(mqttProperties.getMessageFormat())
-        .messageType(messageType).clientType(etxProperties.getClientType())
-        .clientSubType(etxProperties.getClientSubType()).build();
+        .vendorId(mqttVendorId).messageFormat(messageFormat).messageType(messageType)
+        .clientType(clientType).clientSubType(clientSubType).build();
     return getRegionalTopic(topic);
   }
 
@@ -134,7 +116,8 @@ public class EtxMqttTopicBuilder {
    * @return Set of topic strings
    */
   public static Set<String> getTimTopicList(TravelerDataFrameList dataFramesList,
-      EtxProperties etxProperties) {
+      String mqttVendorId, int precision, EtxMqttMessageFormat messageFormat,
+      EtxClientType clientType, EtxClientSubType clientSubType) {
     Set<String> topicSet = new HashSet<>();
     for (TravelerDataFrame dataFrame : dataFramesList) {
       var regions = dataFrame.getRegions();
@@ -144,11 +127,10 @@ public class EtxMqttTopicBuilder {
           log.warn("No refPoint found for region: {} skipping ETX deposit", region.getName());
           continue;
         }
-        double scale = 10000000.0;
-        double latitude = refPoint.getLat().getValue() / scale;
-        double longitude = refPoint.getLong_().getValue() / scale;
-        String topic =
-            buildRegionalTopic(EtxMessageType.TIM, latitude, longitude, 7, etxProperties);
+        double latitude = PositionConversionUtil.convertRefPointToLat(refPoint);
+        double longitude = PositionConversionUtil.convertRefPointToLon(refPoint);
+        String topic = buildRegionalTopic(EtxMessageType.TIM, latitude, longitude, precision,
+            mqttVendorId, messageFormat, clientType, clientSubType);
 
         topicSet.add(topic);
       }
@@ -164,8 +146,10 @@ public class EtxMqttTopicBuilder {
    * @param mapDataCollector The map reference point collector
    * @return Set of topic strings
    */
-  public static Set<String> getSpatTopicList(J2735SPAT spatMsg, EtxProperties etxProperties,
-      MapRefPointCollector mapDataCollector) {
+  public static Set<String> getSpatTopicList(J2735SPAT spatMsg,
+      MapRefPointCollector mapDataCollector, String mqttVendorId, int precision,
+      EtxMqttMessageFormat messageFormat, EtxClientType clientType,
+      EtxClientSubType clientSubType) {
     Set<String> topicSet = new HashSet<>();
     for (J2735IntersectionState intersection : spatMsg.getIntersectionStateList()
         .getIntersectionStatelist()) {
@@ -176,7 +160,11 @@ public class EtxMqttTopicBuilder {
         continue;
       }
 
-      String topic = buildRegionalTopic(EtxMessageType.SPAT, refPoint, 7, etxProperties);
+      double latitude = refPoint.getLatitude().doubleValue();
+      double longitude = refPoint.getLongitude().doubleValue();
+
+      String topic = buildRegionalTopic(EtxMessageType.SPAT, latitude, longitude, precision,
+          mqttVendorId, messageFormat, clientType, clientSubType);
 
       topicSet.add(topic);
     }

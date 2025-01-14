@@ -19,6 +19,7 @@ import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxMqttDepositor;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxDepositMetrics;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
@@ -42,10 +43,11 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
   private MapRefPointCollector mapDataCollector;
 
   public EtxSpatMqttDepositor(MecDepositProperties mecDepositProperties,
-      EtxProperties etxProperties, EtxMqttPublishService mqttService, MeterRegistry registry,
+      EtxProperties etxProperties, EtxMqttProperties mqttProperties,
+      EtxMqttPublishService mqttService, MeterRegistry registry,
       KafkaTemplate<String, String> kafkaTemplate) {
-    super(mecDepositProperties, etxProperties, EtxMessageType.SPAT, mqttService, registry,
-        kafkaTemplate);
+    super(mecDepositProperties, etxProperties, mqttProperties, EtxMessageType.SPAT, mqttService,
+        registry, kafkaTemplate);
   }
 
   /**
@@ -73,14 +75,17 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
       J2735SPAT spatMsg = (J2735SPAT) msg.getPayload().getData();
 
       // If the message format is J2735_GR, we need to convert the message to a GeoRoutedMsg
-      if (etxProperties.getMqtt().getMessageFormat() == EtxMqttMessageFormat.J2735_GR) {
+      if (mqttProperties.getMessageFormat() == EtxMqttMessageFormat.J2735_GR) {
         Instant timestamp = Instant.parse(odeReceivedAt);
         GeoRoutedMsg geoRoutedMsg =
             EtxMqttProtobufBuilder.buildGeoRoutedMsg(messageBytes, timestamp);
         messageBytes = geoRoutedMsg.toByteArray();
       }
 
-      topicSet = EtxMqttTopicBuilder.getSpatTopicList(spatMsg, etxProperties, mapDataCollector);
+      topicSet = EtxMqttTopicBuilder.getSpatTopicList(spatMsg, mapDataCollector,
+          mqttProperties.getVendor(), mqttProperties.getPrecision(),
+          mqttProperties.getMessageFormat(), etxProperties.getClientType(),
+          etxProperties.getClientSubType());
 
       for (String topic : topicSet) {
         mqttService.publishAsn1Bytes(topic, messageBytes, retain);
@@ -105,6 +110,7 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
           .depositedAt(LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME))
           .success(false).errorMessage(errorMessage).topics(topicSet != null ? topicSet : null)
           .build());
+      errorCounter.increment();
     }
   }
 }

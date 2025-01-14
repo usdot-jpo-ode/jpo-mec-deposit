@@ -35,13 +35,13 @@ mec-deposit:
       keep-alive-interval: 60
       completion-timeout: 5000
       max-messages-per-second: ${ETX_PUBLISH_RATE:50}
-      # stale message threshold in milliseconds
-      stale-message-threshold: 250
       vendor: ${ETX_MQTT_VENDOR}
+      precision: 7
       message-format: ${ETX_MQTT_MESSAGE_FORMAT:j2735}
       subscriptions:
         - "vzimp/1/ClientInfo"
     depositors:
+      stale-message-threshold: 250
       bsm:
         mqtt:
           enabled: ${ETX_DEPOSITORS_BSM_MQTT_ENABLED:true}

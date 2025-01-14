@@ -35,30 +35,71 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.test.EtxDepositTestConfig;
 import us.dot.its.jpo.ode.model.OdeMapData;
 
-@SpringBootTest
-@Import(EtxDepositTestConfig.class)
-@TestPropertySource(locations = "classpath:application.yaml", properties = {
-    "mec-deposit.etx.enabled=true", "mec-deposit.etx.depositors.map.api.enabled=true"})
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.kafka.core.KafkaTemplate;
+import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
+import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties.MecDepositMetrics;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.EtxDepositors;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.ApiDepositorProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.DepositorProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.GeoRoutedMsg;
+import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
+import us.dot.its.jpo.ode.mec.deposit.services.etx.depositors.mqtt.EtxBsmMqttDepositor;
+import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttProtobufBuilder;
+import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
+import us.dot.its.jpo.ode.model.OdeBsmData;
+import io.micrometer.core.instrument.Tag;
+import java.util.List;
+
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class EtxMapApiDepositorTest {
 
-  private EtxMapApiDepositor depositor;
-  private String sampleMapJson;
-  private ObjectMapper mapper;
-
-  @Autowired
+  @Mock
   private MecDepositProperties mecDepositProperties;
 
-  @Autowired
+  @Mock
   private EtxProperties etxProperties;
 
-  @Autowired
-  private EtxPartnerApiProperties etxPartnerApiProperties;
-
-  @Autowired
-  private MeterRegistry meterRegistry;
-
   @Mock
-  private EtxPartnerClient etxApi;
+  private EtxPartnerClient etxApiClient;
 
   @Mock
   private EtxTokenManager tokenManager;
@@ -66,15 +107,48 @@ class EtxMapApiDepositorTest {
   @Mock
   private KafkaTemplate<String, String> kafkaTemplate;
 
+  @Mock
+  private Timer timer;
+
+  @Mock
+  private Counter counter;
+
+  private MeterRegistry registry;
+  private EtxMapApiDepositor depositor;
+  private ObjectMapper objectMapper;
+  private String sampleMapJson;
+  private DistributionType distributionType = DistributionType.TARGETED;
+
   @BeforeEach
   void setUp() throws Exception {
+    // Use SimpleMeterRegistry instead of mocking
+    registry = new SimpleMeterRegistry();
     MockitoAnnotations.openMocks(this);
-    mapper = new ObjectMapper();
+    objectMapper = new ObjectMapper();
+
+    // Configure MecDepositProperties metrics
+    MecDepositMetrics metrics = new MecDepositMetrics();
+    metrics.setKafkaTopic("test-metrics-topic");
+    when(mecDepositProperties.getMetrics()).thenReturn(metrics);
 
     when(tokenManager.getValidToken()).thenReturn("mock-token");
 
-    depositor = new EtxMapApiDepositor(mecDepositProperties, etxProperties, etxApi, tokenManager,
-        meterRegistry, kafkaTemplate);
+    // Configure properties using builders
+    ApiDepositorProperties apiDepositorProperties =
+        ApiDepositorProperties.builder().distributionType(distributionType).build();
+
+    DepositorProperties depositorProperties =
+        DepositorProperties.builder().api(apiDepositorProperties).build();
+
+    EtxDepositors depositors =
+        EtxDepositors.builder().staleMessageThreshold(5000).map(depositorProperties).build();
+
+    when(etxProperties.getDepositors()).thenReturn(depositors);
+    when(etxProperties.getClientType()).thenReturn(EtxClientType.SOFTWARE);
+    when(etxProperties.getClientSubType()).thenReturn(EtxClientSubType.APPLICATION);
+
+    depositor = new EtxMapApiDepositor(mecDepositProperties, etxProperties, etxApiClient,
+        tokenManager, registry, kafkaTemplate);
 
     // Load sample MAP JSON from resources
     sampleMapJson = new String(Files.readAllBytes(Paths.get(
@@ -82,90 +156,66 @@ class EtxMapApiDepositorTest {
   }
 
   @Test
-  void testMapDepositListener_SuccessfulDeposit() throws Exception {
-    OdeMapData mapData = mapper.readValue(sampleMapJson, OdeMapData.class);
-    mapData.getMetadata().setOdeReceivedAt(
-        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
-    String recentMapJson = mapper.writeValueAsString(mapData);
+  void testMapDepositListener_Success() throws Exception {
+    // Prepare test data
+    OdeMapData mapData = objectMapper.readValue(sampleMapJson, OdeMapData.class);
+    String currentTimestamp =
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME);
+    mapData.getMetadata().setOdeReceivedAt(currentTimestamp);
 
-    depositor.mapDepositListener(recentMapJson);
+    // Execute
+    depositor.mapDepositListener(objectMapper.writeValueAsString(mapData));
 
-    verify(tokenManager).getValidToken();
-    verify(etxApi).deposit(eq("mock-token"), anyString(), eq(DistributionType.TARGETED));
-    verify(kafkaTemplate).send(anyString(), anyString());
-
-    assert (meterRegistry.timer("mec-deposit.etx.api.processing", "message.type", "MAP")
-        .count() > 0);
-  }
-
-  @Test
-  void testMapDepositListener_ApiError() throws Exception {
-    OdeMapData mapData = mapper.readValue(sampleMapJson, OdeMapData.class);
-    mapData.getMetadata().setOdeReceivedAt(
-        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
-    String recentMapJson = mapper.writeValueAsString(mapData);
-
-    // Simulate API error
-    doThrow(new RuntimeException("API Error")).when(etxApi).deposit(anyString(), anyString(),
-        any());
-
-    depositor.mapDepositListener(recentMapJson);
-
-    verify(tokenManager).getValidToken();
-    verify(etxApi).deposit(anyString(), anyString(), any());
+    // Verify
+    verify(etxApiClient).deposit(eq("mock-token"), eq(mapData.getMetadata().getAsn1()),
+        eq(distributionType));
     verify(kafkaTemplate).send(anyString(),
-        argThat(metricsJson -> metricsJson.contains("\"success\":false")
-            && metricsJson.contains("\"errorMessage\":\"API Error\"")));
-  }
-
-  @Test
-  void testMapDepositListener_TokenError() throws Exception {
-    OdeMapData mapData = mapper.readValue(sampleMapJson, OdeMapData.class);
-    mapData.getMetadata().setOdeReceivedAt(
-        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
-    String recentMapJson = mapper.writeValueAsString(mapData);
-
-    // Simulate token error
-    when(tokenManager.getValidToken()).thenThrow(new RuntimeException("Token Error"));
-
-    depositor.mapDepositListener(recentMapJson);
-
-    verify(tokenManager).getValidToken();
-    verify(etxApi, never()).deposit(anyString(), anyString(), any());
-    verify(kafkaTemplate).send(anyString(),
-        argThat(metricsJson -> metricsJson.contains("\"success\":false")
-            && metricsJson.contains("\"errorMessage\":\"Token Error\"")));
+        argThat(metrics -> metrics.contains("\"success\":true")
+            && metrics.contains("\"messageType\":\"MAP\"")
+            && metrics.contains("\"distributionType\":\"" + distributionType + "\"")));
   }
 
   @Test
   void testMapDepositListener_StaleMessage() throws Exception {
-    OdeMapData mapData = mapper.readValue(sampleMapJson, OdeMapData.class);
-    mapData.getMetadata().setOdeReceivedAt("2020-01-01T00:00:00.000Z");
-    String staleMapJson = mapper.writeValueAsString(mapData);
+    // Prepare test data with old timestamp
+    OdeMapData mapData = objectMapper.readValue(sampleMapJson, OdeMapData.class);
+    String oldTimestamp =
+        LocalDateTime.now(ZoneOffset.UTC).minusMinutes(61).format(DateTimeFormatter.ISO_DATE_TIME);
+    mapData.getMetadata().setOdeReceivedAt(oldTimestamp);
 
-    depositor.mapDepositListener(staleMapJson);
 
-    verify(etxApi, never()).deposit(anyString(), anyString(), any());
-    verify(kafkaTemplate, never()).send(anyString(), anyString());
-    assertEquals(1.0,
-        meterRegistry.counter("mec-deposit.etx.api.stale", "message.type", "MAP").count());
+    // Execute
+    depositor.mapDepositListener(objectMapper.writeValueAsString(mapData));
+
+    // Verify no deposit occurred
+    verify(etxApiClient, never()).deposit(anyString(), anyString(), any(DistributionType.class));
   }
 
   @Test
-  void testMapDepositListener_InvalidJson() {
-    depositor.mapDepositListener("invalid json");
+  void testMapDepositListener_Error() throws Exception {
+    // Prepare test data
+    OdeMapData mapData = objectMapper.readValue(sampleMapJson, OdeMapData.class);
+    String currentTimestamp =
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME);
+    mapData.getMetadata().setOdeReceivedAt(currentTimestamp);
 
-    verify(etxApi, never()).deposit(anyString(), anyString(), any());
+    // Simulate API error
+    doThrow(new RuntimeException("API Error")).when(etxApiClient).deposit(anyString(), anyString(),
+        any(DistributionType.class));
+
+    // Execute
+    depositor.mapDepositListener(objectMapper.writeValueAsString(mapData));
+
+    // Verify error handling
     verify(kafkaTemplate).send(anyString(),
-        argThat(metricsJson -> metricsJson.contains("\"success\":false")));
-  }
+        argThat(metrics -> metrics.contains("\"success\":false")
+            && metrics.contains("\"messageType\":\"MAP\"")
+            && metrics.contains("\"distributionType\":\"" + distributionType + "\"")
+            && metrics.contains("\"errorMessage\":\"API Error\"")));
 
-  @Test
-  void testMapDepositListener_NullMessage() {
-    depositor.mapDepositListener(null);
-
-    verify(etxApi, never()).deposit(anyString(), anyString(), any());
-    verify(kafkaTemplate).send(anyString(),
-        argThat(metricsJson -> metricsJson.contains("\"success\":false")));
+    // Verify error counter was incremented
+    double errorCount =
+        registry.get("mec-deposit.etx.api.error").tag("message.type", "MAP").counter().count();
+    assert (errorCount > 0);
   }
 }

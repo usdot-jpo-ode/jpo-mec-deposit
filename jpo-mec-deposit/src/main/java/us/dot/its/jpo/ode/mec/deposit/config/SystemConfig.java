@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit.utils;
+package us.dot.its.jpo.ode.mec.deposit.config;
 
 /**
  * Configuration for the system, including thread count and database schema name.

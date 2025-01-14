@@ -1,6 +1,9 @@
 package us.dot.its.jpo.ode.mec.deposit.etx;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
@@ -17,6 +20,9 @@ import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerApiProperties;
 @Configuration
 @ConfigurationProperties(prefix = "mec-deposit.etx")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class EtxProperties {
   private boolean enabled;
   private EtxClientType clientType;
@@ -30,27 +36,37 @@ public class EtxProperties {
    * Properties for ETX depositor configuration groups.
    */
   @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static class EtxDepositors {
-    private ImpDepositorProperties bsm;
-    private ImpDepositorProperties spat;
-    private ImpDepositorProperties tim;
-    private ImpDepositorProperties map;
+    private int staleMessageThreshold;
+    private DepositorProperties bsm;
+    private DepositorProperties spat;
+    private DepositorProperties tim;
+    private DepositorProperties map;
   }
 
   /**
    * Properties for ETX depositor configuration.
    */
   @Data
-  public static class ImpDepositorProperties {
-    private EtxMqttDepositorProperties mqtt;
-    private ImpApiDepositorProperties api;
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class DepositorProperties {
+    private MqttDepositorProperties mqtt;
+    private ApiDepositorProperties api;
   }
 
   /**
    * Properties for the ETX Mqtt configuration.
    */
   @Data
-  public static class EtxMqttDepositorProperties {
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class MqttDepositorProperties {
     private Boolean enabled;
     private String kafkaTopic;
   }
@@ -59,7 +75,10 @@ public class EtxProperties {
    * Properties for the ETX Api configuration.
    */
   @Data
-  public static class ImpApiDepositorProperties {
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class ApiDepositorProperties {
     private Boolean enabled;
     private String kafkaTopic;
     private DistributionType distributionType;

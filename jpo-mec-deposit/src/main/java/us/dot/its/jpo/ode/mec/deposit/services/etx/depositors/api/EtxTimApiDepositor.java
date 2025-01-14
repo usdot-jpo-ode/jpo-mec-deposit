@@ -73,7 +73,7 @@ public class EtxTimApiDepositor extends AbstractEtxApiDepositor {
 
       String token = tokenManager.getValidToken();
       log.info("Depositing TIM message to ETX API");
-      this.partnerApi.deposit(token, asn1String, this.distributionType);
+      partnerApi.deposit(token, asn1String, distributionType);
 
       LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
       publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
@@ -88,6 +88,8 @@ public class EtxTimApiDepositor extends AbstractEtxApiDepositor {
           .messageType(messageType).odeReceivedAt(odeReceivedAt)
           .depositedAt(LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME))
           .success(false).errorMessage(e.getMessage()).distributionType(distributionType).build());
+      errorCounter.increment();
     }
   }
 }
+

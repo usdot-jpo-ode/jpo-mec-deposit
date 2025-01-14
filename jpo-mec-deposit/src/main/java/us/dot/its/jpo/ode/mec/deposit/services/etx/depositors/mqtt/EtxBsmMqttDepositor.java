@@ -18,6 +18,7 @@ import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxMqttDepositor;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxDepositMetrics;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
@@ -38,10 +39,10 @@ import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
 public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
 
   public EtxBsmMqttDepositor(MecDepositProperties mecDepositProperties, EtxProperties etxProperties,
-      EtxMqttPublishService mqttService, MeterRegistry registry,
+      EtxMqttProperties mqttProperties, EtxMqttPublishService mqttService, MeterRegistry registry,
       KafkaTemplate<String, String> kafkaTemplate) {
-    super(mecDepositProperties, etxProperties, EtxMessageType.BSM, mqttService, registry,
-        kafkaTemplate);
+    super(mecDepositProperties, etxProperties, mqttProperties, EtxMessageType.BSM, mqttService,
+        registry, kafkaTemplate);
   }
 
   /**
@@ -71,15 +72,18 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
       OdePosition3D refPoint = bsm.getCoreData().getPosition();
 
       // If the message format is J2735_GR, we need to convert the message to a GeoRoutedMsg
-      if (etxProperties.getMqtt().getMessageFormat() == EtxMqttMessageFormat.J2735_GR) {
+      if (mqttProperties.getMessageFormat() == EtxMqttMessageFormat.J2735_GR) {
         Instant timestamp = Instant.parse(odeReceivedAt);
         GeoRoutedMsg geoRoutedMsg = EtxMqttProtobufBuilder.buildGeoRoutedMsg(messageBytes,
             timestamp, refPoint.getLatitude().doubleValue(), refPoint.getLongitude().doubleValue());
         messageBytes = geoRoutedMsg.toByteArray();
       }
 
-      topic = EtxMqttTopicBuilder.buildRegionalTopic(messageType, bsm.getCoreData().getPosition(),
-          7, etxProperties);
+      topic =
+          EtxMqttTopicBuilder.buildRegionalTopic(messageType, refPoint.getLatitude().doubleValue(),
+              refPoint.getLongitude().doubleValue(), mqttProperties.getPrecision(),
+              mqttProperties.getVendor(), mqttProperties.getMessageFormat(),
+              etxProperties.getClientType(), etxProperties.getClientSubType());
 
       // This will now block until the message is published or throws an exception
       mqttService.publishAsn1Bytes(topic, messageBytes, retain);
@@ -102,6 +106,7 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
           .depositedAt(LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME))
           .success(false).errorMessage(errorMessage).topics(topic != null ? Set.of(topic) : null)
           .build());
+      errorCounter.increment();
     }
   }
 }
