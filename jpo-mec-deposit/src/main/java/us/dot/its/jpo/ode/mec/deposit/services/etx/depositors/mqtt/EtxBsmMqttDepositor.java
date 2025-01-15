@@ -70,10 +70,11 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
 
       J2735Bsm bsm = (J2735Bsm) msg.getPayload().getData();
       OdePosition3D refPoint = bsm.getCoreData().getPosition();
+      LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
 
       // If the message format is J2735_GR, we need to convert the message to a GeoRoutedMsg
       if (mqttProperties.getMessageFormat() == EtxMqttMessageFormat.J2735_GR) {
-        Instant timestamp = Instant.parse(odeReceivedAt);
+        Instant timestamp = depositedAt.toInstant(ZoneOffset.UTC);
         GeoRoutedMsg geoRoutedMsg = EtxMqttProtobufBuilder.buildGeoRoutedMsg(messageBytes,
             timestamp, refPoint.getLatitude().doubleValue(), refPoint.getLongitude().doubleValue());
         messageBytes = geoRoutedMsg.toByteArray();
@@ -85,7 +86,6 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
               mqttProperties.getVendor(), mqttProperties.getMessageFormat(),
               etxProperties.getClientType(), etxProperties.getClientSubType());
 
-      LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
       // This will now block until the message is published or throws an exception
       mqttService.publishAsn1Bytes(topic, messageBytes, retain);
       log.info("Successfully sent BSM message to MQTT topic: {}", topic);

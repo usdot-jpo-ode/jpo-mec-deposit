@@ -17,6 +17,15 @@ jobs:
       - name: Build
         uses: docker/build-push-action@v5
 
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run tests
+        run: |
+          cd jpo-mec-deposit
+          mvn clean install
+          mvn test
+
   # sonar:
   #   runs-on: ubuntu-latest
   #   steps:

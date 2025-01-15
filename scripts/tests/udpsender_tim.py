@@ -15,7 +15,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 
 frequency = 1
 
-print(f"Sending BSM at {frequency} Hz")
+print(f"Sending TIM at {frequency} Hz")
 while True:
   sock.sendto(bytes.fromhex(MESSAGE), (UDP_IP, UDP_PORT))
   time.sleep(1 / frequency)

@@ -83,10 +83,11 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
 
       byte[] messageBytes = Hex.decode(msg.getMetadata().getAsn1());
       J2735SPAT spatMsg = (J2735SPAT) msg.getPayload().getData();
+      LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
 
       // If the message format is J2735_GR, we need to convert the message to a GeoRoutedMsg
       if (mqttProperties.getMessageFormat() == EtxMqttMessageFormat.J2735_GR) {
-        Instant timestamp = Instant.parse(odeReceivedAt);
+        Instant timestamp = depositedAt.toInstant(ZoneOffset.UTC);
         GeoRoutedMsg geoRoutedMsg =
             EtxMqttProtobufBuilder.buildGeoRoutedMsg(messageBytes, timestamp);
         messageBytes = geoRoutedMsg.toByteArray();
@@ -97,7 +98,6 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
           mqttProperties.getMessageFormat(), etxProperties.getClientType(),
           etxProperties.getClientSubType());
 
-      LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
       for (String topic : topicSet) {
         mqttService.publishAsn1Bytes(topic, messageBytes, retain);
         log.info("Successfully sent SPaT message to MQTT topic: {}", topic);

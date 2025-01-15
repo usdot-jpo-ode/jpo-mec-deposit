@@ -67,10 +67,11 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
 
       byte[] messageBytes = Hex.decode(msg.getMetadata().getAsn1());
       var timMsg = (TravelerInformation) msg.getPayload().getData();
+      LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
 
       // If the message format is J2735_GR, we need to convert the message to a GeoRoutedMsg
       if (mqttProperties.getMessageFormat() == EtxMqttMessageFormat.J2735_GR) {
-        Instant timestamp = Instant.parse(odeReceivedAt);
+        Instant timestamp = depositedAt.toInstant(ZoneOffset.UTC);
         GeoRoutedMsg geoRoutedMsg =
             EtxMqttProtobufBuilder.buildGeoRoutedMsg(messageBytes, timestamp);
         messageBytes = geoRoutedMsg.toByteArray();
@@ -81,7 +82,6 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
           mqttProperties.getPrecision(), mqttProperties.getMessageFormat(),
           etxProperties.getClientType(), etxProperties.getClientSubType());
 
-      LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
       for (String topic : topicSet) {
         mqttService.publishAsn1Bytes(topic, messageBytes, retain);
         log.info("Sending TIM message to MQTT topics: {}", topic);
