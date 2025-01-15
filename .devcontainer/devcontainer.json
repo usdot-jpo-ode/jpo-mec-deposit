@@ -12,6 +12,12 @@
 			},
 			"extensions": [
 				"vscjava.vscode-java-pack",
+				"vscjava.vscode-java-debug",
+				"vscjava.vscode-maven",
+				"vscjava.vscode-java-dependency",
+				"vscjava.vscode-java-test",
+				"hbenl.vscode-test-explorer",
+				"ms-vscode.test-adapter-converter",
 				"redhat.vscode-xml",
 				"shengchen.vscode-checkstyle",
 				"redhat.java",
