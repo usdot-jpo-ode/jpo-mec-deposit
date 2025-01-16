@@ -130,22 +130,6 @@ class EtxTimApiDepositorTest {
   }
 
   @Test
-  void testTimDepositListener_StaleMessage() throws Exception {
-    // Prepare test data with old timestamp
-    OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
-    String oldTimestamp =
-        LocalDateTime.now(ZoneOffset.UTC).minusMinutes(61).format(DateTimeFormatter.ISO_DATE_TIME);
-    timData.getMetadata().setOdeReceivedAt(oldTimestamp);
-
-
-    // Execute
-    depositor.timDepositListener(objectMapper.writeValueAsString(timData));
-
-    // Verify no deposit occurred
-    verify(etxApiClient, never()).deposit(anyString(), anyString(), any(DistributionType.class));
-  }
-
-  @Test
   void testTimDepositListener_Error() throws Exception {
     // Prepare test data
     OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);

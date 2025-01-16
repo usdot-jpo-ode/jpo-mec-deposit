@@ -65,10 +65,6 @@ public class EtxMapApiDepositor extends AbstractEtxApiDepositor {
       OdeMapData msg = mapper.readValue(message, OdeMapData.class);
       odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
 
-      if (isMessageStale(odeReceivedAt)) {
-        return;
-      }
-
       asn1Hex = msg.getMetadata().getAsn1();
       String token = tokenManager.getValidToken();
 

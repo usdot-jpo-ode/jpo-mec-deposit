@@ -95,18 +95,20 @@ spring:
     consumer:
       group-id: jpo-mec-deposit
       fetch-min-size: 1
-      fetch-max-wait: 50
-      max-poll-records: 500
+      fetch-max-wait: 10
+      max-poll-records: 100
       auto-offset-reset: latest
       enable-auto-commit: true
-      auto-commit-interval: 100
+      auto-commit-interval: 50
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      heartbeat-interval: 3000
     listener:
       ack-mode: BATCH
-      poll-timeout: 1
-      idle-event-interval: 1
+      poll-timeout: 100
+      idle-event-interval: 100
       idle-between-polls: 0
+      concurrency: ${KAFKA_CONCURRENCY:1}
   config:
     import:
       - classpath:application-confluent.yaml
