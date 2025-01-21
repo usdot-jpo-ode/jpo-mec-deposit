@@ -1,0 +1,114 @@
+#General Properties
+#==================
+groupId: ^project.groupId^
+artifactId: ^project.artifactId^
+version: ^project.version^
+server.port: 8082
+
+# MEC Deposit Metrics
+mec-deposit:
+  metrics:
+    enabled: ${METRICS_ENABLED:true}
+    kafka-topic: ${METRICS_KAFKA_TOPIC:topic.MecDepositMetrics}
+  etx:
+    enabled: ${ETX_ENABLED:false}
+    client-type: ${ETX_CLIENT_TYPE}
+    client-sub-type: ${ETX_CLIENT_SUB_TYPE}
+    partner-api:
+      vendor: ${ETX_REGISTRATION_VENDOR}
+      base-uri: ${ETX_PARTNER_API_BASE_URI}
+      username: ${ETX_PARTNER_API_USERNAME}
+      password: ${ETX_PARTNER_API_PASSWORD}
+      # used for the partner api registration to determine the MEC location
+      mec-latitude: ${ETX_MEC_LATITUDE}
+      mec-longitude: ${ETX_MEC_LONGITUDE}
+      network-type: ${ETX_NETWORK_TYPE}
+      cache-registration: ${ETX_CACHE_REGISTRATION}
+      certificate-path: ${ETX_CERT_PATH}
+      clear-tim:
+        enabled: ${ETX_PARTNER_API_CLEAR_TIM_ENABLED:false}
+        interval: ${ETX_PARTNER_API_CLEAR_TIM_INTERVAL:10}
+    mqtt:
+      qos: 0
+      max-inflight: 10
+      connection-timeout: 30
+      keep-alive-interval: 60
+      completion-timeout: 5000
+      max-messages-per-second: ${ETX_PUBLISH_RATE:50}
+      vendor: ${ETX_MQTT_VENDOR}
+      precision: 7
+      message-format: ${ETX_MQTT_MESSAGE_FORMAT:j2735}
+      subscriptions:
+        - "vzimp/1/ClientInfo"
+    depositors:
+      stale-message-threshold: ${ETX_DEPOSITORS_STALE_MESSAGE_THRESHOLD:250}
+      bsm:
+        mqtt:
+          enabled: ${ETX_DEPOSITORS_BSM_MQTT_ENABLED:true}
+          kafka-topic: ${ETX_DEPOSITORS_BSM_MQTT_KAFKA_TOPIC:topic.OdeBsmJson}
+      spat:
+        mqtt:
+          enabled: ${ETX_DEPOSITORS_SPAT_MQTT_ENABLED:true}
+          kafka-topic: ${ETX_DEPOSITORS_SPAT_MQTT_KAFKA_TOPIC:topic.OdeSpatJson}
+      tim:
+        mqtt:
+          enabled: ${ETX_DEPOSITORS_TIM_MQTT_ENABLED:true}
+          kafka-topic: ${ETX_DEPOSITORS_TIM_MQTT_KAFKA_TOPIC:topic.OdeTimJson}
+        api:
+          enabled: ${ETX_DEPOSITORS_TIM_API_ENABLED:true}
+          kafka-topic: ${ETX_DEPOSITORS_TIM_API_KAFKA_TOPIC:topic.OdeTimJsonTMCFiltered}
+          distribution-type: ${ETX_DEPOSITORS_TIM_API_DISTRIBUTION_TYPE:TARGETED}
+      map:
+        mqtt:
+          enabled: ${ETX_DEPOSITORS_MAP_MQTT_ENABLED:true}
+          kafka-topic: ${ETX_DEPOSITORS_MAP_MQTT_KAFKA_TOPIC:topic.OdeMapJson}
+        api:
+          enabled: ${ETX_DEPOSITORS_MAP_API_ENABLED:true}
+          kafka-topic: ${ETX_DEPOSITORS_MAP_API_KAFKA_TOPIC:topic.OdeMapJson}
+          distribution-type: ${ETX_DEPOSITORS_MAP_API_DISTRIBUTION_TYPE:TARGETED}
+# microservice actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  server:
+    port: 8082
+
+logging:
+  level:
+    root: INFO
+    org.springframework.kafka: info
+    org.springframework.web: WARN
+    guru.springframework.controllers: WARN
+    org.springframework.integration.mqtt: INFO
+    us.dot.its.jpo.ode.mec.deposit: ${LOGGING_LEVEL:INFO}
+    org.apache.kafka: WARN
+
+# Spring boot properties
+spring:
+  profiles:
+    default: "none"
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    consumer:
+      group-id: jpo-mec-deposit
+      fetch-min-size: 1
+      fetch-max-wait: 10
+      max-poll-records: 100
+      auto-offset-reset: latest
+      enable-auto-commit: true
+      auto-commit-interval: 50
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      heartbeat-interval: 3000
+    listener:
+      ack-mode: BATCH
+      poll-timeout: 100
+      idle-event-interval: 100
+      idle-between-polls: 0
+      concurrency: ${KAFKA_CONCURRENCY:1}
+  config:
+    import:
+      - classpath:application-confluent.yaml

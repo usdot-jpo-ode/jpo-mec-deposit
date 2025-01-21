@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option java_package = "us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt";
+option java_outer_classname = "GeoRoutedMsg_PB2";
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+package georoutedmsg;
+ 
+
+message Position {
+  double latitude = 1;
+  double longitude = 2;
+}
+ 
+message GeoRoutedMsg {  
+  bytes msgBytes = 1;
+  google.protobuf.Timestamp time = 2;
+  optional Position position = 3;
+}

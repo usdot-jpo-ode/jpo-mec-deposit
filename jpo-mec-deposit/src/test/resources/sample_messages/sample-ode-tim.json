@@ -1,0 +1,458 @@
+{
+  "metadata": {
+    "logFileName": "",
+    "recordType": "timMsg",
+    "securityResultCode": "success",
+    "receivedMessageDetails": {
+      "rxSource": "NA"
+    },
+    "payloadType": "us.dot.its.jpo.ode.model.OdeTimPayload",
+    "serialId": {
+      "streamId": "c112877f-72be-4ba9-9a7a-af7c0d5a5d98",
+      "bundleSize": 1,
+      "bundleId": 0,
+      "recordId": 0,
+      "serialNumber": 0
+    },
+    "odeReceivedAt": "2025-01-06T23:58:38.095Z",
+    "schemaVersion": 8,
+    "maxDurationTime": 0,
+    "recordGeneratedAt": "",
+    "recordGeneratedBy": "RSU",
+    "sanitized": false,
+    "odePacketID": "",
+    "odeTimStartDateTime": "",
+    "asn1": "001F813C70100F788D442EF003FC6B1B010F775D9B0301C266E7D0B1EA6DED07FFF93F4807BC7918A037F9AAF979F4CBCB720A197265E7D3969C3B9043E5BF9F3D3BB3C000000004CDCFA163D4DBDA004B1000F0420810010000E1463A0746381074AD77B5FE6E76FE5D3465E5B9050CB932F3E9CB4E1DC821F2DFCF9E9DD9E00000000266E7E561EA6E36582589C07E2112080080002749D8816792500FFB004038312A03BDB7F81E1D7981032D3008F162B048238C0227DEB1FE6E9EFEBD3465E5B9050CB932F3E9CB4E1DC821F2DFCF9E9DD9E00000000266E7A7F9EA6E0A902588078021060800800052D5A882D0B15412C3490199BACA67F9A8B879F4CBCB720A197265E7D3969C3B9043E5BF9F3D3BB3C000000004CDCF7583D4DCA4904B10F0004208100100001638F10A043244056F98F54000044A1C35113DDD766C00",
+    "originIp": "172.19.0.1"
+  },
+  "payload": {
+    "data": {
+      "msgCnt": 1,
+      "timeStamp": 3960,
+      "packetID": "8D442EF003FC6B1B01",
+      "urlB": "null",
+      "dataFrames": [
+        {
+          "doNotUse1": 0,
+          "frameType": "advisory",
+          "msgId": {
+            "roadSignID": {
+              "position": {
+                "lat": 389550358,
+                "long": -771495007
+              },
+              "viewAngle": {
+                "from000-0to022-5degrees": true,
+                "from022-5to045-0degrees": true,
+                "from045-0to067-5degrees": true,
+                "from067-5to090-0degrees": true,
+                "from090-0to112-5degrees": true,
+                "from112-5to135-0degrees": true,
+                "from135-0to157-5degrees": true,
+                "from157-5to180-0degrees": true,
+                "from180-0to202-5degrees": true,
+                "from202-5to225-0degrees": true,
+                "from225-0to247-5degrees": true,
+                "from247-5to270-0degrees": true,
+                "from270-0to292-5degrees": true,
+                "from292-5to315-0degrees": true,
+                "from315-0to337-5degrees": true,
+                "from337-5to360-0degrees": true
+              },
+              "mutcdCode": "warning"
+            }
+          },
+          "startYear": 2025,
+          "startTime": 3960,
+          "durationTime": 31000,
+          "priority": 5,
+          "doNotUse2": 0,
+          "regions": [
+            {
+              "name": "Western Pedestrian Crossing",
+              "id": {
+                "region": 0,
+                "id": 0
+              },
+              "anchor": {
+                "lat": 389550358,
+                "long": -771495007
+              },
+              "laneWidth": 600,
+              "directionality": "reverse",
+              "closedPath": false,
+              "direction": {
+                "from000-0to022-5degrees": false,
+                "from022-5to045-0degrees": false,
+                "from045-0to067-5degrees": false,
+                "from067-5to090-0degrees": false,
+                "from090-0to112-5degrees": false,
+                "from112-5to135-0degrees": false,
+                "from135-0to157-5degrees": false,
+                "from157-5to180-0degrees": false,
+                "from180-0to202-5degrees": false,
+                "from202-5to225-0degrees": false,
+                "from225-0to247-5degrees": true,
+                "from247-5to270-0degrees": true,
+                "from270-0to292-5degrees": true,
+                "from292-5to315-0degrees": true,
+                "from315-0to337-5degrees": false,
+                "from337-5to360-0degrees": false
+              },
+              "description": {
+                "path": {
+                  "scale": 0,
+                  "offset": {
+                    "ll": {
+                      "nodes": [
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": 0,
+                              "lat": 0
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": 1556,
+                              "lat": -454
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": 1676,
+                              "lat": -254
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL2": {
+                              "lon": 5293,
+                              "lat": -531
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Northern Pedestrian Crossing",
+              "id": {
+                "region": 0,
+                "id": 0
+              },
+              "anchor": {
+                "lat": 389551020,
+                "long": -771492660
+              },
+              "laneWidth": 600,
+              "directionality": "reverse",
+              "closedPath": false,
+              "direction": {
+                "from000-0to022-5degrees": true,
+                "from022-5to045-0degrees": true,
+                "from045-0to067-5degrees": true,
+                "from067-5to090-0degrees": false,
+                "from090-0to112-5degrees": false,
+                "from112-5to135-0degrees": false,
+                "from135-0to157-5degrees": false,
+                "from157-5to180-0degrees": false,
+                "from180-0to202-5degrees": false,
+                "from202-5to225-0degrees": false,
+                "from225-0to247-5degrees": true,
+                "from247-5to270-0degrees": true,
+                "from270-0to292-5degrees": true,
+                "from292-5to315-0degrees": true,
+                "from315-0to337-5degrees": true,
+                "from337-5to360-0degrees": true
+              },
+              "description": {
+                "path": {
+                  "scale": 0,
+                  "offset": {
+                    "ll": {
+                      "nodes": [
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": 0,
+                              "lat": 0
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": -791,
+                              "lat": -1103
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": -610,
+                              "lat": -876
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": -3,
+                              "lat": 2
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": -1149,
+                              "lat": -1750
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": -133,
+                              "lat": -257
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": -121,
+                              "lat": -538
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": 25,
+                              "lat": -360
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": 241,
+                              "lat": -469
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": 260,
+                              "lat": -232
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": 159,
+                              "lat": -84
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Southern Pedestrian Crossing",
+              "id": {
+                "region": 0,
+                "id": 0
+              },
+              "anchor": {
+                "lat": 389549055,
+                "long": -771494061
+              },
+              "laneWidth": 600,
+              "directionality": "reverse",
+              "closedPath": false,
+              "direction": {
+                "from000-0to022-5degrees": false,
+                "from022-5to045-0degrees": false,
+                "from045-0to067-5degrees": false,
+                "from067-5to090-0degrees": false,
+                "from090-0to112-5degrees": false,
+                "from112-5to135-0degrees": false,
+                "from135-0to157-5degrees": true,
+                "from157-5to180-0degrees": true,
+                "from180-0to202-5degrees": true,
+                "from202-5to225-0degrees": true,
+                "from225-0to247-5degrees": false,
+                "from247-5to270-0degrees": false,
+                "from270-0to292-5degrees": false,
+                "from292-5to315-0degrees": false,
+                "from315-0to337-5degrees": false,
+                "from337-5to360-0degrees": false
+              },
+              "description": {
+                "path": {
+                  "scale": 0,
+                  "offset": {
+                    "ll": {
+                      "nodes": [
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": 0,
+                              "lat": 0
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": 602,
+                              "lat": 849
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": 834,
+                              "lat": 1109
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": 353,
+                              "lat": 584
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL2": {
+                              "lon": 1646,
+                              "lat": 3238
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Eastern Pedestrian Crossing",
+              "id": {
+                "region": 0,
+                "id": 0
+              },
+              "anchor": {
+                "lat": 389549656,
+                "long": -771491766
+              },
+              "laneWidth": 600,
+              "directionality": "reverse",
+              "closedPath": false,
+              "direction": {
+                "from000-0to022-5degrees": false,
+                "from022-5to045-0degrees": false,
+                "from045-0to067-5degrees": true,
+                "from067-5to090-0degrees": true,
+                "from090-0to112-5degrees": true,
+                "from112-5to135-0degrees": true,
+                "from135-0to157-5degrees": false,
+                "from157-5to180-0degrees": false,
+                "from180-0to202-5degrees": false,
+                "from202-5to225-0degrees": false,
+                "from225-0to247-5degrees": false,
+                "from247-5to270-0degrees": false,
+                "from270-0to292-5degrees": false,
+                "from292-5to315-0degrees": false,
+                "from315-0to337-5degrees": false,
+                "from337-5to360-0degrees": false
+              },
+              "description": {
+                "path": {
+                  "scale": 0,
+                  "offset": {
+                    "ll": {
+                      "nodes": [
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": 0,
+                              "lat": 0
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL1": {
+                              "lon": -1693,
+                              "lat": 241
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL2": {
+                              "lon": -4063,
+                              "lat": 1160
+                            }
+                          }
+                        },
+                        {
+                          "delta": {
+                            "node-LL2": {
+                              "lon": -2311,
+                              "lat": 981
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "doNotUse3": 0,
+          "doNotUse4": 0,
+          "content": {
+            "advisory": [
+              {
+                "item": {
+                  "itis": 9486
+                }
+              },
+              {
+                "item": {
+                  "itis": 13585
+                }
+              }
+            ]
+          },
+          "url": "null"
+        }
+      ]
+    },
+    "dataType": "us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerInformation"
+  }
+}

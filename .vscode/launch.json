@@ -1,0 +1,17 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "MecDeposit",
+            "request": "launch",
+            "mainClass": "us.dot.its.jpo.ode.mec.deposit.MecDepositApplication",
+            "projectName": "jpo-mec-deposit",
+            "envFile": "${workspaceFolder}/.env",
+            // "vmArgs": "-Djavax.net.debug=ssl,handshake,data,trustmanager"
+        }
+    ]
+}

@@ -1,0 +1,17 @@
+{
+  "configFilePath": "resources/ETX/test-config.json",
+  "caCertPath": "resources/ETX/test-ca.pem",
+  "clientCertPath": "resources/ETX/test-cert.pem",
+  "keyFilePath": "resources/ETX/test-key.pem",
+  "etxVendor": "TEST_VENDOR",
+  "clientType": "Test_Software",
+  "clientSubType": "Test_Application",
+  "networkType": "non-VZ",
+  "etxMqttUri": "mqtt://test-server.example.com:8883",
+  "deviceID": "test-device-id",
+  "etxSessionID": {
+    "SessionID": "test-session-0000"
+  },
+  "mecLatitude": 0.0,
+  "mecLongitude": 0.0
+}
