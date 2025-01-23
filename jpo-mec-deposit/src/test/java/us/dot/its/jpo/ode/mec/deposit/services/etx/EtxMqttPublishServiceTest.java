@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -79,16 +80,21 @@ class EtxMqttPublishServiceTest {
     String topic = "test/topic";
     when(mqttOutboundChannel.send(any(Message.class), anyLong())).thenReturn(true);
 
-    // Simulate reaching rate limit
-    for (int i = 0; i < 100; i++) {
+    // Act - Try to publish messages faster than the rate limit
+    int attempts = 150; // Try more than the rate limit
+    int expectedSuccesses = 100; // Should match maxMessagesPerSecond
+
+    for (int i = 0; i < attempts; i++) {
       service.publishAsn1Bytes(topic, testBytes, false);
     }
 
-    // Act & Assert
-    assertThrows(RuntimeException.class, () -> service.publishAsn1Bytes(topic, testBytes, false));
+    // Assert
+    // Verify that only maxMessagesPerSecond messages were actually sent
+    verify(mqttOutboundChannel, times(expectedSuccesses)).send(any(Message.class), anyLong());
 
-    // Verify rate limit metric was incremented
-    assertEquals(1.0, meterRegistry.counter("mec-deposit.etx.mqtt.ratelimit.skipped").count());
+    // Verify rate limit metric was incremented for the excess messages
+    assertEquals(attempts - expectedSuccesses,
+        meterRegistry.counter("mec-deposit.etx.mqtt.ratelimit.skipped").count());
   }
 
   @Test
