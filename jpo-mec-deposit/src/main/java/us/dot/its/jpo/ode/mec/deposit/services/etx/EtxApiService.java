@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
 
@@ -18,11 +19,13 @@ public class EtxApiService {
   private final EtxPartnerClient partnerApi;
   private final EtxTokenManager tokenManager;
 
+  @Value("${mec-deposit.etx.partner-api.clear-tim.enabled}")
+  private boolean clearTimEnabled;
 
   /**
    * Creates a new ETX registration service and attempts to register the client.
    *
-   * @param etxApi       The ETX API client
+   * @param etxApi The ETX API client
    * @param tokenManager The token manager for authentication
    */
   public EtxApiService(EtxPartnerClient etxApi, EtxTokenManager tokenManager) {
@@ -33,11 +36,13 @@ public class EtxApiService {
   /**
    * Clears the inactive API deployed TIMs that are on the ETX Partner API.
    */
-  @ConditionalOnProperty(value = "mec-deposit.etx.partner-api.clear-tim.enabled",
-      havingValue = "true")
   @Scheduled(fixedRateString = "${mec-deposit.etx.partner-api.clear-tim.interval}",
       timeUnit = TimeUnit.MINUTES)
   public void clearTim() {
+    if (!clearTimEnabled) {
+      log.debug("Clear TIM is disabled");
+      return;
+    }
     String token = tokenManager.getValidToken();
     partnerApi.clearTim(token);
   }
