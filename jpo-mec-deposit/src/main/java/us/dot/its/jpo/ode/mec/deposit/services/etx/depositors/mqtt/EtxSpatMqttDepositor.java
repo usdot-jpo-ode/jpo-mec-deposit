@@ -66,7 +66,8 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
   @Async("kafkaListenerExecutor")
   @KafkaListener(topics = "${mec-deposit.etx.depositors.spat.mqtt.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-spat-mqtt-depositor",
-      concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
+      concurrency = "${spring.kafka.listener.concurrency:1}",
+      containerFactory = "kafkaListenerContainerFactory")
   public void spatDepositListener(String message) {
     boolean retain = false;
     Set<String> topicSet = null;
