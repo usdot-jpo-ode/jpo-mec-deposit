@@ -57,7 +57,8 @@ public class EtxMapApiDepositor extends AbstractEtxApiDepositor {
   @Async("kafkaListenerExecutor")
   @KafkaListener(topics = "${mec-deposit.etx.depositors.map.api.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-map-api-depositor",
-      concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
+      concurrency = "${spring.kafka.listener.concurrency:1}",
+      containerFactory = "kafkaListenerContainerFactory")
   public void mapDepositListener(String message) {
     String odeReceivedAt = null;
     String asn1Hex = "";

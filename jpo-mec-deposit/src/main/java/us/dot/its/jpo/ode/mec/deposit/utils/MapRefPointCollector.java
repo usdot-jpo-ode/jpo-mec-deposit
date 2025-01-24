@@ -27,7 +27,8 @@ public class MapRefPointCollector {
    */
   @KafkaListener(topics = "${mec-deposit.etx.depositors.map.mqtt.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-map-collector",
-      concurrency = "${listen.concurrency:1}", properties = {"auto.offset.reset=earliest"})
+      concurrency = "${spring.kafka.listener.concurrency:1}",
+      properties = {"auto.offset.reset=earliest"})
   public void jsonMapListener(String message) {
     try {
       OdeMapData msg = mapper.readValue(message, OdeMapData.class);

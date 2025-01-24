@@ -51,7 +51,8 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
   @Async("kafkaListenerExecutor")
   @KafkaListener(topics = "${mec-deposit.etx.depositors.bsm.mqtt.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-bsm-mqtt-depositor",
-      concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
+      concurrency = "${spring.kafka.listener.concurrency:1}",
+      containerFactory = "kafkaListenerContainerFactory")
   public void bsmDepositListener(String message) {
     boolean retain = false;
     String topic = null;

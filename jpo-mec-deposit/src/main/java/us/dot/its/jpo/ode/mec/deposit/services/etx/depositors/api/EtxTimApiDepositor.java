@@ -57,7 +57,8 @@ public class EtxTimApiDepositor extends AbstractEtxApiDepositor {
   @Async("kafkaListenerExecutor")
   @KafkaListener(topics = "${mec-deposit.etx.depositors.tim.api.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-tim-api-depositor",
-      concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
+      concurrency = "${spring.kafka.listener.concurrency:1}",
+      containerFactory = "kafkaListenerContainerFactory")
   public void timDepositListener(String message) {
     String odeReceivedAt = null;
     String asn1Hex = "";

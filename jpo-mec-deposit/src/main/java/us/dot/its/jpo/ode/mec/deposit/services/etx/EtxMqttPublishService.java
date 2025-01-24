@@ -9,6 +9,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.integration.mqtt.support.MqttHeaders;
@@ -32,16 +33,17 @@ public class EtxMqttPublishService {
   private final int maxMessagesPerSecond;
   private final Counter rateLimitSkippedCounter;
   private final AtomicInteger currentRate = new AtomicInteger(0);
+  private final AtomicInteger availableTokens;
 
   /**
    * Constructs an EtxMqttService with the specified parameters.
    *
    * @param mqttOutboundChannel The channel for outbound MQTT messages
-   * @param mqttProperties      MQTT configuration properties
-   * @param registry            Metrics registry for monitoring
+   * @param mqttProperties MQTT configuration properties
+   * @param registry Metrics registry for monitoring
    */
   public EtxMqttPublishService(MessageChannel mqttOutboundChannel, EtxMqttProperties mqttProperties,
-                               MeterRegistry registry) {
+      MeterRegistry registry) {
     this.mqttOutboundChannel = mqttOutboundChannel;
     this.maxMessagesPerSecond = mqttProperties.getMaxMessagesPerSecond();
 
@@ -55,10 +57,13 @@ public class EtxMqttPublishService {
     this.executor = new ThreadPoolExecutor(4, 8, 60L, TimeUnit.SECONDS,
         new LinkedBlockingQueue<>(1000), new ThreadPoolExecutor.CallerRunsPolicy());
 
-    // Reset message counter every second and update rate
+    this.availableTokens = new AtomicInteger(maxMessagesPerSecond);
+
+    // Modify the scheduler to refill tokens instead of just counting
     scheduler.scheduleAtFixedRate(() -> {
+      availableTokens.set(maxMessagesPerSecond);
       int count = messageCount.getAndSet(0);
-      currentRate.set(count); // Update the current rate
+      currentRate.set(count);
       if (count > 0) {
         log.info("Published {} messages in the last second", count);
       } else {
@@ -70,19 +75,20 @@ public class EtxMqttPublishService {
   /**
    * Publishes ASN.1 encoded bytes to the specified MQTT topic.
    *
-   * @param topic     The MQTT topic to publish to
+   * @param topic The MQTT topic to publish to
    * @param asn1Bytes The ASN.1 encoded message bytes
-   * @param retain    Whether to retain the message on the broker
+   * @param retain Whether to retain the message on the broker
    */
   public void publishAsn1Bytes(String topic, byte[] asn1Bytes, boolean retain) {
-    try {
-      // Check if we've exceeded our rate limit
-      if (messageCount.get() >= maxMessagesPerSecond) {
-        rateLimitSkippedCounter.increment();
-        log.warn("Skipping message publish - exceeded rate limit of {} Hz", maxMessagesPerSecond);
-        throw new RuntimeException("Message skipped - exceeded rate limit");
-      }
+    // Rate limiting logic - this must be thread safe (before it wasn't)
+    if (availableTokens.decrementAndGet() < 0) {
+      availableTokens.incrementAndGet();
+      rateLimitSkippedCounter.increment();
+      log.debug("Skipping message publish - exceeded rate limit of {} Hz", maxMessagesPerSecond);
+      return;
+    }
 
+    try {
       Message<byte[]> message =
           MessageBuilder.withPayload(asn1Bytes).setHeader(MqttHeaders.TOPIC, topic)
               .setHeader(MqttHeaders.RETAINED, retain).setHeader(MqttHeaders.QOS, 0).build();

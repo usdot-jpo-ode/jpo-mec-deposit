@@ -50,7 +50,8 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
   @Async("kafkaListenerExecutor")
   @KafkaListener(topics = "${mec-deposit.etx.depositors.tim.mqtt.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-tim-mqtt-depositor",
-      concurrency = "${listen.concurrency:1}", containerFactory = "kafkaListenerContainerFactory")
+      concurrency = "${spring.kafka.listener.concurrency:1}",
+      containerFactory = "kafkaListenerContainerFactory")
   public void timDepositListener(String message) {
     boolean retain = false;
     Set<String> topicSet = null;
