@@ -4,11 +4,28 @@ This project is intended to serve as a consumer application to subscribe to a Ka
 
 ## Table of Contents
 
-- [Release Notes](#release-notes)
-- [Usage](#usage)
-- [Configuration](#configuration)
-- [Development Setup](#development-setup)
-- [Testing](#testing)
+- [jpo-mec-deposit (Message Deposit Service)](#jpo-mec-deposit-message-deposit-service)
+  - [Table of Contents](#table-of-contents)
+  - [Release Notes](#release-notes)
+  - [Usage](#usage)
+    - [Run with Docker](#run-with-docker)
+    - [Docker Compose Files](#docker-compose-files)
+    - [Run with Vscode](#run-with-vscode)
+      - [Launch Configurations](#launch-configurations)
+  - [Configuration](#configuration)
+    - [ETX MEC Deposit](#etx-mec-deposit)
+      - [ETX MQTT Deposit](#etx-mqtt-deposit)
+      - [ETX API Deposit](#etx-api-deposit)
+    - [Confluent Cloud Integration](#confluent-cloud-integration)
+      - [Environment variables](#environment-variables)
+        - [Purpose \& Usage](#purpose--usage)
+        - [Note](#note)
+  - [Development Setup](#development-setup)
+    - [Integrated Development Environment (IDE)](#integrated-development-environment-ide)
+    - [Dev Container Environment](#dev-container-environment)
+    - [Checkstyle configuration](#checkstyle-configuration)
+  - [Testing](#testing)
+    - [Unit Tests](#unit-tests)
 
 <!--
 #############################################
@@ -71,6 +88,18 @@ To run the project through the launch configuration and start debugging, the dev
 
 ## Configuration
 
+### ETX MEC Deposit
+
+The ETX MEC Deposit is a feature that allows the depositor to deposit messages to an ETX MEC. This is done by setting the `ETX_ENABLED` environment variable to `True` and providing the necessary ETX configuration. Please refer to the [sample.env](./sample.env) file for the necessary environment variables.
+
+#### ETX MQTT Deposit
+
+The ETX MQTT Deposit is a feature that allows the depositor to deposit messages to an ETX MQTT broker. This is done by setting the `ETX_MQTT_ENABLED` environment variable to `True` and providing the necessary ETX MQTT configuration. Please refer to the [sample.env](./sample.env) file for the necessary environment variables.
+
+#### ETX API Deposit
+
+The ETX API Deposit is a feature that allows the depositor to deposit messages to an ETX API. This is done by setting the `ETX_API_ENABLED` environment variable to `True` and providing the necessary ETX API configuration. Please refer to the [sample.env](./sample.env) file for the necessary environment variables.
+
 ### Confluent Cloud Integration
 
 Rather than using a local kafka instance, this project can utilize an instance of kafka hosted by Confluent Cloud via SASL.
@@ -86,10 +115,6 @@ Rather than using a local kafka instance, this project can utilize an instance o
 ##### Note
 
 This has only been tested with Confluent Cloud but technically all SASL authenticated Kafka brokers can be reached using this method.
-
-### ETX MEC Deposit
-
-The ETX MEC Deposit is a feature that allows the depositor to deposit messages to an ETX MEC. This is done by setting the `ETX_ENABLED` environment variable to `True` and providing the necessary ETX configuration. Please refer to the [sample.env](./sample.env) file for the necessary environment variables.
 
 [Back to top](#table-of-contents)
 
