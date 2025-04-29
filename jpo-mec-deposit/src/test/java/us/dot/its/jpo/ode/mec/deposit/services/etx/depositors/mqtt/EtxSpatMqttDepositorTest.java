@@ -20,6 +20,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +37,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties.MecDepositMetrics;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.DepositorProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.EtxDepositors;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.MqttDepositorProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.SpatIntersectionFilterProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
@@ -96,6 +100,13 @@ class EtxSpatMqttDepositorTest {
     int staleMessageThreshold = 5000; // 5 seconds
     EtxDepositors depositors = new EtxDepositors();
     depositors.setStaleMessageThreshold(staleMessageThreshold);
+
+    MqttDepositorProperties mqtt = new MqttDepositorProperties();
+    SpatIntersectionFilterProperties intersectionFilter = new SpatIntersectionFilterProperties();
+    intersectionFilter.setEnabled(false);
+
+    mqtt.setIntersectionFilter(intersectionFilter);
+    depositors.setSpat(new DepositorProperties(mqtt, null));
 
     when(etxProperties.getDepositors()).thenReturn(depositors);
     when(etxProperties.getClientType()).thenReturn(EtxClientType.SOFTWARE);
@@ -215,5 +226,45 @@ class EtxSpatMqttDepositorTest {
     double errorCount =
         registry.get("mec-deposit.etx.mqtt.error").tag("message.type", "SPAT").counter().count();
     assert (errorCount > 0);
+  }
+
+  @Test
+  void testSpatDepositListener_IntersectionFilter_Enabled_AllowedIntersection() throws Exception {
+    // Arrange
+    OdeSpatData spatData = objectMapper.readValue(sampleSpatJson, OdeSpatData.class);
+    String currentTime = LocalDateTime.now(ZoneOffset.UTC)
+        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
+    spatData.getMetadata().setOdeReceivedAt(currentTime);
+    String message = objectMapper.writeValueAsString(spatData);
+
+    // override the intersection filter
+    ReflectionTestUtils.setField(depositor, "intersectionFilterEnabled", true);
+    ReflectionTestUtils.setField(depositor, "allowedIntersectionIds", List.of(9709));
+
+    // Act
+    depositor.spatDepositListener(message);
+
+    verify(mqttService).publishAsn1Bytes(eq("test-topic"), any(byte[].class), eq(false));
+    verify(kafkaTemplate).send(eq("test-metrics-topic"), anyString());
+  }
+
+  @Test
+  void testSpatDepositListener_IntersectionFilter_Enabled_DisallowedIntersection()
+      throws Exception {
+    // Arrange
+    OdeSpatData spatData = objectMapper.readValue(sampleSpatJson, OdeSpatData.class);
+    String currentTime = LocalDateTime.now(ZoneOffset.UTC)
+        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
+    spatData.getMetadata().setOdeReceivedAt(currentTime);
+    String message = objectMapper.writeValueAsString(spatData);
+
+    // override the intersection filter
+    ReflectionTestUtils.setField(depositor, "intersectionFilterEnabled", true);
+    ReflectionTestUtils.setField(depositor, "allowedIntersectionIds", List.of(1111));
+
+    // Act
+    depositor.spatDepositListener(message);
+
+    verify(mqttService, never()).publishAsn1Bytes(anyString(), any(byte[].class), eq(false));
   }
 }
