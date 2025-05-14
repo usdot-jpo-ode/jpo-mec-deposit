@@ -133,7 +133,7 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
 
       for (String topic : topicSet) {
         mqttService.publishAsn1Bytes(topic, messageBytes, retain);
-        log.info("Successfully sent SPaT message to MQTT topic: {}", topic);
+        log.debug("Successfully sent SPaT message to MQTT topic: {}", topic);
       }
 
       handleProcessingSuccess(topicSet, null, odeReceivedAt, depositedAt, asn1Hex);

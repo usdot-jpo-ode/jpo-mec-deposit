@@ -35,8 +35,8 @@ public class EtxTokenManager {
     AuthToken authToken = partnerApiClient.getToken();
     if (authToken != null) {
       currentToken = authToken.getAccessToken();
-      // Set expiration 5 minutes before actual expiry to be safe
-      expirationTime = System.currentTimeMillis() + (authToken.getExpiresIn() * 1000L) - 300000L;
+      // Set expiration 10 seconds before actual expiry to allow for processing time
+      expirationTime = System.currentTimeMillis() + (authToken.getExpiresIn() * 1000L) - 10000L;
       log.info("ETX token refreshed, valid for {} seconds", authToken.getExpiresIn());
     } else {
       log.error("Failed to refresh ETX token");
