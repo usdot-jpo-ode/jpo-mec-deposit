@@ -7,9 +7,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -72,7 +74,7 @@ class EtxMapApiDepositorTest {
   private DistributionType distributionType = DistributionType.TARGETED;
 
   @BeforeEach
-  void setUp() throws Exception {
+  void setUp() throws IOException, URISyntaxException {
     // Use SimpleMeterRegistry instead of mocking
     registry = new SimpleMeterRegistry();
     MockitoAnnotations.openMocks(this);
@@ -109,7 +111,7 @@ class EtxMapApiDepositorTest {
   }
 
   @Test
-  void testMapDepositListener_Success() throws Exception {
+  void testMapDepositListener_Success() throws JsonProcessingException {
     // Prepare test data
     OdeMapData mapData = objectMapper.readValue(sampleMapJson, OdeMapData.class);
     String currentTimestamp =
@@ -129,7 +131,7 @@ class EtxMapApiDepositorTest {
   }
 
   @Test
-  void testMapDepositListener_Error() throws Exception {
+  void testMapDepositListener_Error() throws JsonProcessingException {
     // Prepare test data
     OdeMapData mapData = objectMapper.readValue(sampleMapJson, OdeMapData.class);
     String currentTimestamp =

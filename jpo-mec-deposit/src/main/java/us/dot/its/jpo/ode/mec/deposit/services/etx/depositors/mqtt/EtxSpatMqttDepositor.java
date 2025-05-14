@@ -42,6 +42,7 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
   private MapRefPointCollector mapDataCollector;
   private Boolean intersectionFilterEnabled;
   private List<Integer> allowedIntersectionIds;
+  private List<Integer> blockedIntersectionIds;
 
   /**
    * Constructs a new EtxSpatMqttDepositor with the specified dependencies.
@@ -63,6 +64,8 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
         etxProperties.getDepositors().getSpat().getMqtt().getIntersectionFilter().getEnabled();
     this.allowedIntersectionIds = etxProperties.getDepositors().getSpat().getMqtt()
         .getIntersectionFilter().getAllowedIntersectionIds();
+    this.blockedIntersectionIds = etxProperties.getDepositors().getSpat().getMqtt()
+        .getIntersectionFilter().getBlockedIntersectionIds();
   }
 
   private boolean shouldProcessIntersection(J2735SPAT spatMsg) {
@@ -75,9 +78,22 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
         && !spatMsg.getIntersectionStateList().getIntersectionStatelist().isEmpty()) {
       Integer intersectionId =
           spatMsg.getIntersectionStateList().getIntersectionStatelist().get(0).getId().getId();
+
+      // Check if intersection is blocked
+      if (blockedIntersectionIds != null && blockedIntersectionIds.contains(intersectionId)) {
+        log.debug("Filtering out SPAT message for blocked intersection ID: {}", intersectionId);
+        return false;
+      }
+
+      // If allowlist is empty, allow all non-blocked intersections
+      if (allowedIntersectionIds == null || allowedIntersectionIds.isEmpty()) {
+        return true;
+      }
+
+      // Check if intersection is explicitly allowed
       boolean allowed = allowedIntersectionIds.contains(intersectionId);
       if (!allowed) {
-        log.debug("Filtering out SPAT message for intersection ID: {}", intersectionId);
+        log.debug("Filtering out SPAT message for non-allowed intersection ID: {}", intersectionId);
       }
       return allowed;
     }

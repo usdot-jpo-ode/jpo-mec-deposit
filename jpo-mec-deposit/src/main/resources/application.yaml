@@ -53,6 +53,7 @@ mec-deposit:
           intersection-filter:
             enabled: ${ETX_DEPOSITORS_SPAT_INTERSECTION_FILTER_ENABLED:false}
             allowed-intersection-ids: ${ETX_DEPOSITORS_SPAT_ALLOWED_INTERSECTIONS:}
+            blocked-intersection-ids: ${ETX_DEPOSITORS_SPAT_BLOCKED_INTERSECTIONS:}
       tim:
         mqtt:
           enabled: ${ETX_DEPOSITORS_TIM_MQTT_ENABLED:true}

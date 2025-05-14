@@ -82,6 +82,7 @@ public class EtxProperties {
   public static class SpatIntersectionFilterProperties {
     private Boolean enabled;
     private List<Integer> allowedIntersectionIds;
+    private List<Integer> blockedIntersectionIds;
   }
 
   /**

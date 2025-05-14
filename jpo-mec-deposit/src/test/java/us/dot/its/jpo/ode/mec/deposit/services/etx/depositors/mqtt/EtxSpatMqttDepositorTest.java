@@ -9,12 +9,14 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -84,9 +86,10 @@ class EtxSpatMqttDepositorTest {
   private ObjectMapper objectMapper;
   private String sampleSpatJson;
   private MockedStatic<EtxMqttTopicBuilder> mockedTopicBuilder;
+  private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'";
 
   @BeforeEach
-  void setUp() throws Exception {
+  void setUp() throws IOException, URISyntaxException {
     // Use SimpleMeterRegistry instead of mocking
     registry = new SimpleMeterRegistry();
 
@@ -143,55 +146,48 @@ class EtxSpatMqttDepositorTest {
     }
   }
 
-  @Test
-  void testSpatDepositListener() throws Exception {
-    // Arrange
+  private String createSpatTestMessage(String timestamp) throws JsonProcessingException {
     OdeSpatData spatData = objectMapper.readValue(sampleSpatJson, OdeSpatData.class);
-    String currentTime =
-        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
-    spatData.getMetadata().setOdeReceivedAt(currentTime);
-    String message = objectMapper.writeValueAsString(spatData);
+    spatData.getMetadata().setOdeReceivedAt(timestamp);
+    return objectMapper.writeValueAsString(spatData);
+  }
 
+  @Test
+  void testSpatDepositListener() throws JsonProcessingException {
+    String currentTime =
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
+    String message = createSpatTestMessage(currentTime);
     when(mqttProperties.getMessageFormat()).thenReturn(EtxMqttMessageFormat.J2735);
 
-    // Act
     depositor.spatDepositListener(message);
 
-    // Assert
+
     verify(mqttService).publishAsn1Bytes(eq("test-topic"), any(byte[].class), eq(false));
     verify(kafkaTemplate).send(eq("test-metrics-topic"), anyString());
   }
 
   @Test
-  void testSpatDepositListenerWithGeoRoutedFormat() throws Exception {
+  void testSpatDepositListenerWithGeoRoutedFormat() throws JsonProcessingException {
     // Arrange
     String currentTime =
-        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
-    OdeSpatData spatData = objectMapper.readValue(sampleSpatJson, OdeSpatData.class);
-    spatData.getMetadata().setOdeReceivedAt(currentTime);
-    String message = objectMapper.writeValueAsString(spatData);
-
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
+    String message = createSpatTestMessage(currentTime);
     when(mqttProperties.getMessageFormat()).thenReturn(EtxMqttMessageFormat.J2735_GR);
 
-    // Act
     depositor.spatDepositListener(message);
 
-    // Assert
+
     verify(mqttService).publishAsn1Bytes(anyString(), any(byte[].class), eq(false));
     verify(kafkaTemplate).send(eq("test-metrics-topic"), anyString());
   }
 
   @Test
-  void testSpatDepositListener_StaleMessage() throws Exception {
-    // Arrange
-    OdeSpatData spatData = objectMapper.readValue(sampleSpatJson, OdeSpatData.class);
-    spatData.getMetadata().setOdeReceivedAt("2020-01-01T00:00:00.000Z"); // Stale timestamp
-    String message = objectMapper.writeValueAsString(spatData);
+  void testSpatDepositListener_StaleMessage() throws JsonProcessingException {
+    String staleTimestamp = "2020-01-01T00:00:00.000000Z"; // Stale timestamp
+    String message = createSpatTestMessage(staleTimestamp);
 
-    // Act
     depositor.spatDepositListener(message);
 
-    // Assert
     verify(mqttService, never()).publishAsn1Bytes(anyString(), any(byte[].class), eq(false));
 
     // Verify stale message counter was incremented
@@ -201,22 +197,17 @@ class EtxSpatMqttDepositorTest {
   }
 
   @Test
-  void testSpatDepositListener_HandlesException() throws Exception {
-    // Arrange
-    OdeSpatData spatData = objectMapper.readValue(sampleSpatJson, OdeSpatData.class);
-    String currentTime = LocalDateTime.now(ZoneOffset.UTC)
-        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
-    spatData.getMetadata().setOdeReceivedAt(currentTime);
-    String message = objectMapper.writeValueAsString(spatData);
-
+  void testSpatDepositListener_HandlesException() throws JsonProcessingException {
     // Simulate an exception during MQTT publish
     doThrow(new RuntimeException("MQTT publish failed")).when(mqttService)
         .publishAsn1Bytes(anyString(), any(byte[].class), eq(false));
 
-    // Act
+    String currentTime =
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
+    String message = createSpatTestMessage(currentTime);
+
     depositor.spatDepositListener(message);
 
-    // Assert
     // Verify error metrics were published to Kafka
     verify(kafkaTemplate).send(eq("test-metrics-topic"),
         argThat(metricsJson -> metricsJson.contains("\"success\":false")
@@ -229,19 +220,16 @@ class EtxSpatMqttDepositorTest {
   }
 
   @Test
-  void testSpatDepositListener_IntersectionFilter_Enabled_AllowedIntersection() throws Exception {
-    // Arrange
-    OdeSpatData spatData = objectMapper.readValue(sampleSpatJson, OdeSpatData.class);
-    String currentTime = LocalDateTime.now(ZoneOffset.UTC)
-        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
-    spatData.getMetadata().setOdeReceivedAt(currentTime);
-    String message = objectMapper.writeValueAsString(spatData);
-
+  void testSpatDepositListener_IntersectionFilter_Enabled_AllowedIntersection()
+      throws JsonProcessingException {
     // override the intersection filter
     ReflectionTestUtils.setField(depositor, "intersectionFilterEnabled", true);
     ReflectionTestUtils.setField(depositor, "allowedIntersectionIds", List.of(9709));
 
-    // Act
+    String currentTime =
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
+    String message = createSpatTestMessage(currentTime);
+
     depositor.spatDepositListener(message);
 
     verify(mqttService).publishAsn1Bytes(eq("test-topic"), any(byte[].class), eq(false));
@@ -250,21 +238,90 @@ class EtxSpatMqttDepositorTest {
 
   @Test
   void testSpatDepositListener_IntersectionFilter_Enabled_DisallowedIntersection()
-      throws Exception {
-    // Arrange
-    OdeSpatData spatData = objectMapper.readValue(sampleSpatJson, OdeSpatData.class);
-    String currentTime = LocalDateTime.now(ZoneOffset.UTC)
-        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
-    spatData.getMetadata().setOdeReceivedAt(currentTime);
-    String message = objectMapper.writeValueAsString(spatData);
-
+      throws JsonProcessingException {
     // override the intersection filter
     ReflectionTestUtils.setField(depositor, "intersectionFilterEnabled", true);
     ReflectionTestUtils.setField(depositor, "allowedIntersectionIds", List.of(1111));
 
-    // Act
+    String currentTime =
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
+    String message = createSpatTestMessage(currentTime);
+
     depositor.spatDepositListener(message);
 
     verify(mqttService, never()).publishAsn1Bytes(anyString(), any(byte[].class), eq(false));
   }
+
+  @Test
+  void testSpatDepositListener_IntersectionFilter_BlockedIntersection()
+      throws JsonProcessingException {
+    // Configure filter with blocked intersection ID 9709 (from sample message)
+    ReflectionTestUtils.setField(depositor, "intersectionFilterEnabled", true);
+    ReflectionTestUtils.setField(depositor, "blockedIntersectionIds", List.of(9709));
+
+    String currentTime =
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
+    String message = createSpatTestMessage(currentTime);
+
+    depositor.spatDepositListener(message);
+
+    // message should be filtered out
+    verify(mqttService, never()).publishAsn1Bytes(anyString(), any(byte[].class), eq(false));
+  }
+
+  @Test
+  void testSpatDepositListener_IntersectionFilter_NonBlockedIntersection()
+      throws JsonProcessingException {
+    // Configure filter with different blocked intersection ID
+    ReflectionTestUtils.setField(depositor, "intersectionFilterEnabled", true);
+    ReflectionTestUtils.setField(depositor, "blockedIntersectionIds", List.of(1234));
+
+    String currentTime =
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
+    String message = createSpatTestMessage(currentTime);
+
+    depositor.spatDepositListener(message);
+
+    // message should be processed
+    verify(mqttService).publishAsn1Bytes(eq("test-topic"), any(byte[].class), eq(false));
+    verify(kafkaTemplate).send(eq("test-metrics-topic"), anyString());
+  }
+
+  @Test
+  void testSpatDepositListener_IntersectionFilter_BlockedTakesPrecedenceOverAllowed()
+      throws JsonProcessingException {
+    // Configure filter with intersection both allowed and blocked
+    ReflectionTestUtils.setField(depositor, "intersectionFilterEnabled", true);
+    ReflectionTestUtils.setField(depositor, "allowedIntersectionIds", List.of(9709));
+    ReflectionTestUtils.setField(depositor, "blockedIntersectionIds", List.of(9709));
+
+    String currentTime =
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
+    String message = createSpatTestMessage(currentTime);
+
+    depositor.spatDepositListener(message);
+
+    // message should be filtered out due to being blocked
+    verify(mqttService, never()).publishAsn1Bytes(anyString(), any(byte[].class), eq(false));
+  }
+
+  @Test
+  void testSpatDepositListener_IntersectionFilter_EmptyAllowlistAllowsNonBlocked()
+      throws JsonProcessingException {
+    // Configure filter with empty allowlist and non-matching blocked list
+    ReflectionTestUtils.setField(depositor, "intersectionFilterEnabled", true);
+    ReflectionTestUtils.setField(depositor, "allowedIntersectionIds", List.of());
+    ReflectionTestUtils.setField(depositor, "blockedIntersectionIds", List.of(1234));
+
+    String currentTime =
+        LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
+    String message = createSpatTestMessage(currentTime);
+
+    depositor.spatDepositListener(message);
+
+    // message should be processed since it's not blocked
+    verify(mqttService).publishAsn1Bytes(eq("test-topic"), any(byte[].class), eq(false));
+    verify(kafkaTemplate).send(eq("test-metrics-topic"), anyString());
+  }
+
 }
