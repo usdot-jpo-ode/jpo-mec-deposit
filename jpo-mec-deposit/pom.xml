@@ -29,6 +29,7 @@
         <java.version>21</java.version>
         <protobuf.version>4.28.3</protobuf.version>
         <jpo-ode.version>4.0.0</jpo-ode.version>
+        <jpo-asn.version>1.0.0</jpo-asn.version>
         <springdoc.version>2.3.0</springdoc.version>
         <swagger-ui.version>5.3.1</swagger-ui.version>
         <checkstyle-maven-plugin.version>3.6.0</checkstyle-maven-plugin.version>
@@ -147,6 +148,21 @@
             <version>${jpo-ode.version}</version>
             <scope>system</scope>
             <systemPath>${project.basedir}/lib/jpo-ode-common-${jpo-ode.version}.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>usdot.jpo.asn</groupId>
+            <artifactId>jpo-asn-j2735-2024</artifactId>
+            <version>${jpo-asn.version}</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/jpo-asn-j2735-2024-${jpo-asn.version}.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>usdot.jpo.asn</groupId>
+            <artifactId>jpo-asn-runtime</artifactId>
+            <version>${jpo-asn.version}</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/jpo-asn-runtime-${jpo-asn.version}.jar</systemPath>
         </dependency>
 
         <dependency>
