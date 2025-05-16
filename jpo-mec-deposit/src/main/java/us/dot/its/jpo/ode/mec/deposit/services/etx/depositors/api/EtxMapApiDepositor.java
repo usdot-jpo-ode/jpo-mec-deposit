@@ -71,7 +71,7 @@ public class EtxMapApiDepositor extends AbstractEtxApiDepositor {
 
       LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
       partnerApi.deposit(token, asn1Hex, distributionType);
-      log.info("Depositing MAP message to ETX API");
+      log.debug("Depositing MAP message to ETX API");
 
       handleProcessingSuccess(null, distributionType, odeReceivedAt, depositedAt, asn1Hex);
     } catch (Exception e) {

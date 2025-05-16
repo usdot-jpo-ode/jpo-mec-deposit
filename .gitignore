@@ -20,3 +20,4 @@ config.json
 
 jpo-mec-deposit/src/main/java/us/dot/its/jpo/ode/mec/deposit/models/etx/mqtt/generated
 scripts/tests/output
+jpoode_mec_deposit.yaml

@@ -4,6 +4,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
@@ -39,6 +40,9 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
 
   @Autowired
   private MapRefPointCollector mapDataCollector;
+  private Boolean intersectionFilterEnabled;
+  private List<Integer> allowedIntersectionIds;
+  private List<Integer> blockedIntersectionIds;
 
   /**
    * Constructs a new EtxSpatMqttDepositor with the specified dependencies.
@@ -56,6 +60,44 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
       KafkaTemplate<String, String> kafkaTemplate) {
     super(mecDepositProperties, etxProperties, mqttProperties, EtxMessageType.SPAT, mqttService,
         registry, kafkaTemplate);
+    this.intersectionFilterEnabled =
+        etxProperties.getDepositors().getSpat().getMqtt().getIntersectionFilter().getEnabled();
+    this.allowedIntersectionIds = etxProperties.getDepositors().getSpat().getMqtt()
+        .getIntersectionFilter().getAllowedIntersectionIds();
+    this.blockedIntersectionIds = etxProperties.getDepositors().getSpat().getMqtt()
+        .getIntersectionFilter().getBlockedIntersectionIds();
+  }
+
+  private boolean shouldProcessIntersection(J2735SPAT spatMsg) {
+    if (!intersectionFilterEnabled) {
+      return true;
+    }
+
+    // Get intersection ID from the first intersection in the SPAT message
+    if (spatMsg.getIntersectionStateList() != null
+        && !spatMsg.getIntersectionStateList().getIntersectionStatelist().isEmpty()) {
+      Integer intersectionId =
+          spatMsg.getIntersectionStateList().getIntersectionStatelist().get(0).getId().getId();
+
+      // Check if intersection is blocked
+      if (blockedIntersectionIds != null && blockedIntersectionIds.contains(intersectionId)) {
+        log.debug("Filtering out SPAT message for blocked intersection ID: {}", intersectionId);
+        return false;
+      }
+
+      // If allowlist is empty, allow all non-blocked intersections
+      if (allowedIntersectionIds == null || allowedIntersectionIds.isEmpty()) {
+        return true;
+      }
+
+      // Check if intersection is explicitly allowed
+      boolean allowed = allowedIntersectionIds.contains(intersectionId);
+      if (!allowed) {
+        log.debug("Filtering out SPAT message for non-allowed intersection ID: {}", intersectionId);
+      }
+      return allowed;
+    }
+    return false;
   }
 
   /**
@@ -82,8 +124,14 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
         return;
       }
 
-      byte[] messageBytes = Hex.decode(msg.getMetadata().getAsn1());
       J2735SPAT spatMsg = (J2735SPAT) msg.getPayload().getData();
+
+      // Add intersection filtering check
+      if (!shouldProcessIntersection(spatMsg)) {
+        return;
+      }
+
+      byte[] messageBytes = Hex.decode(msg.getMetadata().getAsn1());
       LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
 
       // If the message format is J2735_GR, we need to convert the message to a GeoRoutedMsg
@@ -101,7 +149,7 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
 
       for (String topic : topicSet) {
         mqttService.publishAsn1Bytes(topic, messageBytes, retain);
-        log.info("Successfully sent SPaT message to MQTT topic: {}", topic);
+        log.debug("Successfully sent SPaT message to MQTT topic: {}", topic);
       }
 
       handleProcessingSuccess(topicSet, null, odeReceivedAt, depositedAt, asn1Hex);

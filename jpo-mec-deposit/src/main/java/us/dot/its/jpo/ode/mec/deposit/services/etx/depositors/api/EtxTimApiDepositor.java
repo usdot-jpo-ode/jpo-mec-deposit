@@ -69,7 +69,7 @@ public class EtxTimApiDepositor extends AbstractEtxApiDepositor {
       asn1Hex = msg.getMetadata().getAsn1();
 
       String token = tokenManager.getValidToken();
-      log.info("Depositing TIM message to ETX API");
+      log.debug("Depositing TIM message to ETX API");
 
       LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
       partnerApi.deposit(token, asn1Hex, distributionType);

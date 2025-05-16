@@ -89,7 +89,7 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
 
       // This will now block until the message is published or throws an exception
       mqttService.publishAsn1Bytes(topic, messageBytes, retain);
-      log.info("Successfully sent BSM message to MQTT topic: {}", topic);
+      log.debug("Successfully sent BSM message to MQTT topic: {}", topic);
 
       handleProcessingSuccess(Set.of(topic), null, odeReceivedAt, depositedAt, asn1Hex);
     } catch (Exception e) {

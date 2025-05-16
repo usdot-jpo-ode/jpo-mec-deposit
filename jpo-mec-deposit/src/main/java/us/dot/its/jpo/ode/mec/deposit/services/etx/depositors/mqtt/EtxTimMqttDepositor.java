@@ -85,7 +85,7 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
 
       for (String topic : topicSet) {
         mqttService.publishAsn1Bytes(topic, messageBytes, retain);
-        log.info("Sending TIM message to MQTT topics: {}", topic);
+        log.debug("Sending TIM message to MQTT topics: {}", topic);
       }
 
       handleProcessingSuccess(topicSet, null, odeReceivedAt, depositedAt, asn1Hex);

@@ -11,6 +11,7 @@ import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerApiProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
+import java.util.List;
 
 /**
  * Configuration properties for ETX integration. Defines properties for API endpoints, MQTT
@@ -68,6 +69,20 @@ public class EtxProperties {
   public static class MqttDepositorProperties {
     private Boolean enabled;
     private String kafkaTopic;
+    private SpatIntersectionFilterProperties intersectionFilter;
+  }
+
+  /**
+   * Properties for the SPAT intersection filter configuration.
+   */
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class SpatIntersectionFilterProperties {
+    private Boolean enabled;
+    private List<Integer> allowedIntersectionIds;
+    private List<Integer> blockedIntersectionIds;
   }
 
   /**

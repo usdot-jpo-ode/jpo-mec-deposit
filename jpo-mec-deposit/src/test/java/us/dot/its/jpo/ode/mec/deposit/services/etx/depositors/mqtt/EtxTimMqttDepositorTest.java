@@ -9,12 +9,14 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -82,7 +84,7 @@ class EtxTimMqttDepositorTest {
   private MockedStatic<EtxMqttTopicBuilder> mockedTopicBuilder;
 
   @BeforeEach
-  void setUp() throws Exception {
+  void setUp() throws IOException, URISyntaxException {
     // Use SimpleMeterRegistry instead of mocking
     registry = new SimpleMeterRegistry();
 
@@ -131,7 +133,7 @@ class EtxTimMqttDepositorTest {
   }
 
   @Test
-  void testTimDepositListener() throws Exception {
+  void testTimDepositListener() throws JsonProcessingException {
     // Arrange
     OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
     String currentTime =
@@ -150,7 +152,7 @@ class EtxTimMqttDepositorTest {
   }
 
   @Test
-  void testTimDepositListenerWithGeoRoutedFormat() throws Exception {
+  void testTimDepositListenerWithGeoRoutedFormat() throws JsonProcessingException {
     // Arrange
     String currentTime = LocalDateTime.now(ZoneOffset.UTC)
         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
@@ -169,7 +171,7 @@ class EtxTimMqttDepositorTest {
   }
 
   @Test
-  void testTimDepositListener_StaleMessage() throws Exception {
+  void testTimDepositListener_StaleMessage() throws JsonProcessingException {
     // Arrange
     OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
     timData.getMetadata().setOdeReceivedAt("2020-01-01T00:00:00.000Z"); // Stale timestamp
@@ -188,7 +190,7 @@ class EtxTimMqttDepositorTest {
   }
 
   @Test
-  void testTimDepositListener_HandlesException() throws Exception {
+  void testTimDepositListener_HandlesException() throws JsonProcessingException {
     // Arrange
     OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
     String currentTime = LocalDateTime.now(ZoneOffset.UTC)
