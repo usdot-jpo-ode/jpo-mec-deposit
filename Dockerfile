@@ -2,24 +2,29 @@ FROM maven:3.8-eclipse-temurin-21-alpine AS builder
 
 WORKDIR /home
 
+# First copy and build the jpo-asn-pojos module
+COPY ./jpo-mec-deposit/jpo-asn-pojos/pom.xml ./jpo-mec-deposit/jpo-asn-pojos/
+COPY ./jpo-mec-deposit/jpo-asn-pojos/jpo-asn-runtime/pom.xml ./jpo-mec-deposit/jpo-asn-pojos/jpo-asn-runtime/
+COPY ./jpo-mec-deposit/jpo-asn-pojos/jpo-asn-runtime/src ./jpo-mec-deposit/jpo-asn-pojos/jpo-asn-runtime/src
+COPY ./jpo-mec-deposit/jpo-asn-pojos/jpo-asn-j2735-2024/pom.xml ./jpo-mec-deposit/jpo-asn-pojos/jpo-asn-j2735-2024/
+COPY ./jpo-mec-deposit/jpo-asn-pojos/jpo-asn-j2735-2024/src ./jpo-mec-deposit/jpo-asn-pojos/jpo-asn-j2735-2024/src
+RUN cd jpo-mec-deposit/jpo-asn-pojos && mvn clean install -DskipTests
+
+# Copy the main project files
 COPY ./jpo-mec-deposit/pom.xml ./jpo-mec-deposit/
 COPY ./jpo-mec-deposit/lib ./jpo-mec-deposit/lib
 COPY ./jpo-mec-deposit/checkstyle.xml ./jpo-mec-deposit/checkstyle.xml
+COPY ./jpo-mec-deposit/src ./jpo-mec-deposit/src
 
-# Download dependencies alone to cache them first
-WORKDIR /home/jpo-mec-deposit
-RUN mvn dependency:resolve
-
-# Copy the source code and build the project
-COPY ./jpo-mec-deposit/src ./src
-RUN mvn clean package -DskipTests
+RUN cd jpo-mec-deposit && mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /home
 
 COPY --from=builder /home/jpo-mec-deposit/src/main/resources/application.yaml /home
-COPY --from=builder /home/jpo-mec-deposit/target/jpo-mec-deposit.jar /home
+# Use wildcard to match the JAR file regardless of version
+COPY --from=builder /home/jpo-mec-deposit/target/*-SNAPSHOT.jar /home/jpo-mec-deposit.jar
 
 ENTRYPOINT ["java", \
 	"-jar", \

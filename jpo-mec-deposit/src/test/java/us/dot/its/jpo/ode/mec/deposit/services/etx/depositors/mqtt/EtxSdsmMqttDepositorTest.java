@@ -43,7 +43,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
-import us.dot.its.jpo.ode.model.OdeSdsmData;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -125,7 +125,8 @@ class EtxSdsmMqttDepositorTest {
   @Test
   void testSdsmDepositListener() throws Exception {
     // Arrange
-    OdeSdsmData sdsmData = objectMapper.readValue(sampleSdsmJson, OdeSdsmData.class);
+    OdeMessageFrameData sdsmData =
+        objectMapper.readValue(sampleSdsmJson, OdeMessageFrameData.class);
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
     sdsmData.getMetadata().setOdeReceivedAt(currentTime);
@@ -142,7 +143,8 @@ class EtxSdsmMqttDepositorTest {
     // Arrange
     String currentTime = LocalDateTime.now(ZoneOffset.UTC)
         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
-    OdeSdsmData sdsmData = objectMapper.readValue(sampleSdsmJson, OdeSdsmData.class);
+    OdeMessageFrameData sdsmData =
+        objectMapper.readValue(sampleSdsmJson, OdeMessageFrameData.class);
     sdsmData.getMetadata().setOdeReceivedAt(currentTime);
     String message = objectMapper.writeValueAsString(sdsmData);
 
@@ -158,7 +160,8 @@ class EtxSdsmMqttDepositorTest {
   @Test
   void testSdsmDepositListener_StaleMessage() throws Exception {
     // Arrange
-    OdeSdsmData sdsmData = objectMapper.readValue(sampleSdsmJson, OdeSdsmData.class);
+    OdeMessageFrameData sdsmData =
+        objectMapper.readValue(sampleSdsmJson, OdeMessageFrameData.class);
     sdsmData.getMetadata().setOdeReceivedAt("2020-01-01T00:00:00.000Z"); // Stale timestamp
     String message = objectMapper.writeValueAsString(sdsmData);
 
@@ -177,7 +180,8 @@ class EtxSdsmMqttDepositorTest {
   @Test
   void testSdsmDepositListener_HandlesException() throws Exception {
     // Arrange
-    OdeSdsmData sdsmData = objectMapper.readValue(sampleSdsmJson, OdeSdsmData.class);
+    OdeMessageFrameData sdsmData =
+        objectMapper.readValue(sampleSdsmJson, OdeMessageFrameData.class);
     String currentTime = LocalDateTime.now(ZoneOffset.UTC)
         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
     sdsmData.getMetadata().setOdeReceivedAt(currentTime);

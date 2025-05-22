@@ -22,8 +22,8 @@ import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxMqttDepositor;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttProtobufBuilder;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
-import us.dot.its.jpo.ode.model.OdeSdsmData;
 import us.dot.its.jpo.asn.j2735.r2024.Common.Position3D;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 import us.dot.its.jpo.asn.j2735.r2024.SensorDataSharingMessage.SensorDataSharingMessage;
 
 /**
@@ -62,7 +62,7 @@ public class EtxSdsmMqttDepositor extends AbstractEtxMqttDepositor {
     String odeReceivedAt = null;
     String asn1Hex = "";
     try {
-      OdeSdsmData msg = mapper.readValue(message, OdeSdsmData.class);
+      OdeMessageFrameData msg = mapper.readValue(message, OdeMessageFrameData.class);
       odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
       asn1Hex = msg.getMetadata().getAsn1();
 
@@ -72,7 +72,8 @@ public class EtxSdsmMqttDepositor extends AbstractEtxMqttDepositor {
 
       byte[] messageBytes = Hex.decode(msg.getMetadata().getAsn1());
 
-      SensorDataSharingMessage sdsm = (SensorDataSharingMessage) msg.getPayload().getData();
+      SensorDataSharingMessage sdsm =
+          (SensorDataSharingMessage) msg.getPayload().getData().getValue();
       Position3D refPoint = sdsm.getRefPos();
       LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
 
@@ -82,7 +83,8 @@ public class EtxSdsmMqttDepositor extends AbstractEtxMqttDepositor {
       Double longitude = (double) refPoint.getLong_().getValue()
           * MICRODEGREES_TO_DECIMAL_DEGREES_CONVERSION_FACTOR;
 
-      // If the message format is J2735_GR, we need to convert the message to a GeoRoutedMsg
+      // If the message format is J2735_GR, we need to convert the message to a
+      // GeoRoutedMsg
       if (mqttProperties.getMessageFormat() == EtxMqttMessageFormat.J2735_GR) {
         Instant timestamp = depositedAt.toInstant(ZoneOffset.UTC);
         GeoRoutedMsg geoRoutedMsg =
