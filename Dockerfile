@@ -2,14 +2,6 @@ FROM maven:3.8-eclipse-temurin-21-alpine AS builder
 
 WORKDIR /home
 
-# First copy and build the jpo-asn-pojos module
-COPY ./jpo-mec-deposit/jpo-asn-pojos/pom.xml ./jpo-mec-deposit/jpo-asn-pojos/
-COPY ./jpo-mec-deposit/jpo-asn-pojos/jpo-asn-runtime/pom.xml ./jpo-mec-deposit/jpo-asn-pojos/jpo-asn-runtime/
-COPY ./jpo-mec-deposit/jpo-asn-pojos/jpo-asn-runtime/src ./jpo-mec-deposit/jpo-asn-pojos/jpo-asn-runtime/src
-COPY ./jpo-mec-deposit/jpo-asn-pojos/jpo-asn-j2735-2024/pom.xml ./jpo-mec-deposit/jpo-asn-pojos/jpo-asn-j2735-2024/
-COPY ./jpo-mec-deposit/jpo-asn-pojos/jpo-asn-j2735-2024/src ./jpo-mec-deposit/jpo-asn-pojos/jpo-asn-j2735-2024/src
-RUN cd jpo-mec-deposit/jpo-asn-pojos && mvn clean install -DskipTests
-
 # Copy the main project files
 COPY ./jpo-mec-deposit/pom.xml ./jpo-mec-deposit/
 COPY ./jpo-mec-deposit/lib ./jpo-mec-deposit/lib
