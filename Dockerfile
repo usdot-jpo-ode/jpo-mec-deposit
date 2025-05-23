@@ -16,7 +16,7 @@ WORKDIR /home
 
 COPY --from=builder /home/jpo-mec-deposit/src/main/resources/application.yaml /home
 # Use wildcard to match the JAR file regardless of version
-COPY --from=builder /home/jpo-mec-deposit/target/*-SNAPSHOT.jar /home/jpo-mec-deposit.jar
+COPY --from=builder /home/jpo-mec-deposit/target/jpo-mec-deposit.jar /home/jpo-mec-deposit.jar
 
 ENTRYPOINT ["java", \
 	"-jar", \
