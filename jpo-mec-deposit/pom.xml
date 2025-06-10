@@ -28,7 +28,8 @@
     <properties>
         <java.version>21</java.version>
         <protobuf.version>4.28.3</protobuf.version>
-        <jpo-ode.version>4.0.0</jpo-ode.version>
+        <jpo-ode.version>4.1.1</jpo-ode.version>
+        <jpo-asn.version>1.0.0</jpo-asn.version>
         <springdoc.version>2.3.0</springdoc.version>
         <swagger-ui.version>5.3.1</swagger-ui.version>
         <checkstyle-maven-plugin.version>3.6.0</checkstyle-maven-plugin.version>
@@ -150,6 +151,22 @@
         </dependency>
 
         <dependency>
+            <groupId>usdot.jpo.asn</groupId>
+            <artifactId>jpo-asn-j2735-2024</artifactId>
+            <version>${jpo-asn.version}</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/jpo-asn-j2735-2024-${jpo-asn.version}.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>usdot.jpo.asn</groupId>
+            <artifactId>jpo-asn-runtime</artifactId>
+            <version>${jpo-asn.version}</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/jpo-asn-runtime-${jpo-asn.version}.jar</systemPath>
+        </dependency>
+
+        <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>2.3.0</version>
@@ -198,6 +215,10 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <includeSystemScope>true</includeSystemScope>
+                    <layers>
+                        <enabled>true</enabled>
+                    </layers>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
@@ -205,6 +226,14 @@
                         </exclude>
                     </excludes>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                            <goal>build-info</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
@@ -229,23 +258,6 @@
                     <protocArtifact>
                         com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}</protocArtifact>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <includeSystemScope>true</includeSystemScope>
-                    <layers>
-                        <enabled>true</enabled>
-                    </layers>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>build-info</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

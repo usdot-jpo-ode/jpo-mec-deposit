@@ -70,6 +70,11 @@ mec-deposit:
           enabled: ${ETX_DEPOSITORS_MAP_API_ENABLED:true}
           kafka-topic: ${ETX_DEPOSITORS_MAP_API_KAFKA_TOPIC:topic.OdeMapJson}
           distribution-type: ${ETX_DEPOSITORS_MAP_API_DISTRIBUTION_TYPE:TARGETED}
+      sdsm:
+        mqtt:
+          enabled: ${ETX_DEPOSITORS_SDSM_MQTT_ENABLED:true}
+          kafka-topic: ${ETX_DEPOSITORS_SDSM_MQTT_KAFKA_TOPIC:topic.OdeSdsmJson}
+
 # microservice actuator
 management:
   endpoints:
