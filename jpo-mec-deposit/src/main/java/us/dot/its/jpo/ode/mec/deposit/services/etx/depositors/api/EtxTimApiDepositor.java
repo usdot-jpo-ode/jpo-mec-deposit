@@ -28,8 +28,6 @@ import us.dot.its.jpo.ode.model.OdeTimData;
     value = {"mec-deposit.etx.depositors.tim.api.enabled", "mec-deposit.etx.enabled"},
     havingValue = "true")
 public class EtxTimApiDepositor extends AbstractEtxApiDepositor {
-  private final DistributionType distributionType;
-
   /**
    * Constructs a new EtxTimApiDepositor.
    *
@@ -45,7 +43,6 @@ public class EtxTimApiDepositor extends AbstractEtxApiDepositor {
       KafkaTemplate<String, String> kafkaTemplate) {
     super(mecDepositProperties, etxProperties, etxApi, tokenManager, meterRegistry, kafkaTemplate,
         EtxMessageType.TIM);
-    this.distributionType = etxProperties.getDepositors().getTim().getApi().getDistributionType();
   }
 
 
@@ -72,11 +69,11 @@ public class EtxTimApiDepositor extends AbstractEtxApiDepositor {
       log.debug("Depositing TIM message to ETX API");
 
       LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
-      partnerApi.deposit(token, asn1Hex, distributionType);
+      partnerApi.deposit(token, asn1Hex);
 
-      handleProcessingSuccess(null, distributionType, odeReceivedAt, depositedAt, asn1Hex);
+      handleProcessingSuccess(null, odeReceivedAt, depositedAt, asn1Hex);
     } catch (Exception e) {
-      handleProcessingError(e, null, distributionType,
+      handleProcessingError(e, null,
           odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);
     }
   }

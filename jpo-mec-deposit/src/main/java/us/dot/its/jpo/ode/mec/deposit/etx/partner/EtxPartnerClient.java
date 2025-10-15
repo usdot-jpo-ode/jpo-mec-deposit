@@ -304,8 +304,8 @@ public class EtxPartnerClient {
    * @param asn1Hex ASN.1 hex string to deposit
    * @param distributionType Type of distribution
    */
-  public void deposit(String token, String asn1Hex, DistributionType distributionType) {
-    DepositRequest request = new DepositRequest(asn1Hex, distributionType);
+  public void deposit(String token, String asn1Hex) {
+    DepositRequest request = new DepositRequest(asn1Hex);
 
     HttpHeaders headers = new HttpHeaders();
     headers.set("Authorization", "Bearer " + token);

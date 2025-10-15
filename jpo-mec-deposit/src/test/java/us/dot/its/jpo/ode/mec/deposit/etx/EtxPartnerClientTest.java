@@ -137,7 +137,6 @@ class EtxPartnerClientTest {
     // Arrange
     String token = "valid-token";
     String asn1Hex = "testHex";
-    DistributionType distributionType = DistributionType.TARGETED;
 
     ResponseEntity<Void> responseEntity = ResponseEntity.ok().build();
 
@@ -145,7 +144,7 @@ class EtxPartnerClientTest {
         eq(Void.class))).thenReturn(responseEntity);
 
     // Act & Assert
-    assertDoesNotThrow(() -> etxApi.deposit(token, asn1Hex, distributionType));
+    assertDoesNotThrow(() -> etxApi.deposit(token, asn1Hex));
   }
 
   @Test

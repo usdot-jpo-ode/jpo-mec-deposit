@@ -152,9 +152,9 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
         log.debug("Successfully sent SPaT message to MQTT topic: {}", topic);
       }
 
-      handleProcessingSuccess(topicSet, null, odeReceivedAt, depositedAt, asn1Hex);
+      handleProcessingSuccess(topicSet, odeReceivedAt, depositedAt, asn1Hex);
     } catch (Exception e) {
-      handleProcessingError(e, topicSet, null,
+      handleProcessingError(e, topicSet,
           odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);
     }
   }

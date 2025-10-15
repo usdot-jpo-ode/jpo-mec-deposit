@@ -95,6 +95,5 @@ public class EtxProperties {
   public static class ApiDepositorProperties {
     private Boolean enabled;
     private String kafkaTopic;
-    private DistributionType distributionType;
   }
 }

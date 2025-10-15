@@ -91,9 +91,9 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
       mqttService.publishAsn1Bytes(topic, messageBytes, retain);
       log.debug("Successfully sent BSM message to MQTT topic: {}", topic);
 
-      handleProcessingSuccess(Set.of(topic), null, odeReceivedAt, depositedAt, asn1Hex);
+      handleProcessingSuccess(Set.of(topic), odeReceivedAt, depositedAt, asn1Hex);
     } catch (Exception e) {
-      handleProcessingError(e, Set.of(topic), null,
+      handleProcessingError(e, Set.of(topic),
           odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);
     }
   }
