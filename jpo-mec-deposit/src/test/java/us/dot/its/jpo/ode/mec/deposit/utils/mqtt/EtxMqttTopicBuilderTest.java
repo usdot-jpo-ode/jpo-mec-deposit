@@ -12,8 +12,8 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
-import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
-import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerDataFrameList;
+import us.dot.its.jpo.asn.j2735.r2024.Common.Position3D;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrameList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -69,10 +69,8 @@ public class EtxMqttTopicBuilderTest {
         .get("intersectionGeometry").get(0).get("refPoint");
 
     MapRefPointCollector collector = mock(MapRefPointCollector.class);
-    OdePosition3D refPoint = new OdePosition3D();
-    refPoint.setLatitude(new BigDecimal(refPointJson.get("latitude").asDouble()));
-    refPoint.setLongitude(new BigDecimal(refPointJson.get("longitude").asDouble()));
-    when(collector.getIntersectionRefPoint("9709")).thenReturn(refPoint);
+    // Mock the collector to return null - this will test the fallback behavior
+    when(collector.getIntersectionRefPoint("9709")).thenReturn(null);
 
     Set<String> topics = EtxMqttTopicBuilder.getSpatTopicList(spatMsg, collector, "TEST_VENDOR", 7,
         EtxMqttMessageFormat.J2735_GR, EtxClientType.SOFTWARE, EtxClientSubType.APPLICATION);

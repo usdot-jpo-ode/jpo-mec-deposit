@@ -1,6 +1,6 @@
 package us.dot.its.jpo.ode.mec.deposit.utils;
 
-import us.dot.its.jpo.ode.plugin.j2735.common.Position3D;
+import us.dot.its.jpo.asn.j2735.r2024.Common.Position3D;
 
 /**
  * Utility class for converting between different position formats.

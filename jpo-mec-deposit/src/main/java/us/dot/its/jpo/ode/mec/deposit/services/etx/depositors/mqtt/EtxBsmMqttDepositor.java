@@ -22,7 +22,7 @@ import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxMqttDepositor;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttProtobufBuilder;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
-import us.dot.its.jpo.ode.model.OdeBsmData;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 import us.dot.its.jpo.ode.plugin.j2735.J2735Bsm;
 import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
 
@@ -59,7 +59,7 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
     String odeReceivedAt = null;
     String asn1Hex = "";
     try {
-      OdeBsmData msg = mapper.readValue(message, OdeBsmData.class);
+      OdeMessageFrameData msg = mapper.readValue(message, OdeMessageFrameData.class);
       odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
       asn1Hex = msg.getMetadata().getAsn1();
 
@@ -69,7 +69,7 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
 
       byte[] messageBytes = Hex.decode(msg.getMetadata().getAsn1());
 
-      J2735Bsm bsm = (J2735Bsm) msg.getPayload().getData();
+      J2735Bsm bsm = (J2735Bsm) msg.getPayload().getData().getValue();
       OdePosition3D refPoint = bsm.getCoreData().getPosition();
       LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
 

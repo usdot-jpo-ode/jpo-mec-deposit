@@ -50,7 +50,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
-import us.dot.its.jpo.ode.model.OdeSpatData;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
 
 @ExtendWith(MockitoExtension.class)
@@ -147,7 +147,8 @@ class EtxSpatMqttDepositorTest {
   }
 
   private String createSpatTestMessage(String timestamp) throws JsonProcessingException {
-    OdeSpatData spatData = objectMapper.readValue(sampleSpatJson, OdeSpatData.class);
+    OdeMessageFrameData spatData =
+        objectMapper.readValue(sampleSpatJson, OdeMessageFrameData.class);
     spatData.getMetadata().setOdeReceivedAt(timestamp);
     return objectMapper.writeValueAsString(spatData);
   }

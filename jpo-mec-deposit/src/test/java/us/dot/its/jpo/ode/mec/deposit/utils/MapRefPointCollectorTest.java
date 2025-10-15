@@ -4,12 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
+import us.dot.its.jpo.asn.j2735.r2024.Common.Position3D;
 
 class MapRefPointCollectorTest {
 
@@ -29,17 +28,23 @@ class MapRefPointCollectorTest {
   @Test
   void testGetIntersectionRefPoint() {
     collector.jsonMapListener(sampleMapJson);
-    OdePosition3D result = collector.getIntersectionRefPoint(SAMPLE_INTERSECTION_ID);
+    Position3D result = collector.getIntersectionRefPoint(SAMPLE_INTERSECTION_ID);
 
     assertNotNull(result);
-    assertEquals(BigDecimal.valueOf(38.9549984), result.getLatitude());
-    assertEquals(BigDecimal.valueOf(-77.1493367), result.getLongitude());
+    // Convert from microdegrees to decimal degrees (divide by 10,000,000)
+    double expectedLat = 38.9549984;
+    double expectedLon = -77.1493367;
+    double actualLat = result.getLat().getValue() / 10000000.0;
+    double actualLon = result.getLong_().getValue() / 10000000.0;
+
+    assertEquals(expectedLat, actualLat, 0.0000001);
+    assertEquals(expectedLon, actualLon, 0.0000001);
   }
 
   @Test
   void testGetIntersectionRefPoint_NoIntersection() {
     collector.jsonMapListener(sampleMapJson);
-    OdePosition3D result = collector.getIntersectionRefPoint("9999");
+    Position3D result = collector.getIntersectionRefPoint("9999");
 
     assertNull(result);
   }

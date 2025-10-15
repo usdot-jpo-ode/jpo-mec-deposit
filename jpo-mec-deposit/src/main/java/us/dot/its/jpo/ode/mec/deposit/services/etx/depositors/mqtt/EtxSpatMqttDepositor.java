@@ -25,7 +25,7 @@ import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttProtobufBuilder;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
-import us.dot.its.jpo.ode.model.OdeSpatData;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
 
 /**
@@ -116,7 +116,7 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
     String odeReceivedAt = null;
     String asn1Hex = "";
     try {
-      OdeSpatData msg = mapper.readValue(message, OdeSpatData.class);
+      OdeMessageFrameData msg = mapper.readValue(message, OdeMessageFrameData.class);
       odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
       asn1Hex = msg.getMetadata().getAsn1();
 
@@ -124,7 +124,7 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
         return;
       }
 
-      J2735SPAT spatMsg = (J2735SPAT) msg.getPayload().getData();
+      J2735SPAT spatMsg = (J2735SPAT) msg.getPayload().getData().getValue();
 
       // Add intersection filtering check
       if (!shouldProcessIntersection(spatMsg)) {

@@ -13,11 +13,10 @@ import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.mec.deposit.utils.PositionConversionUtil;
 import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionState;
 import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
-import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
-import us.dot.its.jpo.ode.plugin.j2735.common.Position3D;
-import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.GeographicalPath;
-import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerDataFrame;
-import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerDataFrameList;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrameList;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrame;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.GeographicalPath;
+import us.dot.its.jpo.asn.j2735.r2024.Common.Position3D;
 
 /**
  * Utility class for building MQTT topics according to ETX specifications. This class handles topic
@@ -175,14 +174,14 @@ public class EtxMqttTopicBuilder {
     for (J2735IntersectionState intersection : spatMsg.getIntersectionStateList()
         .getIntersectionStatelist()) {
       String intersectionId = intersection.getId().getId().toString();
-      OdePosition3D refPoint = mapDataCollector.getIntersectionRefPoint(intersectionId);
+      Position3D refPoint = mapDataCollector.getIntersectionRefPoint(intersectionId);
       if (refPoint == null) {
         log.warn("No refPoint found for intersectionId: {} skipping ETX deposit", intersectionId);
         continue;
       }
 
-      double latitude = refPoint.getLatitude().doubleValue();
-      double longitude = refPoint.getLongitude().doubleValue();
+      double latitude = refPoint.getLat().getValue();
+      double longitude = refPoint.getLong_().getValue();
 
       String topic = buildRegionalTopic(EtxMessageType.SPAT, latitude, longitude, precision,
           mqttVendorId, messageFormat, clientType, clientSubType);

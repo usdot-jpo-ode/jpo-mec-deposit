@@ -45,8 +45,8 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
-import us.dot.its.jpo.ode.model.OdeTimData;
-import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerDataFrameList;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrameList;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -135,7 +135,7 @@ class EtxTimMqttDepositorTest {
   @Test
   void testTimDepositListener() throws JsonProcessingException {
     // Arrange
-    OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
+    OdeMessageFrameData timData = objectMapper.readValue(sampleTimJson, OdeMessageFrameData.class);
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
     timData.getMetadata().setOdeReceivedAt(currentTime);
@@ -156,7 +156,7 @@ class EtxTimMqttDepositorTest {
     // Arrange
     String currentTime = LocalDateTime.now(ZoneOffset.UTC)
         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
-    OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
+    OdeMessageFrameData timData = objectMapper.readValue(sampleTimJson, OdeMessageFrameData.class);
     timData.getMetadata().setOdeReceivedAt(currentTime);
     String message = objectMapper.writeValueAsString(timData);
 
@@ -173,7 +173,7 @@ class EtxTimMqttDepositorTest {
   @Test
   void testTimDepositListener_StaleMessage() throws JsonProcessingException {
     // Arrange
-    OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
+    OdeMessageFrameData timData = objectMapper.readValue(sampleTimJson, OdeMessageFrameData.class);
     timData.getMetadata().setOdeReceivedAt("2020-01-01T00:00:00.000Z"); // Stale timestamp
     String message = objectMapper.writeValueAsString(timData);
 
@@ -192,7 +192,7 @@ class EtxTimMqttDepositorTest {
   @Test
   void testTimDepositListener_HandlesException() throws JsonProcessingException {
     // Arrange
-    OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
+    OdeMessageFrameData timData = objectMapper.readValue(sampleTimJson, OdeMessageFrameData.class);
     String currentTime = LocalDateTime.now(ZoneOffset.UTC)
         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
     timData.getMetadata().setOdeReceivedAt(currentTime);
