@@ -26,7 +26,7 @@ import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttProtobufBuilder;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
 import us.dot.its.jpo.ode.model.OdeMessageFrameData;
-import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
+import us.dot.its.jpo.asn.j2735.r2024.SPAT.SPAT;
 
 /**
  * Depositor class for handling SPAT messages via MQTT integration with ETX.
@@ -41,8 +41,8 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
   @Autowired
   private MapRefPointCollector mapDataCollector;
   private Boolean intersectionFilterEnabled;
-  private List<Integer> allowedIntersectionIds;
-  private List<Integer> blockedIntersectionIds;
+  private List<Long> allowedIntersectionIds;
+  private List<Long> blockedIntersectionIds;
 
   /**
    * Constructs a new EtxSpatMqttDepositor with the specified dependencies.
@@ -68,16 +68,14 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
         .getIntersectionFilter().getBlockedIntersectionIds();
   }
 
-  private boolean shouldProcessIntersection(J2735SPAT spatMsg) {
+  private boolean shouldProcessIntersection(SPAT spatMsg) {
     if (!intersectionFilterEnabled) {
       return true;
     }
 
     // Get intersection ID from the first intersection in the SPAT message
-    if (spatMsg.getIntersectionStateList() != null
-        && !spatMsg.getIntersectionStateList().getIntersectionStatelist().isEmpty()) {
-      Integer intersectionId =
-          spatMsg.getIntersectionStateList().getIntersectionStatelist().get(0).getId().getId();
+    if (spatMsg.getIntersections() != null && spatMsg.getIntersections().size() > 0) {
+      Long intersectionId = spatMsg.getIntersections().get(0).getId().getId().getValue();
 
       // Check if intersection is blocked
       if (blockedIntersectionIds != null && blockedIntersectionIds.contains(intersectionId)) {
@@ -124,7 +122,7 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
         return;
       }
 
-      J2735SPAT spatMsg = (J2735SPAT) msg.getPayload().getData().getValue();
+      SPAT spatMsg = (SPAT) msg.getPayload().getData().getValue();
 
       // Add intersection filtering check
       if (!shouldProcessIntersection(spatMsg)) {

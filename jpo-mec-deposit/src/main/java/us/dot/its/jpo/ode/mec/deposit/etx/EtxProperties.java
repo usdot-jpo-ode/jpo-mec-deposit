@@ -81,8 +81,8 @@ public class EtxProperties {
   @AllArgsConstructor
   public static class SpatIntersectionFilterProperties {
     private Boolean enabled;
-    private List<Integer> allowedIntersectionIds;
-    private List<Integer> blockedIntersectionIds;
+    private List<Long> allowedIntersectionIds;
+    private List<Long> blockedIntersectionIds;
   }
 
   /**

@@ -20,11 +20,11 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.GeoRoutedMsg;
 import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxMqttDepositor;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
+import us.dot.its.jpo.ode.mec.deposit.utils.PositionConversionUtil;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttProtobufBuilder;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
 import us.dot.its.jpo.ode.model.OdeMessageFrameData;
-import us.dot.its.jpo.ode.plugin.j2735.J2735Bsm;
-import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
+import us.dot.its.jpo.asn.j2735.r2024.BasicSafetyMessage.BasicSafetyMessage;
 
 /**
  * Depositor class for handling BSM messages via MQTT integration with ETX.
@@ -69,23 +69,23 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
 
       byte[] messageBytes = Hex.decode(msg.getMetadata().getAsn1());
 
-      J2735Bsm bsm = (J2735Bsm) msg.getPayload().getData().getValue();
-      OdePosition3D refPoint = bsm.getCoreData().getPosition();
+      BasicSafetyMessage bsm = (BasicSafetyMessage) msg.getPayload().getData().getValue();
+      double latitude = PositionConversionUtil.convertJ2735LatToLat(bsm.getCoreData().getLat());
+      double longitude = PositionConversionUtil.convertJ2735LonToLon(bsm.getCoreData().getLong_());
       LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
 
       // If the message format is J2735_GR, we need to convert the message to a GeoRoutedMsg
       if (mqttProperties.getMessageFormat() == EtxMqttMessageFormat.J2735_GR) {
         Instant timestamp = depositedAt.toInstant(ZoneOffset.UTC);
-        GeoRoutedMsg geoRoutedMsg = EtxMqttProtobufBuilder.buildGeoRoutedMsg(messageBytes,
-            timestamp, refPoint.getLatitude().doubleValue(), refPoint.getLongitude().doubleValue());
+        GeoRoutedMsg geoRoutedMsg =
+            EtxMqttProtobufBuilder.buildGeoRoutedMsg(messageBytes, timestamp, latitude, longitude);
         messageBytes = geoRoutedMsg.toByteArray();
       }
 
-      topic =
-          EtxMqttTopicBuilder.buildRegionalTopic(messageType, refPoint.getLatitude().doubleValue(),
-              refPoint.getLongitude().doubleValue(), mqttProperties.getPrecision(),
-              mqttProperties.getVendor(), mqttProperties.getMessageFormat(),
-              etxProperties.getClientType(), etxProperties.getClientSubType());
+      topic = EtxMqttTopicBuilder.buildRegionalTopic(messageType, latitude, longitude,
+          mqttProperties.getPrecision(), mqttProperties.getVendor(),
+          mqttProperties.getMessageFormat(), etxProperties.getClientType(),
+          etxProperties.getClientSubType());
 
       // This will now block until the message is published or throws an exception
       mqttService.publishAsn1Bytes(topic, messageBytes, retain);
