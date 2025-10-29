@@ -10,6 +10,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -17,7 +19,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -28,6 +29,7 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 import us.dot.its.jpo.ode.model.OdeTimData;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
@@ -72,6 +74,7 @@ class EtxTimApiDepositorTest {
   private EtxTimApiDepositor depositor;
   private ObjectMapper objectMapper;
   private String sampleTimJson;
+  private String sampleTimAsn1;
   private DistributionType distributionType = DistributionType.TARGETED;
 
   @BeforeEach
@@ -80,6 +83,8 @@ class EtxTimApiDepositorTest {
     registry = new SimpleMeterRegistry();
     MockitoAnnotations.openMocks(this);
     objectMapper = new ObjectMapper();
+    // objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    // objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 
     // Configure MecDepositProperties metrics
     MecDepositMetrics metrics = new MecDepositMetrics();
@@ -109,22 +114,30 @@ class EtxTimApiDepositorTest {
     // Load sample TIM JSON from resources
     sampleTimJson = new String(Files.readAllBytes(Paths.get(
         getClass().getClassLoader().getResource("sample_messages/sample-ode-tim.json").toURI())));
+
+    OdeMessageFrameData odeTimData =
+        objectMapper.readValue(sampleTimJson, OdeMessageFrameData.class);
+    sampleTimAsn1 = odeTimData.getMetadata().getAsn1();
+  }
+
+  private String createTimTestMessage(String timestamp) throws JsonProcessingException {
+    OdeMessageFrameData timData = objectMapper.readValue(sampleTimJson, OdeMessageFrameData.class);
+    timData.getMetadata().setOdeReceivedAt(timestamp);
+    return objectMapper.writeValueAsString(timData);
   }
 
   @Test
   void testTimDepositListener_Success() throws JsonProcessingException {
     // Prepare test data
-    OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
     String currentTimestamp =
         LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
-    timData.getMetadata().setOdeReceivedAt(currentTimestamp);
+    String message = createTimTestMessage(currentTimestamp);
 
     // Execute
-    depositor.timDepositListener(objectMapper.writeValueAsString(timData));
+    depositor.timDepositListener(message);
 
     // Verify
-    verify(etxApiClient).deposit(eq("mock-token"), eq(timData.getMetadata().getAsn1()),
-        eq(distributionType));
+    verify(etxApiClient).deposit(eq("mock-token"), eq(sampleTimAsn1), eq(distributionType));
     verify(kafkaTemplate).send(anyString(),
         argThat(metrics -> metrics.contains("\"success\":true")
             && metrics.contains("\"messageType\":\"TIM\"")
@@ -134,17 +147,16 @@ class EtxTimApiDepositorTest {
   @Test
   void testTimDepositListener_Error() throws JsonProcessingException {
     // Prepare test data
-    OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
     String currentTimestamp =
         LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
-    timData.getMetadata().setOdeReceivedAt(currentTimestamp);
+    String message = createTimTestMessage(currentTimestamp);
 
     // Simulate API error
     doThrow(new RuntimeException("API Error")).when(etxApiClient).deposit(anyString(), anyString(),
         any(DistributionType.class));
 
     // Execute
-    depositor.timDepositListener(objectMapper.writeValueAsString(timData));
+    depositor.timDepositListener(message);
 
     // Verify error handling
     verify(kafkaTemplate).send(anyString(),

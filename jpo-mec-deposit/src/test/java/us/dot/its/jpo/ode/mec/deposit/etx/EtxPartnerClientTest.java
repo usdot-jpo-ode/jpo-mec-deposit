@@ -167,9 +167,9 @@ class EtxPartnerClientTest {
   @Test
   void validRegistration_WithValidConfig_ReturnsTrue() throws IOException {
     // Arrange
-    // Create expected config that matches test-config.json
+    // Create expected config that matches the actual config.json file
     RegistrationConfiguration expectedConfig = new RegistrationConfiguration();
-    expectedConfig.setEtxVendor("testVendor");
+    expectedConfig.setEtxVendor("TEST_VENDOR");
     expectedConfig.setDeviceID("test-device-id");
     expectedConfig.setNetworkType(NetworkType.NON_VZ);
     expectedConfig.setClientType(EtxClientType.SOFTWARE);
@@ -184,12 +184,12 @@ class EtxPartnerClientTest {
     when(mockPartnerApiProperties.getNetworkType()).thenReturn(NetworkType.NON_VZ);
     when(mockPartnerApiProperties.getMecLatitude()).thenReturn(BigDecimal.valueOf(0.0));
     when(mockPartnerApiProperties.getMecLongitude()).thenReturn(BigDecimal.valueOf(0.0));
-    when(mockPartnerApiProperties.getVendor()).thenReturn("testVendor");
+    when(mockPartnerApiProperties.getVendor()).thenReturn("TEST_VENDOR");
     when(mockEtxProperties.getClientType()).thenReturn(EtxClientType.SOFTWARE);
     when(mockEtxProperties.getClientSubType()).thenReturn(EtxClientSubType.APPLICATION);
 
     // Act
-    String configPath = "src/test/resources/certs/test-config.json";
+    String configPath = "src/test/resources/certs/config.json";
     boolean result = etxApi.validRegistration(configPath);
 
     // Assert

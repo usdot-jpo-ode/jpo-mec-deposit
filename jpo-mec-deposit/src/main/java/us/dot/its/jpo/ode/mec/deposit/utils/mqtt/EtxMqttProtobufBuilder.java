@@ -46,6 +46,7 @@ public class EtxMqttProtobufBuilder {
    * @return A built GeoRoutedMsg protobuf object
    */
   public static GeoRoutedMsg buildGeoRoutedMsg(byte[] messageBytes, Instant timestamp) {
-    return buildGeoRoutedMsg(messageBytes, timestamp, 10.0, 10.0);
+    // adding static location within ETX requirements
+    return buildGeoRoutedMsg(messageBytes, timestamp, null, null);
   }
 }

@@ -9,18 +9,25 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.mockStatic;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerApiProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttClientInfo;
 
 @ExtendWith(MockitoExtension.class)
 class EtxMqttPublishServiceTest {
@@ -31,14 +38,39 @@ class EtxMqttPublishServiceTest {
   @Mock
   private EtxMqttProperties mqttProperties;
 
+  @Mock
+  private EtxPartnerApiProperties partnerApiProperties;
+
   private MeterRegistry meterRegistry;
   private EtxMqttPublishService service;
+  private MockedStatic<EtxUtil> mockedEtxUtil;
 
   @BeforeEach
   void setUp() {
     meterRegistry = new SimpleMeterRegistry();
     when(mqttProperties.getMaxMessagesPerSecond()).thenReturn(100);
-    service = new EtxMqttPublishService(mqttOutboundChannel, mqttProperties, meterRegistry);
+    // Mock partnerApiProperties to return a valid certificate path
+    when(partnerApiProperties.getCertificatePath()).thenReturn("src/test/resources/certs");
+
+    // Create mocked static for EtxUtil
+    mockedEtxUtil = mockStatic(EtxUtil.class);
+
+    // Mock the readConfigFile method to return a valid config with session ID
+    RegistrationConfiguration mockConfig = new RegistrationConfiguration();
+    EtxMqttClientInfo mockSessionInfo = new EtxMqttClientInfo();
+    mockSessionInfo.setSessionId("test-session-0000");
+    mockConfig.setEtxSessionID(mockSessionInfo);
+    mockedEtxUtil.when(() -> EtxUtil.readConfigFile(any(String.class))).thenReturn(mockConfig);
+
+    service = new EtxMqttPublishService(mqttOutboundChannel, partnerApiProperties, mqttProperties,
+        meterRegistry);
+  }
+
+  @AfterEach
+  void tearDown() {
+    if (mockedEtxUtil != null) {
+      mockedEtxUtil.close();
+    }
   }
 
   @Test

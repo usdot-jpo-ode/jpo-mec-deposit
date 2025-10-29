@@ -8,14 +8,14 @@
     },
     "payloadType": "us.dot.its.jpo.ode.model.OdeMessageFramePayload",
     "serialId": {
-      "streamId": "07112cc3-9785-4590-8e43-f659f38e12a5",
+      "streamId": "32e5b1a5-e90f-4835-ba83-58fcad39a483",
       "bundleSize": 1,
       "bundleId": 0,
       "recordId": 0,
       "serialNumber": 0
     },
-    "odeReceivedAt": "2025-05-22T22:45:10.967Z",
-    "schemaVersion": 8,
+    "odeReceivedAt": "2025-10-28T01:21:12.386Z",
+    "schemaVersion": 9,
     "maxDurationTime": 0,
     "recordGeneratedAt": "",
     "recordGeneratedBy": "RSU",
@@ -24,7 +24,7 @@
     "odeTimStartDateTime": "",
     "asn1": "0029250A010C0C0A301FA04EDB8816396666F30C34000A00002C43E94BBA4200020002EC00280002",
     "source": "RSU",
-    "originIp": "127.0.0.1",
+    "originIp": "172.26.0.1",
     "isCertPresent": false
   },
   "payload": {

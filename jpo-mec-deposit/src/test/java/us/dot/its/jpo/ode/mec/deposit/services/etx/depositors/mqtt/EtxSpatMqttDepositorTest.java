@@ -44,14 +44,17 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.EtxDepositors;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.MqttDepositorProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.SpatIntersectionFilterProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttClientInfo;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
 import us.dot.its.jpo.ode.model.OdeMessageFrameData;
-import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
+import us.dot.its.jpo.asn.j2735.r2024.SPAT.SPAT;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -86,6 +89,7 @@ class EtxSpatMqttDepositorTest {
   private ObjectMapper objectMapper;
   private String sampleSpatJson;
   private MockedStatic<EtxMqttTopicBuilder> mockedTopicBuilder;
+  private MockedStatic<EtxUtil> mockedEtxUtil;
   private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'";
 
   @BeforeEach
@@ -129,8 +133,18 @@ class EtxSpatMqttDepositorTest {
 
     mockedTopicBuilder = Mockito.mockStatic(EtxMqttTopicBuilder.class);
 
+    // Create mocked static for EtxUtil
+    mockedEtxUtil = Mockito.mockStatic(EtxUtil.class);
+
+    // Mock the readConfigFile method to return a valid config with session ID
+    RegistrationConfiguration mockConfig = new RegistrationConfiguration();
+    EtxMqttClientInfo mockSessionInfo = new EtxMqttClientInfo();
+    mockSessionInfo.setSessionId("test-session-0000");
+    mockConfig.setEtxSessionID(mockSessionInfo);
+    mockedEtxUtil.when(() -> EtxUtil.readConfigFile(any(String.class))).thenReturn(mockConfig);
+
     // More specific mock setup
-    mockedTopicBuilder.when(() -> EtxMqttTopicBuilder.getSpatTopicList(any(J2735SPAT.class),
+    mockedTopicBuilder.when(() -> EtxMqttTopicBuilder.getSpatTopicList(any(SPAT.class),
         eq(mapDataCollector), anyString(), anyInt(), any(EtxMqttMessageFormat.class),
         eq(EtxClientType.SOFTWARE), eq(EtxClientSubType.APPLICATION)))
         .thenReturn(Set.of("test-topic"));
@@ -143,6 +157,9 @@ class EtxSpatMqttDepositorTest {
   void tearDown() {
     if (mockedTopicBuilder != null) {
       mockedTopicBuilder.close();
+    }
+    if (mockedEtxUtil != null) {
+      mockedEtxUtil.close();
     }
   }
 
@@ -225,7 +242,7 @@ class EtxSpatMqttDepositorTest {
       throws JsonProcessingException {
     // override the intersection filter
     ReflectionTestUtils.setField(depositor, "intersectionFilterEnabled", true);
-    ReflectionTestUtils.setField(depositor, "allowedIntersectionIds", List.of(9709));
+    ReflectionTestUtils.setField(depositor, "allowedIntersectionIds", List.of(9709L));
 
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
@@ -258,7 +275,7 @@ class EtxSpatMqttDepositorTest {
       throws JsonProcessingException {
     // Configure filter with blocked intersection ID 9709 (from sample message)
     ReflectionTestUtils.setField(depositor, "intersectionFilterEnabled", true);
-    ReflectionTestUtils.setField(depositor, "blockedIntersectionIds", List.of(9709));
+    ReflectionTestUtils.setField(depositor, "blockedIntersectionIds", List.of(9709L));
 
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
