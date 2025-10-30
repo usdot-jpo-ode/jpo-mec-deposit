@@ -70,7 +70,7 @@ public class EtxGeohashMqttPublisher extends AbstractEtxMqttDepositor {
 
       // Extract the original message bytes and geohash
       byte[] originalMessageBytes = geoHashRoutedMsg.getMsgBytes().toByteArray();
-      String geohash = geoHashRoutedMsg.hasGeohash() ? geoHashRoutedMsg.getGeohash() : null;
+      String geohash = geoHashRoutedMsg.getGeohash();
 
       // Convert to hex for logging/metrics
       asn1Hex = Hex.toHexString(originalMessageBytes);
