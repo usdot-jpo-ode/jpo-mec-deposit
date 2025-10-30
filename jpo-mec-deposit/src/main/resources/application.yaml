@@ -74,6 +74,10 @@ mec-deposit:
         mqtt:
           enabled: ${ETX_DEPOSITORS_SDSM_MQTT_ENABLED:true}
           kafka-topic: ${ETX_DEPOSITORS_SDSM_MQTT_KAFKA_TOPIC:topic.OdeSdsmJson}
+      geohash:
+        mqtt:
+          enabled: ${ETX_DEPOSITORS_GEOHASH_MQTT_ENABLED:false}
+          kafka-topic: ${ETX_DEPOSITORS_GEOHASH_MQTT_KAFKA_TOPIC:topic.GeoHashRoutedMsg}
 
 # microservice actuator
 management:

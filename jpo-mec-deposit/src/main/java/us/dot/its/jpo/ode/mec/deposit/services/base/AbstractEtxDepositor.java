@@ -80,6 +80,28 @@ public abstract class AbstractEtxDepositor {
     return isStale;
   }
 
+  /**
+   * Overloaded method to check if a message is stale based on seconds and nanos. This method is
+   * designed for use with geohash publishers that work with protobuf timestamps.
+   *
+   * @param seconds The seconds component of the timestamp
+   * @param nanos The nanoseconds component of the timestamp
+   * @return true if the message is stale, false otherwise
+   */
+  protected boolean isMessageStale(long seconds, int nanos) {
+    Instant msgInstant = Instant.ofEpochSecond(seconds, nanos);
+    LocalDateTime msgTimestamp = LocalDateTime.ofInstant(msgInstant, ZoneOffset.UTC);
+    LocalDateTime currentTime = LocalDateTime.now(ZoneOffset.UTC);
+    Duration latency = Duration.between(msgTimestamp, currentTime);
+    boolean isStale = latency.toMillis() > staleMessageThreshold;
+    if (isStale) {
+      log.debug("Skipping stale {} message (seconds: {}, nanos: {})", messageType.name(), seconds,
+          nanos);
+      staleMessageCounter.increment();
+    }
+    return isStale;
+  }
+
   protected void publishMetrics(EtxDepositMetrics metrics) {
     try {
       kafkaTemplate.send(mecDepositProperties.getMetrics().getKafkaTopic(),

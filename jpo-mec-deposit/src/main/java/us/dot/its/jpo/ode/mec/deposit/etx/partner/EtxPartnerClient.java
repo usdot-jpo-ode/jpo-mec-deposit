@@ -93,7 +93,17 @@ public class EtxPartnerClient {
           if (configData != null) {
             ClientRegistrationGetResponse registrationResponse =
                 getRegistration(token, configData.getDeviceID());
+
+            ClientConnectionResponse connectionResponse =
+                connection(token, registrationResponse.getDeviceID());
+            if (connectionResponse == null || connectionResponse.getMqttURL() == null) {
+              throw new RuntimeException("Connection failed - null or invalid response");
+            }
+
+            configData.setEtxMqttUri(new URI(connectionResponse.getMqttURL()));
+
             if (registrationResponse != null) {
+              EtxUtil.writeToFile(configPath, mapper.writeValueAsString(configData));
               return configData;
             }
           }
