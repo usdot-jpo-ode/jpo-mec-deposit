@@ -16,13 +16,13 @@ public class EtxMqttProtobufBuilder {
    * Builds a GeoRoutedMsg protobuf object with the given parameters.
    *
    * @param messageBytes The raw message bytes to include
-   * @param timestamp    The timestamp for when the message was created/received
-   * @param latitude     Optional latitude position
-   * @param longitude    Optional longitude position
+   * @param timestamp The timestamp for when the message was created/received
+   * @param latitude Optional latitude position
+   * @param longitude Optional longitude position
    * @return A built GeoRoutedMsg protobuf object
    */
   public static GeoRoutedMsg buildGeoRoutedMsg(byte[] messageBytes, Instant timestamp,
-                                               Double latitude, Double longitude) {
+      Double latitude, Double longitude) {
 
     GeoRoutedMsg.Builder builder = GeoRoutedMsg.newBuilder()
         .setMsgBytes(ByteString.copyFrom(messageBytes)).setTime(Timestamp.newBuilder()
@@ -42,10 +42,11 @@ public class EtxMqttProtobufBuilder {
    * Builds a GeoRoutedMsg protobuf object without position information.
    *
    * @param messageBytes The raw message bytes to include
-   * @param timestamp    The timestamp for when the message was created/received
+   * @param timestamp The timestamp for when the message was created/received
    * @return A built GeoRoutedMsg protobuf object
    */
   public static GeoRoutedMsg buildGeoRoutedMsg(byte[] messageBytes, Instant timestamp) {
+    // adding static location within ETX requirements
     return buildGeoRoutedMsg(messageBytes, timestamp, null, null);
   }
 }

@@ -5,11 +5,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
-import us.dot.its.jpo.ode.model.OdeMapData;
-import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionGeometry;
-import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionGeometryList;
-import us.dot.its.jpo.ode.plugin.j2735.J2735MAP;
-import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
+import us.dot.its.jpo.asn.j2735.r2024.Common.Position3D;
+import us.dot.its.jpo.asn.j2735.r2024.MapData.IntersectionGeometry;
+import us.dot.its.jpo.asn.j2735.r2024.MapData.IntersectionGeometryList;
+import us.dot.its.jpo.asn.j2735.r2024.MapData.MapData;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 
 /**
  * Collects and manages reference points from MAP messages for intersections.
@@ -18,7 +18,7 @@ import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
 @Slf4j
 public class MapRefPointCollector {
   private final ObjectMapper mapper = DateJsonMapper.getInstance();
-  private ConcurrentHashMap<String, OdePosition3D> map = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<String, Position3D> map = new ConcurrentHashMap<>();
 
   /**
    * Listens for and processes MAP messages from Kafka.
@@ -31,14 +31,14 @@ public class MapRefPointCollector {
       properties = {"auto.offset.reset=earliest"})
   public void jsonMapListener(String message) {
     try {
-      OdeMapData msg = mapper.readValue(message, OdeMapData.class);
-      J2735MAP mapMsg = (J2735MAP) msg.getPayload().getData();
-      J2735IntersectionGeometryList intersections = mapMsg.getIntersections();
+      OdeMessageFrameData msg = mapper.readValue(message, OdeMessageFrameData.class);
+      MapData mapMsg = (MapData) msg.getPayload().getData().getValue();
+      IntersectionGeometryList intersections = mapMsg.getIntersections();
 
-      for (int i = 0; i < intersections.getIntersections().size(); i++) {
-        J2735IntersectionGeometry intersection = intersections.getIntersections().get(i);
+      for (int i = 0; i < intersections.size(); i++) {
+        IntersectionGeometry intersection = intersections.get(i);
         String intersectionId = intersection.getId().getId().toString();
-        OdePosition3D refPoint = intersection.getRefPoint();
+        Position3D refPoint = intersection.getRefPoint();
         log.debug("Received MAP message: {} with refPoint: {}", intersectionId, refPoint);
         map.put(intersectionId, refPoint);
       }
@@ -57,13 +57,13 @@ public class MapRefPointCollector {
    * @return The intersection's reference point position, or null if not found
    * @throws IllegalArgumentException if intersectionId is null
    */
-  public OdePosition3D getIntersectionRefPoint(String intersectionId) {
+  public Position3D getIntersectionRefPoint(String intersectionId) {
     if (intersectionId == null) {
       log.error("Intersection ID cannot be null");
       throw new IllegalArgumentException("Intersection ID cannot be null");
     }
 
-    OdePosition3D position = map.get(intersectionId);
+    Position3D position = map.get(intersectionId);
     if (position == null) {
       log.warn("No reference point found for intersection ID: {}", intersectionId);
       return null;

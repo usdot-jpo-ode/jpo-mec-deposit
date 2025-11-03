@@ -1,6 +1,25 @@
 JPO MEC Deposit Release Notes
 ----------------------------
 
+Version 1.0.0
+----------------------------------------
+
+### **Summary**
+
+First public release of JPO-MEC-DEPOSIT. The main updates in this version includes:
+
+- Removal of JAR files for ODE library references in favor of using GitHub Artifacts.
+- Intersection Filtering Configuration to allow for selecting only certain intersections for the ETX depositor.
+- Additional MQTT MEC Deposit application for SDSM messages to the ETX.
+
+## **Pull Requests**
+
+- [PR5](https://github.com/usdot-jpo-ode/jpo-mec-deposit/pull/5): Intersection Filtering Configuration
+- [PR6](https://github.com/usdot-jpo-ode/jpo-mec-deposit/pull/6): SDSM Depositor
+- [PR7](https://github.com/usdot-jpo-ode/jpo-mec-deposit/pull/7): JPO ODE GitHub artifacts and schema updates.
+
+----------------------------------------
+
 Version 0.1.0
 ----------------------------------------
 
@@ -19,5 +38,6 @@ The main updates include:
 
 ## **Pull Requests**
 
-- [PR3](https://github.com/usdot-fhwa-stol/v2x-mec/pull/3): V2 python scripts for the ETX
-- [PR11](https://github.com/usdot-fhwa-stol/v2x-mec/pull/11): TIM Messages and MongoDB Latency Analysis
+- [PR1](https://github.com/usdot-jpo-ode/jpo-mec-deposit/pull/1): Repository Init Structure
+- [PR2](https://github.com/usdot-jpo-ode/jpo-mec-deposit/pull/2): Fix ETX Clear TIM feature flag
+- [PR3](https://github.com/usdot-jpo-ode/jpo-mec-deposit/pull/3): Rate Limiting Thread Safety

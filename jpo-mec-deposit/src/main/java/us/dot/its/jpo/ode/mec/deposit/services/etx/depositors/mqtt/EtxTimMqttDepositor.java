@@ -22,8 +22,9 @@ import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxMqttDepositor;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttProtobufBuilder;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
-import us.dot.its.jpo.ode.model.OdeTimData;
-import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerInformation;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerInformation;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrameList;
 
 /**
  * Depositor class for handling TIM messages via MQTT integration with ETX.
@@ -58,7 +59,7 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
     String odeReceivedAt = null;
     String asn1Hex = "";
     try {
-      OdeTimData msg = mapper.readValue(message, OdeTimData.class);
+      OdeMessageFrameData msg = mapper.readValue(message, OdeMessageFrameData.class);
       odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
       asn1Hex = msg.getMetadata().getAsn1();
 
@@ -67,7 +68,7 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
       }
 
       byte[] messageBytes = Hex.decode(msg.getMetadata().getAsn1());
-      var timMsg = (TravelerInformation) msg.getPayload().getData();
+      var timMsg = (TravelerInformation) msg.getPayload().getData().getValue();
       LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
 
       // If the message format is J2735_GR, we need to convert the message to a GeoRoutedMsg

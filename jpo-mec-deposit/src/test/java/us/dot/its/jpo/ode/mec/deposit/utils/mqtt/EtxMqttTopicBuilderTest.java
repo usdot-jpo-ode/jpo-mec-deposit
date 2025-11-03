@@ -1,19 +1,25 @@
 package us.dot.its.jpo.ode.mec.deposit.utils.mqtt;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
-import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
-import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
-import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerDataFrameList;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
+import us.dot.its.jpo.asn.j2735.r2024.SPAT.SPAT;
+import us.dot.its.jpo.asn.j2735.r2024.Common.Position3D;
+import us.dot.its.jpo.asn.j2735.r2024.MapData.IntersectionGeometry;
+import us.dot.its.jpo.asn.j2735.r2024.MapData.MapData;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrame;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrameList;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerInformation;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerInformationMessageFrame;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -32,6 +38,7 @@ public class EtxMqttTopicBuilderTest {
   @BeforeEach
   void setUp() {
     objectMapper = new ObjectMapper();
+    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
   @Test
@@ -59,20 +66,20 @@ public class EtxMqttTopicBuilderTest {
     // Load sample SPAT message
     JsonNode spatJson = objectMapper
         .readTree(getClass().getResourceAsStream("/sample_messages/sample-ode-spat.json"));
-    final J2735SPAT spatMsg =
-        objectMapper.convertValue(spatJson.get("payload").get("data"), J2735SPAT.class);
+    OdeMessageFrameData odeSpatMsg = objectMapper.convertValue(spatJson, OdeMessageFrameData.class);
+    SPAT spatMsg = (SPAT) odeSpatMsg.getPayload().getData().getValue();
 
     // Setup MapRefPointCollector with the reference point from MAP message
     JsonNode mapJson = objectMapper
         .readTree(getClass().getResourceAsStream("/sample_messages/sample-ode-map.json"));
-    JsonNode refPointJson = mapJson.get("payload").get("data").get("intersections")
-        .get("intersectionGeometry").get(0).get("refPoint");
-
+    OdeMessageFrameData odeMapMsg = objectMapper.convertValue(mapJson, OdeMessageFrameData.class);
+    MapData mapData = (MapData) odeMapMsg.getPayload().getData().getValue();
+    IntersectionGeometry intersection = mapData.getIntersections().get(0);
+    Position3D refPoint = intersection.getRefPoint();
     MapRefPointCollector collector = mock(MapRefPointCollector.class);
-    OdePosition3D refPoint = new OdePosition3D();
-    refPoint.setLatitude(new BigDecimal(refPointJson.get("latitude").asDouble()));
-    refPoint.setLongitude(new BigDecimal(refPointJson.get("longitude").asDouble()));
-    when(collector.getIntersectionRefPoint("9709")).thenReturn(refPoint);
+    // Mock the collector to return null - this will test the fallback behavior
+    when(collector.getIntersectionRefPoint(intersection.getId().getId().toString()))
+        .thenReturn(refPoint);
 
     Set<String> topics = EtxMqttTopicBuilder.getSpatTopicList(spatMsg, collector, "TEST_VENDOR", 7,
         EtxMqttMessageFormat.J2735_GR, EtxClientType.SOFTWARE, EtxClientSubType.APPLICATION);
@@ -86,9 +93,9 @@ public class EtxMqttTopicBuilderTest {
     // Load sample TIM message
     JsonNode timJson = objectMapper
         .readTree(getClass().getResourceAsStream("/sample_messages/sample-ode-tim.json"));
-    TravelerDataFrameList dataFramesList = objectMapper.convertValue(
-        timJson.get("payload").get("data").get("dataFrames"), TravelerDataFrameList.class);
-
+    OdeMessageFrameData odeTimMsg = objectMapper.convertValue(timJson, OdeMessageFrameData.class);
+    TravelerInformation timMsg = (TravelerInformation) odeTimMsg.getPayload().getData().getValue();
+    TravelerDataFrameList dataFramesList = timMsg.getDataFrames();
     Set<String> topics = EtxMqttTopicBuilder.getTimTopicList(dataFramesList, "TEST_VENDOR", 7,
         EtxMqttMessageFormat.J2735_GR, EtxClientType.SOFTWARE, EtxClientSubType.APPLICATION);
 

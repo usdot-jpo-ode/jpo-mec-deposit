@@ -17,7 +17,7 @@ import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxApiDepositor;
-import us.dot.its.jpo.ode.model.OdeTimData;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 
 /**
  * Depositor class for handling TIM messages via ETX API integration.
@@ -63,7 +63,7 @@ public class EtxTimApiDepositor extends AbstractEtxApiDepositor {
     String odeReceivedAt = null;
     String asn1Hex = "";
     try {
-      OdeTimData msg = mapper.readValue(message, OdeTimData.class);
+      OdeMessageFrameData msg = mapper.readValue(message, OdeMessageFrameData.class);
       odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
 
       asn1Hex = msg.getMetadata().getAsn1();

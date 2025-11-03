@@ -11,13 +11,12 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttRegionalTopic;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.mec.deposit.utils.PositionConversionUtil;
-import us.dot.its.jpo.ode.plugin.j2735.J2735IntersectionState;
-import us.dot.its.jpo.ode.plugin.j2735.J2735SPAT;
-import us.dot.its.jpo.ode.plugin.j2735.OdePosition3D;
-import us.dot.its.jpo.ode.plugin.j2735.common.Position3D;
-import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.GeographicalPath;
-import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerDataFrame;
-import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerDataFrameList;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrameList;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrame;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.GeographicalPath;
+import us.dot.its.jpo.asn.j2735.r2024.Common.Position3D;
+import us.dot.its.jpo.asn.j2735.r2024.SPAT.IntersectionState;
+import us.dot.its.jpo.asn.j2735.r2024.SPAT.SPAT;
 
 /**
  * Utility class for building MQTT topics according to ETX specifications. This class handles topic
@@ -167,22 +166,20 @@ public class EtxMqttTopicBuilder {
    * @param clientSubType The subtype of the client sending the message
    * @return Set of topic strings, one for each intersection with valid reference points
    */
-  public static Set<String> getSpatTopicList(J2735SPAT spatMsg,
-      MapRefPointCollector mapDataCollector, String mqttVendorId, int precision,
-      EtxMqttMessageFormat messageFormat, EtxClientType clientType,
-      EtxClientSubType clientSubType) {
+  public static Set<String> getSpatTopicList(SPAT spatMsg, MapRefPointCollector mapDataCollector,
+      String mqttVendorId, int precision, EtxMqttMessageFormat messageFormat,
+      EtxClientType clientType, EtxClientSubType clientSubType) {
     Set<String> topicSet = new HashSet<>();
-    for (J2735IntersectionState intersection : spatMsg.getIntersectionStateList()
-        .getIntersectionStatelist()) {
+    for (IntersectionState intersection : spatMsg.getIntersections()) {
       String intersectionId = intersection.getId().getId().toString();
-      OdePosition3D refPoint = mapDataCollector.getIntersectionRefPoint(intersectionId);
+      Position3D refPoint = mapDataCollector.getIntersectionRefPoint(intersectionId);
       if (refPoint == null) {
         log.warn("No refPoint found for intersectionId: {} skipping ETX deposit", intersectionId);
         continue;
       }
 
-      double latitude = refPoint.getLatitude().doubleValue();
-      double longitude = refPoint.getLongitude().doubleValue();
+      double latitude = PositionConversionUtil.convertRefPointToLat(refPoint);
+      double longitude = PositionConversionUtil.convertRefPointToLon(refPoint);
 
       String topic = buildRegionalTopic(EtxMessageType.SPAT, latitude, longitude, precision,
           mqttVendorId, messageFormat, clientType, clientSubType);

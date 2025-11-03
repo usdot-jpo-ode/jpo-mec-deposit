@@ -25,6 +25,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.AuthTokenRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClearRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientConnectionPostRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientConnectionResponse;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientRegistrationGetResponse;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientRegistrationPostRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientRegistrationResponse;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DepositRequest;
@@ -82,11 +83,37 @@ public class EtxPartnerClient {
       boolean cacheRegistration = partnerApiProperties.isCacheRegistration();
       String configPath = buildConfigPath();
 
-      if (!validRegistration(configPath) || !cacheRegistration) {
-        return handleNewRegistration(token, configPath);
-      } else {
-        return loadExistingConfiguration(configPath);
+      RegistrationConfiguration configData = null;
+
+      // If caching is enabled, check if the registration already exists and return the
+      // configuration if it is still valid
+      if (cacheRegistration) {
+        try {
+          configData = loadExistingConfiguration(configPath);
+          if (configData != null) {
+            ClientRegistrationGetResponse registrationResponse =
+                getRegistration(token, configData.getDeviceID());
+
+            ClientConnectionResponse connectionResponse =
+                connection(token, registrationResponse.getDeviceID());
+            if (connectionResponse == null || connectionResponse.getMqttURL() == null) {
+              throw new RuntimeException("Connection failed - null or invalid response");
+            }
+
+            configData.setEtxMqttUri(new URI(connectionResponse.getMqttURL()));
+
+            if (registrationResponse != null) {
+              EtxUtil.writeToFile(configPath, mapper.writeValueAsString(configData));
+              return configData;
+            }
+          }
+        } catch (IOException e) {
+          log.info("Failed to load existing configuration, continuing with new registration");
+          configData = null;
+        }
       }
+
+      return handleNewRegistration(token, configPath);
     } catch (Exception e) {
       log.error("Failed to register client partner", e);
       throw e;
@@ -228,6 +255,31 @@ public class EtxPartnerClient {
       ResponseEntity<ClientRegistrationResponse> response =
           restTemplate.exchange(partnerApiProperties.getBaseUri() + "/prd/v2/registration",
               HttpMethod.POST, entity, ClientRegistrationResponse.class);
+
+      return response.getBody();
+    } catch (HttpClientErrorException.Unauthorized e) {
+      log.error("Unauthorized error: " + e.getStackTrace());
+      return null;
+    }
+  }
+
+  /**
+   * Registers a new client with the ETX Partner API.
+   *
+   * @param token Authentication token
+   * @return The registration response
+   */
+  public ClientRegistrationGetResponse getRegistration(String token, String deviceID) {
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", "Bearer " + token);
+    headers.set("Content-Type", "application/json");
+
+    HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+    try {
+      ResponseEntity<ClientRegistrationGetResponse> response = restTemplate.exchange(
+          partnerApiProperties.getBaseUri() + "/prd/v2/registration?DeviceID=" + deviceID,
+          HttpMethod.GET, entity, ClientRegistrationGetResponse.class);
 
       return response.getBody();
     } catch (HttpClientErrorException.Unauthorized e) {

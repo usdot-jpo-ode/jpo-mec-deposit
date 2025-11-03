@@ -21,7 +21,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,8 +44,8 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
-import us.dot.its.jpo.ode.model.OdeTimData;
-import us.dot.its.jpo.ode.plugin.j2735.travelerinformation.TravelerDataFrameList;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrameList;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -132,14 +131,18 @@ class EtxTimMqttDepositorTest {
     }
   }
 
+  private String createTimTestMessage(String timestamp) throws JsonProcessingException {
+    OdeMessageFrameData timData = objectMapper.readValue(sampleTimJson, OdeMessageFrameData.class);
+    timData.getMetadata().setOdeReceivedAt(timestamp);
+    return objectMapper.writeValueAsString(timData);
+  }
+
   @Test
   void testTimDepositListener() throws JsonProcessingException {
     // Arrange
-    OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
-    String currentTime =
+    String currentTimestamp =
         LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
-    timData.getMetadata().setOdeReceivedAt(currentTime);
-    String message = objectMapper.writeValueAsString(timData);
+    String message = createTimTestMessage(currentTimestamp);
 
     when(mqttProperties.getMessageFormat()).thenReturn(EtxMqttMessageFormat.J2735);
 
@@ -154,11 +157,9 @@ class EtxTimMqttDepositorTest {
   @Test
   void testTimDepositListenerWithGeoRoutedFormat() throws JsonProcessingException {
     // Arrange
-    String currentTime = LocalDateTime.now(ZoneOffset.UTC)
-        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
-    OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
-    timData.getMetadata().setOdeReceivedAt(currentTime);
-    String message = objectMapper.writeValueAsString(timData);
+    String currentTimestamp =
+        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
+    String message = createTimTestMessage(currentTimestamp);
 
     when(mqttProperties.getMessageFormat()).thenReturn(EtxMqttMessageFormat.J2735_GR);
 
@@ -173,9 +174,7 @@ class EtxTimMqttDepositorTest {
   @Test
   void testTimDepositListener_StaleMessage() throws JsonProcessingException {
     // Arrange
-    OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
-    timData.getMetadata().setOdeReceivedAt("2020-01-01T00:00:00.000Z"); // Stale timestamp
-    String message = objectMapper.writeValueAsString(timData);
+    String message = createTimTestMessage("2020-01-01T00:00:00.000Z"); // Stale timestamp
 
     // Act
     depositor.timDepositListener(message);
@@ -192,11 +191,9 @@ class EtxTimMqttDepositorTest {
   @Test
   void testTimDepositListener_HandlesException() throws JsonProcessingException {
     // Arrange
-    OdeTimData timData = objectMapper.readValue(sampleTimJson, OdeTimData.class);
-    String currentTime = LocalDateTime.now(ZoneOffset.UTC)
-        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
-    timData.getMetadata().setOdeReceivedAt(currentTime);
-    String message = objectMapper.writeValueAsString(timData);
+    String currentTimestamp =
+        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
+    String message = createTimTestMessage(currentTimestamp);
 
     // Simulate an exception during MQTT publish
     doThrow(new RuntimeException("MQTT publish failed")).when(mqttService)

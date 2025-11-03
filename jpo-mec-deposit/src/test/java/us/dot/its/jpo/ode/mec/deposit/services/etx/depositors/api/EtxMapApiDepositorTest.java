@@ -26,7 +26,7 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
-import us.dot.its.jpo.ode.model.OdeMapData;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
@@ -113,7 +113,7 @@ class EtxMapApiDepositorTest {
   @Test
   void testMapDepositListener_Success() throws JsonProcessingException {
     // Prepare test data
-    OdeMapData mapData = objectMapper.readValue(sampleMapJson, OdeMapData.class);
+    OdeMessageFrameData mapData = objectMapper.readValue(sampleMapJson, OdeMessageFrameData.class);
     String currentTimestamp =
         LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
     mapData.getMetadata().setOdeReceivedAt(currentTimestamp);
@@ -133,7 +133,7 @@ class EtxMapApiDepositorTest {
   @Test
   void testMapDepositListener_Error() throws JsonProcessingException {
     // Prepare test data
-    OdeMapData mapData = objectMapper.readValue(sampleMapJson, OdeMapData.class);
+    OdeMessageFrameData mapData = objectMapper.readValue(sampleMapJson, OdeMessageFrameData.class);
     String currentTimestamp =
         LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
     mapData.getMetadata().setOdeReceivedAt(currentTimestamp);

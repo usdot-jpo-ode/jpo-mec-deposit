@@ -12,6 +12,7 @@ This project is intended to serve as a consumer application to subscribe to a Ka
     - [Docker Compose Files](#docker-compose-files)
     - [Run with Vscode](#run-with-vscode)
       - [Launch Configurations](#launch-configurations)
+        - [Generate GitHub Token](#generate-github-token)
   - [Configuration](#configuration)
     - [ETX MEC Deposit](#etx-mec-deposit)
       - [ETX MQTT Deposit](#etx-mqtt-deposit)
@@ -56,7 +57,16 @@ The current version and release history of the jpo-mec-deposit: [jpo-mec-deposit
 1. Create a copy of `sample.env` and rename it to `.env`.
 2. Create a copy of `jpo-utils/sample.env` and rename it to `.env` in the `jpo-utils` directory.
 3. Update the variable `DOCKER_HOST_IP` to the local IP address of the system running docker in the `.env` file.
-4. Run the following command to start the Docker Compose services: `docker compose up -d`
+4. Generate GitHub Token
+   1. Log into GitHub.
+   2. Navigate to Settings -> Developer settings -> Personal access tokens.
+   3. Click "New personal access token (classic)".
+      1. As of now, GitHub does not support `Fine-grained tokens` for obtaining packages.
+   4. Provide a name and expiration for the token.
+   5. Select the `read:packages` scope.
+   6. Click "Generate token" and copy the token.
+   7. Copy the token name and token value into your `.env` file.
+5. Run the following command to start the Docker Compose services: `docker compose up -d`
 
 ### Docker Compose Files
 
@@ -72,7 +82,53 @@ To vary which services are started, use the `COMPOSE_PROFILES` environment varia
 
 #### Launch Configurations
 
-A launch.json file with some launch configurations have been included to allow developers to debug the project in VSCode. Please make sure your `.env` file is already created and populated with the correct values. Also, make sure to run docker compose up -d before running the launch configuration.
+A launch.json file with some launch configurations have been included to allow developers to debug the project in VSCode. Please make sure your `.env` file is already created and populated with the correct values. Also, make sure to run docker compose up -d before running the launch configuration. Also add the following local configuration to allow for retrieval of GitHub hosted JAR files:
+
+##### Generate GitHub Token
+
+A GitHub token is required to pull artifacts from GitHub repositories. This is required to obtain the jpo-ode jars and must be done before attempting to build this repository.
+
+1. Log into GitHub.
+2. Navigate to Settings -> Developer settings -> Personal access tokens.
+3. Click "New personal access token (classic)".
+   1. As of now, GitHub does not support `Fine-grained tokens` for obtaining packages.
+4. Provide a name and expiration for the token.
+5. Select the `read:packages` scope.
+6. Click "Generate token" and copy the token.
+7. Copy the token name and token value into your `.env` file.
+8. Create a copy of [settings.xml](jpo-mec-deposit/settings.xml) and save it to `~/.m2/settings.xml`
+9. Update the variables in your `~/.m2/settings.xml` with the token value and target jpo-ode organization. Here is an example filled in `settings.xml` file:
+
+```XML
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+    <activeProfiles>
+        <activeProfile>default</activeProfile>
+    </activeProfiles>
+    <servers>
+        <server>
+            <id>github</id>
+            <username>jpo_mec_deposit</username>
+            <password>ghp_token-string-value</password>
+        </server>
+    </servers>
+    <profiles>
+        <profile>
+            <id>default</id>
+            <repositories>
+                <repository>
+                    <id>github</id>
+                    <name>GitHub Apache Maven Packages</name>
+                    <url>https://maven.pkg.github.com/usdot-jpo-ode/jpo-ode</url>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+</settings>
+```
 
 To run the project through the launch configuration and start debugging, the developer can navigate to the Run panel (View->Run or Ctrl+Shift+D), select the configuration at the top, and click the green arrow or press F5 to begin.
 

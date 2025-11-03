@@ -17,7 +17,7 @@ import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxApiDepositor;
-import us.dot.its.jpo.ode.model.OdeMapData;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 
 /**
  * Depositor class for handling MAP messages via ETX API integration.
@@ -63,7 +63,7 @@ public class EtxMapApiDepositor extends AbstractEtxApiDepositor {
     String odeReceivedAt = null;
     String asn1Hex = "";
     try {
-      OdeMapData msg = mapper.readValue(message, OdeMapData.class);
+      OdeMessageFrameData msg = mapper.readValue(message, OdeMessageFrameData.class);
       odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
 
       asn1Hex = msg.getMetadata().getAsn1();

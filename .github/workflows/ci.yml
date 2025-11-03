@@ -2,11 +2,9 @@ name: ci
 
 on:
   pull_request:
+    types: [opened, reopened, synchronize]
   push:
-    branches:
-      - "develop"
-      - "master"
-      - "release/*"
+    branches: [develop, master]
 
 jobs:
   docker:
@@ -16,37 +14,60 @@ jobs:
         uses: docker/setup-buildx-action@v3
       - name: Build
         uses: docker/build-push-action@v5
+        with:
+          build-args: |
+            MAVEN_GITHUB_TOKEN_NAME=${{ vars.MAVEN_GITHUB_TOKEN_NAME }}
+            MAVEN_GITHUB_TOKEN=${{ secrets.MAVEN_GITHUB_TOKEN }}
+            MAVEN_GITHUB_ORG=${{ github.repository_owner }}
+          secrets: |
+            MAVEN_GITHUB_TOKEN: ${{ secrets.MAVEN_GITHUB_TOKEN }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           java-version: "21"
           distribution: "temurin"
-      - name: Run tests
-        run: |
-          cd jpo-mec-deposit
-          mvn clean install
-          mvn test
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-${{ hashFiles('**/settings.xml') }}-${{ runner.os }}-java-21
+          restore-keys: |
+            ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-${{ runner.os }}-java-21
+            ${{ runner.os }}-maven-${{ runner.os }}-java-21
+            ${{ runner.os }}-maven
 
-  # sonar:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         submodules: recursive
-  #     - name: Set up JDK
-  #       uses: actions/setup-java@v4
-  #       with:
-  #         java-version: "21"
-  #         distribution: "temurin"
-  #     - name: Run Sonar
-  #       env:
-  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  #       run: |
-  #         ls -la && pwd
-  #         mvn -e clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar -Dsonar.projectKey=usdot.jpo.ode:jpo-mec-deposit -Dsonar.projectName=jpo-mec-deposit -Dsonar.organization=usdot-jpo-mec-deposit -Dsonar.host.url=https://sonarcloud.io -Dsonar.branch.name=$GITHUB_REF_NAME
+      - name: Install Dependencies
+        env:
+          MAVEN_GITHUB_TOKEN: ${{ secrets.MAVEN_GITHUB_TOKEN }}
+          MAVEN_GITHUB_ORG: ${{ github.repository_owner }}
+        run: |
+          cd $GITHUB_WORKSPACE/jpo-mec-deposit
+          mvn clean install -DskipTests -s ./settings.xml
+          mvn dependency:go-offline -s ./settings.xml
+
+      - name: Run tests
+        env:
+          MAVEN_GITHUB_TOKEN: ${{ secrets.MAVEN_GITHUB_TOKEN }}
+          MAVEN_GITHUB_ORG: ${{ github.repository_owner }}
+        run: |
+          cd $GITHUB_WORKSPACE/jpo-mec-deposit
+          mvn verify -s ./settings.xml
+
+      - name: Archive Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: jpo-mec-deposit-test-results
+          path: $GITHUB_WORKSPACE/jpo-mec-deposit/target/surefire-reports
+
+      - name: Clean up
+        run: |
+          rm -rf $GITHUB_WORKSPACE/jpo-mec-deposit/target

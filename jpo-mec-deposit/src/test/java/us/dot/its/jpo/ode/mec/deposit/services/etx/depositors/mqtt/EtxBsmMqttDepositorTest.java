@@ -45,7 +45,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
-import us.dot.its.jpo.ode.model.OdeBsmData;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -127,7 +127,7 @@ class EtxBsmMqttDepositorTest {
   @Test
   void testBsmDepositListener() throws JsonProcessingException {
     // Arrange
-    OdeBsmData bsmData = objectMapper.readValue(sampleBsmJson, OdeBsmData.class);
+    OdeMessageFrameData bsmData = objectMapper.readValue(sampleBsmJson, OdeMessageFrameData.class);
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
     bsmData.getMetadata().setOdeReceivedAt(currentTime);
@@ -144,7 +144,7 @@ class EtxBsmMqttDepositorTest {
     // Arrange
     String currentTime = LocalDateTime.now(ZoneOffset.UTC)
         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
-    OdeBsmData bsmData = objectMapper.readValue(sampleBsmJson, OdeBsmData.class);
+    OdeMessageFrameData bsmData = objectMapper.readValue(sampleBsmJson, OdeMessageFrameData.class);
     bsmData.getMetadata().setOdeReceivedAt(currentTime);
     String message = objectMapper.writeValueAsString(bsmData);
 
@@ -160,7 +160,7 @@ class EtxBsmMqttDepositorTest {
   @Test
   void testBsmDepositListener_StaleMessage() throws JsonProcessingException {
     // Arrange
-    OdeBsmData bsmData = objectMapper.readValue(sampleBsmJson, OdeBsmData.class);
+    OdeMessageFrameData bsmData = objectMapper.readValue(sampleBsmJson, OdeMessageFrameData.class);
     bsmData.getMetadata().setOdeReceivedAt("2020-01-01T00:00:00.000Z"); // Stale timestamp
     String message = objectMapper.writeValueAsString(bsmData);
 
@@ -179,7 +179,7 @@ class EtxBsmMqttDepositorTest {
   @Test
   void testBsmDepositListener_HandlesException() throws JsonProcessingException {
     // Arrange
-    OdeBsmData bsmData = objectMapper.readValue(sampleBsmJson, OdeBsmData.class);
+    OdeMessageFrameData bsmData = objectMapper.readValue(sampleBsmJson, OdeMessageFrameData.class);
     String currentTime = LocalDateTime.now(ZoneOffset.UTC)
         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
     bsmData.getMetadata().setOdeReceivedAt(currentTime);
