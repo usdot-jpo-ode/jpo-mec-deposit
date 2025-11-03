@@ -90,7 +90,6 @@ class EtxPartnerClientTest {
   @Test
   void register_WithValidToken_ReturnsRegistrationResponse() {
     // Arrange
-    String token = "valid-token";
     ClientRegistrationResponse expectedResponse = new ClientRegistrationResponse();
     expectedResponse.setDeviceID("device123");
 
@@ -103,6 +102,8 @@ class EtxPartnerClientTest {
     when(mockRestTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class),
         eq(ClientRegistrationResponse.class))).thenReturn(responseEntity);
 
+    String token = "valid-token";
+
     // Act
     ClientRegistrationResponse result = etxApi.register(token);
 
@@ -114,8 +115,6 @@ class EtxPartnerClientTest {
   @Test
   void connection_WithValidTokenAndDeviceId_ReturnsConnectionResponse() {
     // Arrange
-    String token = "valid-token";
-    String deviceId = "device123";
     ClientConnectionResponse expectedResponse = new ClientConnectionResponse();
     expectedResponse.setMqttURL("mqtt://test.com");
 
@@ -123,6 +122,9 @@ class EtxPartnerClientTest {
 
     when(mockRestTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class),
         eq(ClientConnectionResponse.class))).thenReturn(responseEntity);
+
+    String token = "valid-token";
+    String deviceId = "device123";
 
     // Act
     ClientConnectionResponse result = etxApi.connection(token, deviceId);
