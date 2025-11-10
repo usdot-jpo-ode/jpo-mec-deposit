@@ -15,9 +15,9 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxApiDepositor;
 import us.dot.its.jpo.ode.model.OdeMessageFrameData;
+import us.dot.its.jpo.ode.model.OdeTimData;
 
 /**
  * Depositor class for handling TIM messages via ETX API integration.
@@ -28,7 +28,6 @@ import us.dot.its.jpo.ode.model.OdeMessageFrameData;
     value = {"mec-deposit.etx.depositors.tim.api.enabled", "mec-deposit.etx.enabled"},
     havingValue = "true")
 public class EtxTimApiDepositor extends AbstractEtxApiDepositor {
-  private final DistributionType distributionType;
 
   /**
    * Constructs a new EtxTimApiDepositor.
@@ -45,7 +44,6 @@ public class EtxTimApiDepositor extends AbstractEtxApiDepositor {
       KafkaTemplate<String, String> kafkaTemplate) {
     super(mecDepositProperties, etxProperties, etxApi, tokenManager, meterRegistry, kafkaTemplate,
         EtxMessageType.TIM);
-    this.distributionType = etxProperties.getDepositors().getTim().getApi().getDistributionType();
   }
 
 
@@ -63,7 +61,7 @@ public class EtxTimApiDepositor extends AbstractEtxApiDepositor {
     String odeReceivedAt = null;
     String asn1Hex = "";
     try {
-      OdeMessageFrameData msg = mapper.readValue(message, OdeMessageFrameData.class);
+      OdeTimData msg = mapper.readValue(message, OdeTimData.class);
       odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
 
       asn1Hex = msg.getMetadata().getAsn1();
@@ -72,11 +70,11 @@ public class EtxTimApiDepositor extends AbstractEtxApiDepositor {
       log.debug("Depositing TIM message to ETX API");
 
       LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
-      partnerApi.deposit(token, asn1Hex, distributionType);
+      partnerApi.deposit(token, asn1Hex);
 
-      handleProcessingSuccess(null, distributionType, odeReceivedAt, depositedAt, asn1Hex);
+      handleProcessingSuccess(null, odeReceivedAt, depositedAt, asn1Hex);
     } catch (Exception e) {
-      handleProcessingError(e, null, distributionType,
+      handleProcessingError(e, null,
           odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);
     }
   }

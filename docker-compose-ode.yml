@@ -3,9 +3,10 @@ services:
   ode:
     profiles:
       - all
+      - ode_full
       - mec_deposit_full
       - ode
-    image: usdotjpoode/jpo-ode:2025-q3
+    image: usdotjpoode/jpo-ode:${ODE_VERSION:-latest}
     restart: ${RESTART_POLICY}
     deploy:
       resources:
@@ -47,6 +48,7 @@ services:
       ODE_TIM_INGEST_MONITORING_ENABLED: ${ODE_TIM_INGEST_MONITORING_ENABLED}
       ODE_TIM_INGEST_MONITORING_INTERVAL: ${ODE_TIM_INGEST_MONITORING_INTERVAL}
       ODE_STOMP_EXPORTER_ENABLED: ${ODE_STOMP_EXPORTER_ENABLED}
+      ODE_SECURITY_SVCS_SIGNATURE_URI: ${ODE_SECURITY_SVCS_SIGNATURE_URI}
     depends_on:
       kafka:
         condition: service_healthy
@@ -65,9 +67,10 @@ services:
   adm:
     profiles:
       - all
+      - ode_full
       - mec_deposit_full
       - adm
-    image: usdotjpoode/asn1_codec:2025-q3
+    image: usdotjpoode/asn1_codec:${ODE_VERSION:-latest}
     restart: ${RESTART_POLICY}
     deploy:
       resources:
@@ -87,6 +90,36 @@ services:
       kafka:
         condition: service_healthy
         required: false
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  aem:
+    profiles:
+      - all
+      - ode_full
+      - mec_deposit_full
+      - aem
+    image: usdotjpoode/asn1_codec:${ODE_VERSION:-latest}
+    restart: ${RESTART_POLICY}
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2G
+    environment:
+      DOCKER_HOST_IP: ${DOCKER_HOST_IP}
+      KAFKA_TYPE: ${KAFKA_TYPE}
+      CONFLUENT_KEY: ${CONFLUENT_KEY}
+      CONFLUENT_SECRET: ${CONFLUENT_SECRET}
+      ACM_CONFIG_FILE: aem.properties
+      ACM_LOG_TO_CONSOLE: ${AEM_LOG_TO_CONSOLE:-false}
+      ACM_LOG_TO_FILE: ${AEM_LOG_TO_FILE:-true}
+      ACM_LOG_LEVEL: ${AEM_LOG_LEVEL:-INFO}
+    depends_on:
+      kafka:
+        condition: service_healthy
     logging:
       options:
         max-size: "10m"

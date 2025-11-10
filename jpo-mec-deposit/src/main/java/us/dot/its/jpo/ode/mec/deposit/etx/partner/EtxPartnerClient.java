@@ -22,14 +22,12 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.AuthToken;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.AuthTokenRequest;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClearRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientConnectionPostRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientConnectionResponse;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientRegistrationGetResponse;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientRegistrationPostRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientRegistrationResponse;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DepositRequest;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
 
 /**
@@ -354,10 +352,9 @@ public class EtxPartnerClient {
    *
    * @param token Authentication token
    * @param asn1Hex ASN.1 hex string to deposit
-   * @param distributionType Type of distribution
    */
-  public void deposit(String token, String asn1Hex, DistributionType distributionType) {
-    DepositRequest request = new DepositRequest(asn1Hex, distributionType);
+  public void deposit(String token, String asn1Hex) {
+    DepositRequest request = new DepositRequest(asn1Hex);
 
     HttpHeaders headers = new HttpHeaders();
     headers.set("Authorization", "Bearer " + token);
@@ -366,9 +363,9 @@ public class EtxPartnerClient {
     HttpEntity<DepositRequest> entity = new HttpEntity<>(request, headers);
 
     try {
-      ResponseEntity<Void> response = restTemplate.exchange(
-          partnerApiProperties.getBaseUri() + "/prd/v2/configurations/deposit", HttpMethod.POST,
-          entity, Void.class);
+      ResponseEntity<Void> response =
+          restTemplate.exchange(partnerApiProperties.getBaseUri() + "/prd/v2/deposit/geofence",
+              HttpMethod.POST, entity, Void.class);
       HttpStatusCode responseCode = response.getStatusCode();
       if (responseCode.is2xxSuccessful()) {
         log.debug("Deposit response: " + responseCode);
@@ -377,33 +374,6 @@ public class EtxPartnerClient {
       }
     } catch (HttpClientErrorException.Unauthorized e) {
       log.error("Unauthorized deposit error: " + e.getStackTrace());
-    }
-  }
-
-  /**
-   * Clears TIM messages from the ETX system.
-   *
-   * @param token Authentication token
-   * @return true if clear operation was successful, false otherwise
-   */
-  public boolean clearTim(String token) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", "Bearer " + token);
-    headers.set("Content-Type", "application/json");
-
-    HttpEntity<ClearRequest> entity = new HttpEntity<>(new ClearRequest(true), headers);
-
-    ResponseEntity<Void> response =
-        restTemplate.exchange(partnerApiProperties.getBaseUri() + "/prd/v2/configurations/clear",
-            HttpMethod.POST, entity, Void.class);
-
-    HttpStatusCode responseCode = response.getStatusCode();
-    if (responseCode.is2xxSuccessful()) {
-      log.info("Cleared inactive TIMs deployed on the VZ Configuration API");
-      return true;
-    } else {
-      log.error("Failed to clear inactive TIMs deployed on the VZ Configuration API");
-      return false;
     }
   }
 }

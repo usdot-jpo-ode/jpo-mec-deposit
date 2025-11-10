@@ -15,7 +15,6 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxApiDepositor;
 import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 
@@ -28,7 +27,6 @@ import us.dot.its.jpo.ode.model.OdeMessageFrameData;
     value = {"mec-deposit.etx.depositors.map.api.enabled", "mec-deposit.etx.enabled"},
     havingValue = "true")
 public class EtxMapApiDepositor extends AbstractEtxApiDepositor {
-  private final DistributionType distributionType;
 
   /**
    * Constructs a new EtxMapApiDepositor.
@@ -45,7 +43,6 @@ public class EtxMapApiDepositor extends AbstractEtxApiDepositor {
       KafkaTemplate<String, String> kafkaTemplate) {
     super(mecDepositProperties, etxProperties, etxApi, tokenManager, meterRegistry, kafkaTemplate,
         EtxMessageType.MAP);
-    this.distributionType = etxProperties.getDepositors().getMap().getApi().getDistributionType();
   }
 
 
@@ -70,12 +67,12 @@ public class EtxMapApiDepositor extends AbstractEtxApiDepositor {
       String token = tokenManager.getValidToken();
 
       LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
-      partnerApi.deposit(token, asn1Hex, distributionType);
+      partnerApi.deposit(token, asn1Hex);
       log.debug("Depositing MAP message to ETX API");
 
-      handleProcessingSuccess(null, distributionType, odeReceivedAt, depositedAt, asn1Hex);
+      handleProcessingSuccess(null, odeReceivedAt, depositedAt, asn1Hex);
     } catch (Exception e) {
-      handleProcessingError(e, null, distributionType,
+      handleProcessingError(e, null,
           odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);
     }
   }
