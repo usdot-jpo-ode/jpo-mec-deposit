@@ -16,6 +16,4 @@ import lombok.NoArgsConstructor;
 public class DepositRequest {
   @JsonProperty("asn1_hex")
   private String asn1Hex;
-  @JsonProperty("distribution_type")
-  private DistributionType distributionType;
 }

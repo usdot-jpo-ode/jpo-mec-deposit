@@ -1,17 +1,13 @@
 package us.dot.its.jpo.ode.mec.deposit.services.etx.depositors.api;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -28,9 +24,7 @@ import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.model.OdeMessageFrameData;
-import us.dot.its.jpo.ode.model.OdeTimData;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -75,7 +69,6 @@ class EtxTimApiDepositorTest {
   private ObjectMapper objectMapper;
   private String sampleTimJson;
   private String sampleTimAsn1;
-  private DistributionType distributionType = DistributionType.TARGETED;
 
   @BeforeEach
   void setUp() throws IOException, URISyntaxException {
@@ -95,8 +88,7 @@ class EtxTimApiDepositorTest {
     when(tokenManager.getValidToken()).thenReturn("mock-token");
 
     // Configure properties using builders
-    ApiDepositorProperties apiDepositorProperties =
-        ApiDepositorProperties.builder().distributionType(distributionType).build();
+    ApiDepositorProperties apiDepositorProperties = ApiDepositorProperties.builder().build();
 
     DepositorProperties depositorProperties =
         DepositorProperties.builder().api(apiDepositorProperties).build();
@@ -137,11 +129,9 @@ class EtxTimApiDepositorTest {
     depositor.timDepositListener(message);
 
     // Verify
-    verify(etxApiClient).deposit(eq("mock-token"), eq(sampleTimAsn1), eq(distributionType));
-    verify(kafkaTemplate).send(anyString(),
-        argThat(metrics -> metrics.contains("\"success\":true")
-            && metrics.contains("\"messageType\":\"TIM\"")
-            && metrics.contains("\"distributionType\":\"" + distributionType + "\"")));
+    verify(etxApiClient).deposit(eq("mock-token"), eq(sampleTimAsn1));
+    verify(kafkaTemplate).send(anyString(), argThat(metrics -> metrics.contains("\"success\":true")
+        && metrics.contains("\"messageType\":\"TIM\"")));
   }
 
   @Test
@@ -152,8 +142,7 @@ class EtxTimApiDepositorTest {
     String message = createTimTestMessage(currentTimestamp);
 
     // Simulate API error
-    doThrow(new RuntimeException("API Error")).when(etxApiClient).deposit(anyString(), anyString(),
-        any(DistributionType.class));
+    doThrow(new RuntimeException("API Error")).when(etxApiClient).deposit(anyString(), anyString());
 
     // Execute
     depositor.timDepositListener(message);
@@ -162,7 +151,6 @@ class EtxTimApiDepositorTest {
     verify(kafkaTemplate).send(anyString(),
         argThat(metrics -> metrics.contains("\"success\":false")
             && metrics.contains("\"messageType\":\"TIM\"")
-            && metrics.contains("\"distributionType\":\"" + distributionType + "\"")
             && metrics.contains("\"errorMessage\":\"API Error\"")));
 
     // Verify error counter was incremented

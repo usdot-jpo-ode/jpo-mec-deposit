@@ -25,9 +25,6 @@ mec-deposit:
       network-type: "non-VZ"
       cache-registration: false
       certificate-path: "etx/"
-      clear-tim:
-        enabled: false
-        interval: 10
     mqtt:
       qos: 0
       max-inflight: 10
@@ -57,7 +54,6 @@ mec-deposit:
         api:
           enabled: false
           kafka-topic: "topic.OdeTimJsonTMCFiltered"
-          distribution-type: TARGETED
       map:
         mqtt:
           enabled: false
@@ -65,7 +61,6 @@ mec-deposit:
         api:
           enabled: false
           kafka-topic: "topic.OdeMapJson"
-          distribution-type: TARGETED
 # microservice actuator
 management:
   endpoints:

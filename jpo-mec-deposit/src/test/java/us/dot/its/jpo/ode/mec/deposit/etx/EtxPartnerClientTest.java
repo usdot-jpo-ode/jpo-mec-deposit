@@ -32,7 +32,6 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.AuthToken;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientConnectionResponse;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientRegistrationResponse;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.NetworkType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -90,7 +89,6 @@ class EtxPartnerClientTest {
   @Test
   void register_WithValidToken_ReturnsRegistrationResponse() {
     // Arrange
-    String token = "valid-token";
     ClientRegistrationResponse expectedResponse = new ClientRegistrationResponse();
     expectedResponse.setDeviceID("device123");
 
@@ -103,6 +101,8 @@ class EtxPartnerClientTest {
     when(mockRestTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class),
         eq(ClientRegistrationResponse.class))).thenReturn(responseEntity);
 
+    String token = "valid-token";
+
     // Act
     ClientRegistrationResponse result = etxApi.register(token);
 
@@ -114,8 +114,6 @@ class EtxPartnerClientTest {
   @Test
   void connection_WithValidTokenAndDeviceId_ReturnsConnectionResponse() {
     // Arrange
-    String token = "valid-token";
-    String deviceId = "device123";
     ClientConnectionResponse expectedResponse = new ClientConnectionResponse();
     expectedResponse.setMqttURL("mqtt://test.com");
 
@@ -123,6 +121,9 @@ class EtxPartnerClientTest {
 
     when(mockRestTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class),
         eq(ClientConnectionResponse.class))).thenReturn(responseEntity);
+
+    String token = "valid-token";
+    String deviceId = "device123";
 
     // Act
     ClientConnectionResponse result = etxApi.connection(token, deviceId);
@@ -137,7 +138,6 @@ class EtxPartnerClientTest {
     // Arrange
     String token = "valid-token";
     String asn1Hex = "testHex";
-    DistributionType distributionType = DistributionType.TARGETED;
 
     ResponseEntity<Void> responseEntity = ResponseEntity.ok().build();
 
@@ -145,23 +145,7 @@ class EtxPartnerClientTest {
         eq(Void.class))).thenReturn(responseEntity);
 
     // Act & Assert
-    assertDoesNotThrow(() -> etxApi.deposit(token, asn1Hex, distributionType));
-  }
-
-  @Test
-  void clearTim_WithValidToken_ReturnsTrue() {
-    // Arrange
-    String token = "valid-token";
-    ResponseEntity<Void> responseEntity = ResponseEntity.ok().build();
-
-    when(mockRestTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class),
-        eq(Void.class))).thenReturn(responseEntity);
-
-    // Act
-    boolean result = etxApi.clearTim(token);
-
-    // Assert
-    assertTrue(result);
+    assertDoesNotThrow(() -> etxApi.deposit(token, asn1Hex));
   }
 
   @Test

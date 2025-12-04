@@ -89,9 +89,9 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
         log.debug("Sending TIM message to MQTT topics: {}", topic);
       }
 
-      handleProcessingSuccess(topicSet, null, odeReceivedAt, depositedAt, asn1Hex);
+      handleProcessingSuccess(topicSet, odeReceivedAt, depositedAt, asn1Hex);
     } catch (Exception e) {
-      handleProcessingError(e, topicSet, null,
+      handleProcessingError(e, topicSet,
           odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);
     }
   }

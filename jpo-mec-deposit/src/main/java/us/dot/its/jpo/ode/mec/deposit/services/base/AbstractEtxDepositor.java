@@ -18,7 +18,6 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxDepositMetrics;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxDepositorType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 
 /**
@@ -113,8 +112,8 @@ public abstract class AbstractEtxDepositor {
 
   protected abstract EtxDepositorType getDepositorType();
 
-  protected void handleProcessingError(Exception e, Set<String> topics,
-      DistributionType distributionType, long odeReceivedAtMillis, String asn1Hex) {
+  protected void handleProcessingError(Exception e, Set<String> topics, long odeReceivedAtMillis,
+      String asn1Hex) {
 
     if (!mecDepositProperties.getMetrics().isEnabled()) {
       log.debug("Metrics are disabled, skipping error processing");
@@ -129,13 +128,13 @@ public abstract class AbstractEtxDepositor {
     // Publish failure metrics with the attempted topic if available
     publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
         .messageType(messageType).odeReceivedAt(odeReceivedAtMillis).mecDepositedAt(nowMillis)
-        .success(false).errorMessage(errorMessage).distributionType(distributionType)
-        .topics(topics != null ? topics : null).asn1Hex(asn1Hex).build());
+        .success(false).errorMessage(errorMessage).topics(topics != null ? topics : null)
+        .asn1Hex(asn1Hex).build());
     errorCounter.increment();
   }
 
-  protected void handleProcessingSuccess(Set<String> topics, DistributionType distributionType,
-      String odeReceivedAt, LocalDateTime depositedAt, String asn1Hex) {
+  protected void handleProcessingSuccess(Set<String> topics, String odeReceivedAt,
+      LocalDateTime depositedAt, String asn1Hex) {
 
     if (!mecDepositProperties.getMetrics().isEnabled()) {
       log.debug("Metrics are disabled, skipping success processing");
@@ -150,7 +149,7 @@ public abstract class AbstractEtxDepositor {
     publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
         .messageType(messageType).odeReceivedAt(odeReceivedAtMillis)
         .mecDepositedAt(depositedAtMillis).latencyMs(depositedAtMillis - odeReceivedAtMillis)
-        .success(true).distributionType(distributionType).topics(topics).asn1Hex(asn1Hex).build());
+        .success(true).topics(topics).asn1Hex(asn1Hex).build());
     recordLatency(odeReceivedAt, depositedAt);
   }
 }
