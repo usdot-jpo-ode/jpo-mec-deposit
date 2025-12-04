@@ -92,15 +92,19 @@ public class EtxPartnerClient {
             ClientRegistrationGetResponse registrationResponse =
                 getRegistration(token, configData.getDeviceID());
 
-            ClientConnectionResponse connectionResponse =
-                connection(token, registrationResponse.getDeviceID());
-            if (connectionResponse == null || connectionResponse.getMqttURL() == null) {
-              throw new RuntimeException("Connection failed - null or invalid response");
-            }
+            // If registration not found (404) or null, proceed with new registration
+            if (registrationResponse == null) {
+              log.info(
+                  "Existing registration not found or invalid, proceeding with new registration");
+              configData = null;
+            } else {
+              ClientConnectionResponse connectionResponse =
+                  connection(token, registrationResponse.getDeviceID());
+              if (connectionResponse == null || connectionResponse.getMqttURL() == null) {
+                throw new RuntimeException("Connection failed - null or invalid response");
+              }
 
-            configData.setEtxMqttUri(new URI(connectionResponse.getMqttURL()));
-
-            if (registrationResponse != null) {
+              configData.setEtxMqttUri(new URI(connectionResponse.getMqttURL()));
               EtxUtil.writeToFile(configPath, mapper.writeValueAsString(configData));
               return configData;
             }
@@ -280,6 +284,10 @@ public class EtxPartnerClient {
           HttpMethod.GET, entity, ClientRegistrationGetResponse.class);
 
       return response.getBody();
+    } catch (HttpClientErrorException.NotFound e) {
+      log.info("Registration not found (404) for deviceID: {}, will create new registration",
+          deviceID);
+      return null;
     } catch (HttpClientErrorException.Unauthorized e) {
       log.error("Unauthorized error: " + e.getStackTrace());
       return null;
