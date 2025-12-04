@@ -117,9 +117,9 @@ public class EtxGeohashMqttPublisher extends AbstractEtxMqttDepositor {
       log.debug("Sending GeoRoutedMsg to MQTT topic: {} (detected type: {}, geohash: {})", topic,
           detectedMessageType, geohash);
 
-      handleProcessingSuccess(topicSet, null, timestamp.toString(), depositedAt, asn1Hex);
+      handleProcessingSuccess(topicSet, timestamp.toString(), depositedAt, asn1Hex);
     } catch (Exception e) {
-      handleProcessingError(e, topicSet, null, depositedAt.toInstant(ZoneOffset.UTC).toEpochMilli(),
+      handleProcessingError(e, topicSet, depositedAt.toInstant(ZoneOffset.UTC).toEpochMilli(),
           asn1Hex);
     }
   }

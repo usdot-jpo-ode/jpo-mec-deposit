@@ -74,7 +74,9 @@ public class KafkaConfig {
   }
 
   /**
-   * Creates a consumer factory for ByteArray messages (for protobuf messages).
+   * Creates a consumer factory for ByteArray messages (for protobuf messages). Note:
+   * GROUP_ID_CONFIG is intentionally omitted to allow @KafkaListener groupId annotation to take
+   * precedence, enabling proper load balancing across replicas.
    *
    * @return ConsumerFactory for ByteArray messages
    */
@@ -82,7 +84,8 @@ public class KafkaConfig {
   public ConsumerFactory<String, byte[]> byteArrayConsumerFactory() {
     Map<String, Object> props = new HashMap<>();
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-    props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+    // GROUP_ID_CONFIG is not set here - it should be specified in @KafkaListener annotation
+    // to allow different listeners to use different group IDs and enable proper load balancing
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class);
     props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
