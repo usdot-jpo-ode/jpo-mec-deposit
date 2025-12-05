@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.bouncycastle.util.encoders.Hex;
 
@@ -50,10 +49,13 @@ public class EtxGeohashMqttPublisher extends AbstractEtxMqttDepositor {
   /**
    * Listens for GeoHashRoutedMsg protobuf messages from Kafka and publishes them as GeoRoutedMsg
    * protobuf messages to MQTT topics.
+   * 
+   * Note: @Async should NOT be used on @KafkaListener methods as Kafka listeners already run
+   * asynchronously and @Async can interfere with consumer group coordination, causing duplicate
+   * message processing across replicas.
    *
    * @param geoHashRoutedMsgBytes The GeoHashRoutedMsg protobuf message bytes from Kafka
    */
-  @Async("kafkaListenerExecutor")
   @KafkaListener(topics = "${mec-deposit.etx.depositors.geohash.mqtt.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-geohash-mqtt-publisher",
       concurrency = "${spring.kafka.listener.concurrency:1}",
