@@ -84,8 +84,8 @@ public class KafkaConfig {
   public ConsumerFactory<String, byte[]> byteArrayConsumerFactory() {
     Map<String, Object> props = new HashMap<>();
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-    // GROUP_ID_CONFIG is not set here - it should be specified in @KafkaListener annotation
-    // to allow different listeners to use different group IDs and enable proper load balancing
+    // GROUP_ID_CONFIG is intentionally omitted to allow @KafkaListener groupId annotation to take
+    // precedence, enabling proper load balancing across replicas
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class);
     props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
