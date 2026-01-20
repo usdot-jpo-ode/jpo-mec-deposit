@@ -21,6 +21,16 @@ This project is intended to serve as a consumer application to subscribe to a Ka
       - [Environment variables](#environment-variables)
         - [Purpose \& Usage](#purpose--usage)
         - [Note](#note)
+  - [Message Flow Diagrams](#message-flow-diagrams)
+    - [ODE MQTT Publisher Message Flow](#ode-mqtt-publisher-message-flow)
+    - [ODE API Publisher Message Flow](#ode-api-publisher-message-flow)
+    - [GeoHash MQTT Publisher Message Flow](#geohash-mqtt-publisher-message-flow)
+    - [V2X App API Integration](#v2x-app-api-integration)
+  - [GeoHash MQTT Publisher](#geohash-mqtt-publisher)
+    - [Overview](#overview)
+    - [Architecture](#architecture)
+    - [Message Processing Flow](#message-processing-flow)
+    - [Publisher Configuration](#publisher-configuration)
   - [Development Setup](#development-setup)
     - [Integrated Development Environment (IDE)](#integrated-development-environment-ide)
     - [Dev Container Environment](#dev-container-environment)
@@ -176,9 +186,212 @@ This has only been tested with Confluent Cloud but technically all SASL authenti
 
 <!--
 #############################################
+############# Message Flow Diagrams #############
+#############################################
+-->
+
+<a name="message-flow-diagrams"></a>
+
+## Message Flow Diagrams
+
+The following diagrams illustrate the different message flow patterns supported by jpo-mec-deposit for publishing V2X messages to ETX MEC platforms.
+
+### ODE MQTT Publisher Message Flow
+
+The ODE MQTT Publisher flow handles direct publishing of ODE processed messages (BSM, TIM, SPaT, SDSM, etc.) to the Verizon MEC MQTT Server.
+
+![ODE MQTT Publisher Message Flow](docs/ode-mqtt-publisher-diagram.png)
+
+**Key Steps:**
+
+1. **Get Keycloak Token**: The jpo-mec-deposit consumer requests a Keycloak token from the Partner Backend API for authentication.
+2. **Request Certificate + MQTT URL**: The consumer requests the necessary certificate and MQTT URL from the Partner Backend API.
+3. **ODE Processed Messages**: JPO ODE sends processed messages (BSM, TIM, SPaT, SDSM, etc.) to the jpo-mec-deposit protobuf consumer.
+4. **MQTT Regional Publish**: The consumer publishes messages directly to the Verizon MEC MQTT Server using MQTT.
+
+The Partner Backend API handles authentication with Keycloak, retrieves certificates and MQTT URLs from the Verizon ETX Registration API, and manages logging and TIM configuration in PostgreSQL.
+
+### ODE API Publisher Message Flow
+
+The ODE API Publisher flow handles publishing messages via the ETX Configuration API, allowing for geofence-based message deployment.
+
+![ODE API Publisher Message Flow](docs/ode-api-publisher-diagram.png)
+
+**Key Steps:**
+
+1. **Get Keycloak Token**: The jpo-mec-deposit consumer requests a Keycloak token from the Partner Backend API.
+2. **Request Certificate + MQTT URL**: The consumer requests certificate and MQTT URL from the Partner Backend API.
+3. **ODE Processed Messages**: JPO ODE sends processed messages (TIM & MAP) to the jpo-mec-deposit protobuf consumer.
+4. **API Deployed Message Payload**: The Partner Backend API deploys the message payload to the Verizon MEC MQTT Server.
+5. **Deploy Configuration with Geofence**: The Partner Backend API deploys a configuration with geofence for the message payload to the Verizon ETX Configuration API.
+
+This flow enables region-based message publishing through the Configuration API, which then publishes V2X messages for the defined region to the MQTT Server.
+
+### GeoHash MQTT Publisher Message Flow
+
+The GeoHash MQTT Publisher flow handles publishing V2X messages using geohash-based routing through Kafka and MQTT.
+
+![GeoHash MQTT Publisher Message Flow](docs/geohash-mqtt-publisher-diagram.png)
+
+**Key Steps:**
+
+1. **Get Keycloak Token**: The jpo-mec-deposit consumer requests a Keycloak token from the Partner Backend API.
+2. **Request Certificate + MQTT URL**: The consumer requests certificate and MQTT URL from the Partner Backend API.
+3. **Publishing V2X Messages**: V2X messages are published in `geoHashRoutedMsg` protobuf definitions to a Config Kafka publisher.
+4. **MQTT Publish (TIM)**: The consumer publishes messages to the Verizon MEC MQTT Server using MQTT.
+
+The Partner Backend API manages authentication, certificate retrieval, and interacts with PostgreSQL for logging, TIM configuration, and user database operations. PostgreSQL publishes TIM deployment configurations to the Config Kafka publisher, which feeds into the geohash routing system.
+
+### V2X App API Integration
+
+The V2X App API serves as the central application interface for authentication, registration, and data management in the V2X ecosystem. jpo-mec-deposit integrates with the V2X App API to obtain authentication tokens, ETX certificates, and MQTT connection details.
+
+![V2X App API Architecture](docs/v2x-api-diagram.png)
+
+**Key Components:**
+
+- **V2x App API**: Central hub that provides:
+  - Authentication services via Keycloak integration
+  - ETX certificate and MQTT URL retrieval from Verizon ETX Registration API
+  - TIM mappings and configuration management
+  - Logging and configuration storage in PostgreSQL
+
+- **Integration Points with jpo-mec-deposit**:
+  - **Get Keycloak Token**: jpo-mec-deposit requests authentication tokens from the V2X App API
+  - **Request/Validate ETX Certificate + MQTT URL**: jpo-mec-deposit obtains necessary credentials and endpoint information for connecting to the Verizon MEC MQTT Server
+
+- **Supporting Services**:
+  - **Keycloak**: Identity and access management, authenticates requests from V2X App API
+  - **PostgreSQL**: Stores logging data, TIM configuration, and serves as Keycloak's backing user database
+  - **Verizon ETX Registration API**: Provides certificate and MQTT URL retrieval
+  - **TIM Kafka Publisher**: Publishes geohash-routed messages consumed by jpo-mec-deposit
+
+**Message Flow:**
+
+The V2X App API orchestrates the authentication and registration flow:
+
+1. jpo-mec-deposit requests a Keycloak token from the V2X App API
+2. V2X App API authenticates with Keycloak (which uses PostgreSQL for user data)
+3. jpo-mec-deposit requests ETX certificate and MQTT URL from the V2X App API
+4. V2X App API retrieves credentials from the Verizon ETX Registration API
+5. jpo-mec-deposit uses the obtained credentials to publish messages to the Verizon MEC MQTT Server
+
+For more detailed information about the V2X App API, including setup, configuration, and API documentation, please refer to the [V2X App API GitHub repository](https://github.com/usdot-fhwa-stol/v2x-app-api).
+
+[Back to top](#table-of-contents)
+
+<!--
+#############################################
+############# GeoHash MQTT Publisher #############
+#############################################
+-->
+
+<a name="geohash-mqtt-publisher"></a>
+
+## GeoHash MQTT Publisher
+
+### Overview
+
+The GeoHash MQTT Publisher (`EtxGeohashMqttPublisher`) is a specialized component that consumes geohash-routed protobuf messages from Kafka and publishes them as geo-routed messages to MQTT topics. This publisher enables efficient geographic routing of V2X messages using geohash-based topic organization.
+
+### Architecture
+
+The GeoHash MQTT Publisher operates as a Kafka consumer that:
+
+- **Consumes**: `GeoHashRoutedMsg` protobuf messages from a configured Kafka topic
+- **Transforms**: Converts `GeoHashRoutedMsg` to `GeoRoutedMsg` protobuf format
+- **Publishes**: Sends messages to MQTT topics organized by geohash and message type
+
+**Key Components:**
+
+- **GeoHashRoutedMsg**: Input protobuf message containing:
+  - Original message bytes (ASN.1 encoded V2X message)
+  - Timestamp
+  - Geohash string (base32 encoded geographic identifier)
+
+- **GeoRoutedMsg**: Output protobuf message containing:
+  - Original message bytes
+  - Timestamp
+  - Position (latitude/longitude derived from geohash)
+
+### Message Processing Flow
+
+1. **Kafka Consumption**: The publisher listens to the configured Kafka topic (default: `topic.GeoHashRoutedMsg`) using a byte array consumer.
+
+2. **Message Parsing**:
+   - Parses the incoming `GeoHashRoutedMsg` protobuf message
+   - Extracts the original message bytes and geohash string
+
+3. **Geohash Processing**:
+   - Converts the geohash string to a `GeoHash` object
+   - Extracts latitude and longitude coordinates from the geohash originating point
+
+4. **Message Type Detection**:
+   - Analyzes the original message bytes to detect the V2X message type (BSM, TIM, SPaT, MAP, SDSM, etc.)
+   - Defaults to TIM if detection fails
+
+5. **Topic Generation**:
+   - Builds MQTT topic using the geohash, detected message type, and configuration properties
+   - Topic structure includes: namespace (REGIONAL or REGIONAL_STATIC), geohash path, message type, vendor, client type/subtype, and message format
+   - Uses geohash directly to avoid redundant coordinate conversions
+
+6. **Protobuf Construction**:
+   - Builds a `GeoRoutedMsg` protobuf message containing:
+     - Original message bytes
+     - Timestamp (UTC)
+     - Position (latitude/longitude from geohash)
+
+7. **MQTT Publishing**:
+   - Publishes the `GeoRoutedMsg` as ASN.1 bytes to the generated MQTT topic
+   - Uses configured QoS and retain settings
+
+8. **Metrics & Logging**:
+   - Records processing success/failure metrics
+   - Logs debug information including topic, message type, and geohash
+
+### Publisher Configuration
+
+The GeoHash MQTT Publisher is enabled by setting the following environment variables:
+
+```bash
+# Enable ETX functionality
+ETX_ENABLED="True"
+
+# Enable GeoHash MQTT Publisher
+ETX_DEPOSITORS_GEOHASH_MQTT_ENABLED="True"
+
+# Kafka topic for GeoHashRoutedMsg messages
+ETX_DEPOSITORS_GEOHASH_MQTT_KAFKA_TOPIC="topic.GeoHashRoutedMsg"
+```
+
+**Additional Configuration Properties:**
+
+- `mec-deposit.etx.mqtt.precision`: Geohash precision (default: 7, range: 6-8)
+- `mec-deposit.etx.mqtt.vendor`: Vendor identifier for MQTT topics
+- `mec-deposit.etx.mqtt.message-format`: Message format (e.g., "j2735")
+- `mec-deposit.etx.client-type`: Client type (e.g., "Software")
+- `mec-deposit.etx.client-sub-type`: Client subtype (e.g., "Application")
+
+**Conditional Activation:**
+
+The publisher is only activated when both of the following conditions are met:
+
+- `mec-deposit.etx.depositors.geohash.mqtt.enabled=true`
+- `mec-deposit.etx.enabled=true`
+
+**Kafka Consumer Group:**
+
+The publisher uses a dedicated consumer group: `${spring.kafka.consumer.group-id}-geohash-mqtt-publisher`
+
+This ensures that geohash messages are processed independently from other message types and allows for separate scaling and monitoring.
+
+[Back to top](#table-of-contents)
+
+<!--
+#############################################
 ############# Development Setup #############
 #############################################
- -->
+-->
 
 <a name="development-setup"></a>
 
