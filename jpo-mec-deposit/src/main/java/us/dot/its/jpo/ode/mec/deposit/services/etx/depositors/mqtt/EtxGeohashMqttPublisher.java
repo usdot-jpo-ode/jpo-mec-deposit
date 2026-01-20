@@ -50,10 +50,6 @@ public class EtxGeohashMqttPublisher extends AbstractEtxMqttDepositor {
    * Listens for GeoHashRoutedMsg protobuf messages from Kafka and publishes them as GeoRoutedMsg
    * protobuf messages to MQTT topics.
    * 
-   * Note: @Async should NOT be used on @KafkaListener methods as Kafka listeners already run
-   * asynchronously and @Async can interfere with consumer group coordination, causing duplicate
-   * message processing across replicas.
-   *
    * @param geoHashRoutedMsgBytes The GeoHashRoutedMsg protobuf message bytes from Kafka
    */
   @KafkaListener(topics = "${mec-deposit.etx.depositors.geohash.mqtt.kafka-topic}",
@@ -91,14 +87,6 @@ public class EtxGeohashMqttPublisher extends AbstractEtxMqttDepositor {
       GeoRoutedMsg geoRoutedMsg = EtxMqttProtobufBuilder.buildGeoRoutedMsg(originalMessageBytes,
           timestamp, latitude, longitude);
       byte[] geoRoutedMsgBytes = geoRoutedMsg.toByteArray();
-
-      // If the payload is empty and retained is enabled, publish an empty message to clear retained
-      // state
-      // if (originalMessageBytes == null || originalMessageBytes.length == 0 || asn1Hex.isBlank())
-      // {
-      // // Use this.messageType when detection is not possible due to empty payload
-      // geoRoutedMsgBytes = new byte[0];
-      // }
 
       // Extract message type from the original message bytes
       EtxMessageType detectedMessageType =

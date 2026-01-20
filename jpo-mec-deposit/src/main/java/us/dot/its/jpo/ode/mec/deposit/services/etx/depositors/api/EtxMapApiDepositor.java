@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
@@ -51,7 +50,6 @@ public class EtxMapApiDepositor extends AbstractEtxApiDepositor {
    *
    * @param message The MAP message to deposit
    */
-  @Async("kafkaListenerExecutor")
   @KafkaListener(topics = "${mec-deposit.etx.depositors.map.api.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-map-api-depositor",
       concurrency = "${spring.kafka.listener.concurrency:1}",

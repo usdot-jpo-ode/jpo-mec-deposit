@@ -68,6 +68,34 @@ public class EtxMqttConfig {
   }
 
   /**
+   * Refreshes the ETX registration by re-registering the client and updating the configuration.
+   * This method can be called when MQTT publishes start failing to recover from invalid
+   * registrations or connection issues.
+   *
+   * @return true if refresh was successful, false otherwise
+   */
+  public synchronized boolean refreshRegistration() {
+    try {
+      log.info("Refreshing ETX registration...");
+      String token = tokenManager.getValidToken();
+      RegistrationConfiguration newConfig = etxApi.registerClientPartner(token);
+      if (newConfig == null || newConfig.getEtxMqttUri() == null) {
+        log.error("Failed to refresh ETX registration - invalid configuration returned");
+        return false;
+      }
+      this.etxConfig = newConfig;
+      log.info("ETX registration refreshed successfully. New MQTT URI: {}",
+          newConfig.getEtxMqttUri());
+      // Note: The MQTT client manager will automatically reconnect with the new configuration
+      // since it reads from the config file and has automaticReconnect enabled
+      return true;
+    } catch (Exception e) {
+      log.error("Failed to refresh ETX registration", e);
+      return false;
+    }
+  }
+
+  /**
    * Creates and configures the MQTT client manager with SSL and connection settings.
    *
    * @return Configured MQTT client manager

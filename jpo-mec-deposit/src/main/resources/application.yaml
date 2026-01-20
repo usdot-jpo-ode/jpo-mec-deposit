@@ -35,6 +35,7 @@ mec-deposit:
       vendor: ${ETX_MQTT_VENDOR}
       precision: 7
       message-format: ${ETX_MQTT_MESSAGE_FORMAT:j2735}
+      registration-refresh-failure-threshold: ${ETX_REGISTRATION_REFRESH_FAILURE_THRESHOLD:10}
       subscriptions:
         - "vzimp/1/ClientInfo"
     depositors:

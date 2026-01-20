@@ -10,7 +10,6 @@ import org.bouncycastle.util.encoders.Hex;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
@@ -24,7 +23,6 @@ import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttProtobufBuilder;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
 import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerInformation;
-import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrameList;
 
 /**
  * Depositor class for handling TIM messages via MQTT integration with ETX.
@@ -48,7 +46,6 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
    *
    * @param message The TIM message from Kafka in JSON format
    */
-  @Async("kafkaListenerExecutor")
   @KafkaListener(topics = "${mec-deposit.etx.depositors.tim.mqtt.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-tim-mqtt-depositor",
       concurrency = "${spring.kafka.listener.concurrency:1}",
