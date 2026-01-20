@@ -49,7 +49,7 @@ public class EtxGeohashMqttPublisher extends AbstractEtxMqttDepositor {
   /**
    * Listens for GeoHashRoutedMsg protobuf messages from Kafka and publishes them as GeoRoutedMsg
    * protobuf messages to MQTT topics.
-   * 
+   *
    * @param geoHashRoutedMsgBytes The GeoHashRoutedMsg protobuf message bytes from Kafka
    */
   @KafkaListener(topics = "${mec-deposit.etx.depositors.geohash.mqtt.kafka-topic}",

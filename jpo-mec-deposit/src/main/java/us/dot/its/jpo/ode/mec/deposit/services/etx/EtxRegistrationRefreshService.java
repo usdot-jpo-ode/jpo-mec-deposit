@@ -22,8 +22,7 @@ public class EtxRegistrationRefreshService {
   private final int failureThreshold;
   private final EtxMqttConfig etxMqttConfig;
   private volatile long lastRefreshAttempt = 0;
-  private static final long MIN_REFRESH_INTERVAL_MS = 60000; // 1 minute minimum between refresh
-                                                             // attempts
+  private static final long MIN_REFRESH_INTERVAL_MS = 60000;
 
   /**
    * Constructs the registration refresh service.
