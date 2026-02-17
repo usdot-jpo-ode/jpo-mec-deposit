@@ -1,10 +1,10 @@
-# jpo-mec-deposit (Message Deposit Service)
+# jpo-mec-deposit
 
-This project is intended to serve as a consumer application to subscribe to a Kafka topic of streaming JSON from the [ODE](https://github.com/usdot-jpo-ode/jpo-ode) and stream this data to MECs depending on the provided configuration. This runs alongside the ODE and when deployed using Docker Compose, runs in a Docker container.
+This project is intended to serve as a consumer application to subscribe to a Kafka topic of streaming JSON from the [ODE](https://github.com/usdot-jpo-ode/jpo-ode) and stream this data to MQTT based Mobile Edge Compute (MEC) datacenters depending on the provided configuration to allow for network based V2X integrations. This runs alongside the ODE and when deployed using Docker Compose, runs in a Docker container.
 
 ## Table of Contents
 
-- [jpo-mec-deposit (Message Deposit Service)](#jpo-mec-deposit-message-deposit-service)
+- [jpo-mec-deposit](#jpo-mec-deposit)
   - [Table of Contents](#table-of-contents)
   - [Release Notes](#release-notes)
   - [Usage](#usage)
