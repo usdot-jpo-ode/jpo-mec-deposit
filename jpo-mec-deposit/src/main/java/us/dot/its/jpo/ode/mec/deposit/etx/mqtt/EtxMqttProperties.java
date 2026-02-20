@@ -22,4 +22,5 @@ public class EtxMqttProperties {
   private int precision;
   private EtxMqttMessageFormat messageFormat;
   private String[] subscriptions;
+  private int registrationRefreshFailureThreshold;
 }

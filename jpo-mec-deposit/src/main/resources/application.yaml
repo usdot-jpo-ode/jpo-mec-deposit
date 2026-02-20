@@ -25,9 +25,6 @@ mec-deposit:
       network-type: ${ETX_NETWORK_TYPE}
       cache-registration: ${ETX_CACHE_REGISTRATION}
       certificate-path: ${ETX_CERT_PATH}
-      clear-tim:
-        enabled: ${ETX_PARTNER_API_CLEAR_TIM_ENABLED:false}
-        interval: ${ETX_PARTNER_API_CLEAR_TIM_INTERVAL:10}
     mqtt:
       qos: 0
       max-inflight: 10
@@ -38,6 +35,7 @@ mec-deposit:
       vendor: ${ETX_MQTT_VENDOR}
       precision: 7
       message-format: ${ETX_MQTT_MESSAGE_FORMAT:j2735}
+      registration-refresh-failure-threshold: ${ETX_REGISTRATION_REFRESH_FAILURE_THRESHOLD:10}
       subscriptions:
         - "vzimp/1/ClientInfo"
     depositors:
@@ -61,7 +59,6 @@ mec-deposit:
         api:
           enabled: ${ETX_DEPOSITORS_TIM_API_ENABLED:true}
           kafka-topic: ${ETX_DEPOSITORS_TIM_API_KAFKA_TOPIC:topic.OdeTimJsonTMCFiltered}
-          distribution-type: ${ETX_DEPOSITORS_TIM_API_DISTRIBUTION_TYPE:TARGETED}
       map:
         mqtt:
           enabled: ${ETX_DEPOSITORS_MAP_MQTT_ENABLED:true}
@@ -69,11 +66,14 @@ mec-deposit:
         api:
           enabled: ${ETX_DEPOSITORS_MAP_API_ENABLED:true}
           kafka-topic: ${ETX_DEPOSITORS_MAP_API_KAFKA_TOPIC:topic.OdeMapJson}
-          distribution-type: ${ETX_DEPOSITORS_MAP_API_DISTRIBUTION_TYPE:TARGETED}
       sdsm:
         mqtt:
           enabled: ${ETX_DEPOSITORS_SDSM_MQTT_ENABLED:true}
           kafka-topic: ${ETX_DEPOSITORS_SDSM_MQTT_KAFKA_TOPIC:topic.OdeSdsmJson}
+      geohash:
+        mqtt:
+          enabled: ${ETX_DEPOSITORS_GEOHASH_MQTT_ENABLED:false}
+          kafka-topic: ${ETX_DEPOSITORS_GEOHASH_MQTT_KAFKA_TOPIC:topic.GeoHashRoutedMsg}
 
 # microservice actuator
 management:

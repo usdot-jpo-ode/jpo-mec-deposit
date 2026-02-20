@@ -25,7 +25,6 @@ import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 
 import io.micrometer.core.instrument.Counter;
@@ -71,7 +70,6 @@ class EtxMapApiDepositorTest {
   private EtxMapApiDepositor depositor;
   private ObjectMapper objectMapper;
   private String sampleMapJson;
-  private DistributionType distributionType = DistributionType.TARGETED;
 
   @BeforeEach
   void setUp() throws IOException, URISyntaxException {
@@ -89,8 +87,7 @@ class EtxMapApiDepositorTest {
     when(tokenManager.getValidToken()).thenReturn("mock-token");
 
     // Configure properties using builders
-    ApiDepositorProperties apiDepositorProperties =
-        ApiDepositorProperties.builder().distributionType(distributionType).build();
+    ApiDepositorProperties apiDepositorProperties = ApiDepositorProperties.builder().build();
 
     DepositorProperties depositorProperties =
         DepositorProperties.builder().api(apiDepositorProperties).build();
@@ -122,12 +119,9 @@ class EtxMapApiDepositorTest {
     depositor.mapDepositListener(objectMapper.writeValueAsString(mapData));
 
     // Verify
-    verify(etxApiClient).deposit(eq("mock-token"), eq(mapData.getMetadata().getAsn1()),
-        eq(distributionType));
-    verify(kafkaTemplate).send(anyString(),
-        argThat(metrics -> metrics.contains("\"success\":true")
-            && metrics.contains("\"messageType\":\"MAP\"")
-            && metrics.contains("\"distributionType\":\"" + distributionType + "\"")));
+    verify(etxApiClient).deposit(eq("mock-token"), eq(mapData.getMetadata().getAsn1()));
+    verify(kafkaTemplate).send(anyString(), argThat(metrics -> metrics.contains("\"success\":true")
+        && metrics.contains("\"messageType\":\"MAP\"")));
   }
 
   @Test
@@ -139,8 +133,7 @@ class EtxMapApiDepositorTest {
     mapData.getMetadata().setOdeReceivedAt(currentTimestamp);
 
     // Simulate API error
-    doThrow(new RuntimeException("API Error")).when(etxApiClient).deposit(anyString(), anyString(),
-        any(DistributionType.class));
+    doThrow(new RuntimeException("API Error")).when(etxApiClient).deposit(anyString(), anyString());
 
     // Execute
     depositor.mapDepositListener(objectMapper.writeValueAsString(mapData));
@@ -149,7 +142,6 @@ class EtxMapApiDepositorTest {
     verify(kafkaTemplate).send(anyString(),
         argThat(metrics -> metrics.contains("\"success\":false")
             && metrics.contains("\"messageType\":\"MAP\"")
-            && metrics.contains("\"distributionType\":\"" + distributionType + "\"")
             && metrics.contains("\"errorMessage\":\"API Error\"")));
 
     // Verify error counter was incremented

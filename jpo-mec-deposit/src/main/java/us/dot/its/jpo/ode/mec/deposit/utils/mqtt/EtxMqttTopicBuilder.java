@@ -8,6 +8,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttNamespace;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttRegionalTopic;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.mec.deposit.utils.PositionConversionUtil;
@@ -187,5 +188,44 @@ public class EtxMqttTopicBuilder {
       topicSet.add(topic);
     }
     return topicSet;
+  }
+
+  /**
+   * Builds MQTT topic directly from geohash string, avoiding redundant coordinate conversion. This
+   * is more performant than converting geohash to lat/lon and back to geohash.
+   *
+   * @param geohash The geohash string
+   * @param messageType The detected message type
+   * @param precision The geohash precision to use
+   * @param mqttVendorId The vendor identifier for the MQTT message
+   * @param messageFormat The format of the message content
+   * @param clientType The type of client sending the message
+   * @param clientSubType The subtype of the client sending the message
+   * @return The MQTT topic string
+   */
+  public static String buildTopicFromGeohash(EtxMqttNamespace namespace, String geohash,
+      EtxMessageType messageType, int precision, String mqttVendorId,
+      EtxMqttMessageFormat messageFormat, EtxClientType clientType,
+      EtxClientSubType clientSubType) {
+    try {
+      if (geohash != null && !geohash.isEmpty()) {
+        // Use geohash directly for topic formatting
+        String formattedGeohash = getPubTopicGeoHash(geohash, precision);
+
+        // Build topic components
+        return String.format("vzimp/1/%s/%s/%s/%s/%s/%s/%s", namespace.getValue(), formattedGeohash,
+            clientType, clientSubType, mqttVendorId, messageFormat.getValue(),
+            messageType.getValue());
+      } else {
+        // Fallback to default topic when no geohash available
+        return String.format("vzimp/1/%s/-/-/-/%s/%s/%s/%s/%s", namespace.getValue(), mqttVendorId,
+            messageFormat.getValue(), messageType.getValue(), clientType, clientSubType);
+      }
+    } catch (Exception e) {
+      log.warn("Could not build topic from geohash: {}, using default topic", geohash, e);
+      // Fallback to default topic
+      return String.format("vzimp/1/%s/-/-/-/%s/%s/%s/%s/%s", namespace.getValue(), mqttVendorId,
+          messageFormat.getValue(), messageType.getValue(), clientType, clientSubType);
+    }
   }
 }

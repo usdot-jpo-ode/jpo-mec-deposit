@@ -7,7 +7,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * Enumeration representing the different namespaces for ETX (Edge Traffic Exchange) MQTT messages.
  */
 public enum EtxMqttNamespace {
-  GEO_RELEVANCE("GeoRelevance"), REGIONAL("Regional"), PRIVATE("Private");
+  GEO_RELEVANCE("GeoRelevance"), REGIONAL("Regional"), REGIONAL_STATIC("RegionalStatic"), PRIVATE(
+      "Private");
 
   private final String value;
 

@@ -10,7 +10,6 @@ import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerApiProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DistributionType;
 import java.util.List;
 
 /**
@@ -95,6 +94,5 @@ public class EtxProperties {
   public static class ApiDepositorProperties {
     private Boolean enabled;
     private String kafkaTopic;
-    private DistributionType distributionType;
   }
 }

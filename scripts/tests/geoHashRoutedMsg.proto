@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+package geohashroutedmsg;
+ 
+
+message GeoHashRoutedMsg {  
+  bytes msgBytes = 1;
+  google.protobuf.Timestamp time = 2;
+  string geohash = 3;
+}

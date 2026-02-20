@@ -10,7 +10,6 @@ import org.bouncycastle.util.encoders.Hex;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
@@ -48,7 +47,6 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
    *
    * @param message The BSM message from Kafka in JSON format
    */
-  @Async("kafkaListenerExecutor")
   @KafkaListener(topics = "${mec-deposit.etx.depositors.bsm.mqtt.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-bsm-mqtt-depositor",
       concurrency = "${spring.kafka.listener.concurrency:1}",
@@ -91,9 +89,9 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
       mqttService.publishAsn1Bytes(topic, messageBytes, retain);
       log.debug("Successfully sent BSM message to MQTT topic: {}", topic);
 
-      handleProcessingSuccess(Set.of(topic), null, odeReceivedAt, depositedAt, asn1Hex);
+      handleProcessingSuccess(Set.of(topic), odeReceivedAt, depositedAt, asn1Hex);
     } catch (Exception e) {
-      handleProcessingError(e, Set.of(topic), null,
+      handleProcessingError(e, Set.of(topic),
           odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);
     }
   }

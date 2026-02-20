@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option java_package = "us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt";
+option java_outer_classname = "GeoHashRoutedMsg_PB2";
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+package geohashroutedmsg;
+ 
+
+message GeoHashRoutedMsg {  
+  bytes msgBytes = 1;
+  google.protobuf.Timestamp time = 2;
+  string geohash = 3;
+}
