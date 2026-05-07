@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.BrokerPublishPayload;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttBrokerTarget;
 import us.dot.its.jpo.ode.mec.deposit.services.mqtt.BrokerPublisher;
+import us.dot.its.jpo.ode.mec.deposit.services.mqtt.SignedMessageValidationService;
 
 /**
  * NMI target publisher.
@@ -11,9 +12,12 @@ import us.dot.its.jpo.ode.mec.deposit.services.mqtt.BrokerPublisher;
 @Component
 public class NmiBrokerPublisher implements BrokerPublisher {
   private final NmiMqttPublishService nmiMqttPublishService;
+  private final SignedMessageValidationService signedMessageValidationService;
 
-  public NmiBrokerPublisher(NmiMqttPublishService nmiMqttPublishService) {
+  public NmiBrokerPublisher(NmiMqttPublishService nmiMqttPublishService,
+      SignedMessageValidationService signedMessageValidationService) {
     this.nmiMqttPublishService = nmiMqttPublishService;
+    this.signedMessageValidationService = signedMessageValidationService;
   }
 
   @Override
@@ -23,6 +27,7 @@ public class NmiBrokerPublisher implements BrokerPublisher {
 
   @Override
   public void publish(BrokerPublishPayload payload, boolean retain) {
+    signedMessageValidationService.validateIfSigned(payload.getPayload(), payload.getTopics(), "NMI");
     for (String topic : payload.getTopics()) {
       nmiMqttPublishService.publishAsn1Bytes(topic, payload.getPayload(), retain);
     }

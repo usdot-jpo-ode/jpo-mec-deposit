@@ -10,6 +10,9 @@ mec-deposit:
   metrics:
     enabled: ${METRICS_ENABLED:true}
     kafka-topic: ${METRICS_KAFKA_TOPIC:topic.MecDepositMetrics}
+  mqtt-signature-validation:
+    enabled: ${MQTT_SIGNATURE_VALIDATION_ENABLED:true}
+    api-url: ${MQTT_SIGNATURE_VALIDATION_API_URL:http://127.0.0.1:8088/validate}
   etx:
     enabled: ${ETX_ENABLED:false}
     client-type: ${ETX_CLIENT_TYPE}

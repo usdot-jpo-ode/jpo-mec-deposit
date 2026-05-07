@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.BrokerPublishPayload;
@@ -22,6 +23,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttFanoutPublishResult;
  * Coordinates multi-broker MQTT fanout publishing with per-target isolation.
  */
 @Service
+@Slf4j
 public class MultiBrokerPublishService {
   private final Map<MqttBrokerTarget, BrokerPublisher> publishers = new EnumMap<>(MqttBrokerTarget.class);
   private final Set<MqttBrokerTarget> activeTargets;
@@ -42,7 +44,7 @@ public class MultiBrokerPublishService {
     } else {
       EtxMqttBrokerType brokerType =
           mqttProperties.getBrokerType() != null ? mqttProperties.getBrokerType() : EtxMqttBrokerType.ETX;
-      configured = Set.of(switch (brokerType) {
+      configured = Set.of( switch (brokerType) {
         case NMI -> MqttBrokerTarget.NMI;
         case AV -> MqttBrokerTarget.AV;
         default -> MqttBrokerTarget.ETX;
@@ -82,6 +84,8 @@ public class MultiBrokerPublishService {
         publishedTopics.addAll(payload.getTopics());
       } catch (Exception e) {
         counter("failure", target).increment();
+        log.error("MQTT publish failed for broker target {} with {} topics: {}", target,
+            payload.getTopics().size(), e.getMessage(), e);
         if (activeTargets.size() == 1) {
           throw e;
         }
