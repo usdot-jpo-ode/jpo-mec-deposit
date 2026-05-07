@@ -16,6 +16,8 @@ import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrameList;
 import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrame;
 import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.GeographicalPath;
 import us.dot.its.jpo.asn.j2735.r2024.Common.Position3D;
+import us.dot.its.jpo.asn.j2735.r2024.MapData.IntersectionGeometry;
+import us.dot.its.jpo.asn.j2735.r2024.MapData.MapData;
 import us.dot.its.jpo.asn.j2735.r2024.SPAT.IntersectionState;
 import us.dot.its.jpo.asn.j2735.r2024.SPAT.SPAT;
 
@@ -191,6 +193,29 @@ public class EtxMqttTopicBuilder {
   }
 
   /**
+   * Generates a set of MQTT topics for MAP messages using intersection reference points.
+   */
+  public static Set<String> getMapTopicList(MapData mapMsg, String mqttVendorId, int precision,
+      EtxMqttMessageFormat messageFormat, EtxClientType clientType, EtxClientSubType clientSubType) {
+    Set<String> topicSet = new HashSet<>();
+    if (mapMsg == null || mapMsg.getIntersections() == null) {
+      return topicSet;
+    }
+    for (IntersectionGeometry intersection : mapMsg.getIntersections()) {
+      Position3D refPoint = intersection.getRefPoint();
+      if (refPoint == null) {
+        continue;
+      }
+      double latitude = PositionConversionUtil.convertRefPointToLat(refPoint);
+      double longitude = PositionConversionUtil.convertRefPointToLon(refPoint);
+      String topic = buildRegionalTopic(EtxMessageType.MAP, latitude, longitude, precision,
+          mqttVendorId, messageFormat, clientType, clientSubType);
+      topicSet.add(topic);
+    }
+    return topicSet;
+  }
+
+  /**
    * Builds MQTT topic directly from geohash string, avoiding redundant coordinate conversion. This
    * is more performant than converting geohash to lat/lon and back to geohash.
    *
@@ -228,4 +253,5 @@ public class EtxMqttTopicBuilder {
           messageFormat.getValue(), messageType.getValue(), clientType, clientSubType);
     }
   }
+
 }

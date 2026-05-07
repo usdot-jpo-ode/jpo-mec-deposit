@@ -1,6 +1,7 @@
 package us.dot.its.jpo.ode.mec.deposit.services.etx.depositors.mqtt;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.Counter;
@@ -35,7 +37,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties.MecDepositMetrics;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.EtxDepositors;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
@@ -90,9 +91,9 @@ class EtxSdsmMqttDepositorTest {
 
     // Configure stale message threshold
     int staleMessageThreshold = 5000; // 5 seconds
-    EtxDepositors depositors = new EtxDepositors();
-    depositors.setStaleMessageThreshold(staleMessageThreshold);
-    when(etxProperties.getDepositors()).thenReturn(depositors);
+    when(etxProperties.resolveStaleMessageThresholdMs()).thenReturn(staleMessageThreshold);
+    when(etxProperties.isMqttDepositorEnabled(any(), anyString())).thenReturn(true);
+    when(etxProperties.nmiMqttTopicPrecision()).thenReturn(7);
     when(etxProperties.getClientType()).thenReturn(EtxClientType.SOFTWARE);
     when(etxProperties.getClientSubType()).thenReturn(EtxClientSubType.APPLICATION);
 

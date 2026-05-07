@@ -13,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.lang.Nullable;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxDepositMetrics;
@@ -41,7 +42,7 @@ public abstract class AbstractEtxDepositor {
     this.mecDepositProperties = mecDepositProperties;
     this.etxProperties = etxProperties;
     this.messageType = messageType;
-    this.staleMessageThreshold = etxProperties.getDepositors().getStaleMessageThreshold();
+    this.staleMessageThreshold = etxProperties.resolveStaleMessageThresholdMs();
     this.processingTimer =
         Timer.builder(metricsPrefix + ".processing").tag("message.type", messageType.name())
             .description("Time taken to process " + messageType.name() + " messages")
@@ -61,6 +62,9 @@ public abstract class AbstractEtxDepositor {
     LocalDateTime msgTimestamp =
         LocalDateTime.parse(odeReceivedAt, DateTimeFormatter.ISO_DATE_TIME);
     Duration latency = Duration.between(msgTimestamp, startTime);
+    if (latency.isNegative()) {
+      latency = Duration.ZERO;
+    }
     log.debug("{} processing latency: {} milliseconds", getDepositorType(), latency.toMillis());
     processingTimer.record(latency);
     return latency;
@@ -135,6 +139,15 @@ public abstract class AbstractEtxDepositor {
 
   protected void handleProcessingSuccess(Set<String> topics, String odeReceivedAt,
       LocalDateTime depositedAt, String asn1Hex) {
+    handleProcessingSuccess(topics, odeReceivedAt, depositedAt, asn1Hex, null);
+  }
+
+  /**
+   * @param mqttBrokerTargets broker names that successfully received the message (e.g. ETX, NMI);
+   *        omit by passing null for non-MQTT or legacy paths
+   */
+  protected void handleProcessingSuccess(Set<String> topics, String odeReceivedAt,
+      LocalDateTime depositedAt, String asn1Hex, @Nullable Set<String> mqttBrokerTargets) {
 
     if (!mecDepositProperties.getMetrics().isEnabled()) {
       log.debug("Metrics are disabled, skipping success processing");
@@ -144,12 +157,19 @@ public abstract class AbstractEtxDepositor {
     // Convert ISO timestamp string to epoch millis
     long odeReceivedAtMillis = Instant.parse(odeReceivedAt).toEpochMilli();
     long depositedAtMillis = depositedAt.toInstant(ZoneOffset.UTC).toEpochMilli();
+    long latencyMs = depositedAtMillis - odeReceivedAtMillis;
+    if (latencyMs < 0) {
+      latencyMs = 0;
+    }
 
     // Publish success metrics
     publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
         .messageType(messageType).odeReceivedAt(odeReceivedAtMillis)
-        .mecDepositedAt(depositedAtMillis).latencyMs(depositedAtMillis - odeReceivedAtMillis)
-        .success(true).topics(topics).asn1Hex(asn1Hex).build());
+        .mecDepositedAt(depositedAtMillis).latencyMs(latencyMs)
+        .success(true).topics(topics)
+        .mqttBrokerTargets(
+            mqttBrokerTargets != null && !mqttBrokerTargets.isEmpty() ? mqttBrokerTargets : null)
+        .asn1Hex(asn1Hex).build());
     recordLatency(odeReceivedAt, depositedAt);
   }
 }

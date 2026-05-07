@@ -2,6 +2,7 @@ package us.dot.its.jpo.ode.mec.deposit.config.mqtt;
 
 import jakarta.annotation.PostConstruct;
 import java.util.Arrays;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -54,6 +55,11 @@ public class EtxMqttConfig {
    */
   @PostConstruct
   public void init() {
+    if (!mqttProperties.isUseRegistration()) {
+      log.info("ETX MQTT registration disabled; using configured broker URI: {}",
+          mqttProperties.getBrokerUri());
+      return;
+    }
     try {
       String token = tokenManager.getValidToken();
       this.etxConfig = etxApi.registerClientPartner(token);
@@ -102,22 +108,47 @@ public class EtxMqttConfig {
    */
   @Bean
   public ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager() {
-    RegistrationConfiguration etxConfig =
-        EtxUtil.readConfigFile(partnerApiProperties.getCertificatePath() + "/config.json");
-    String brokerUrl = etxConfig.getEtxMqttUri().toString().replace("mqtt://", "ssl://");
+    RegistrationConfiguration etxConfig = null;
+    if (mqttProperties.isUseRegistration()) {
+      etxConfig = EtxUtil.readConfigFile(partnerApiProperties.getCertificatePath() + "/config.json");
+    }
+
+    String configuredBrokerUri = mqttProperties.getBrokerUri();
+    String brokerUrl = configuredBrokerUri;
+    if (brokerUrl == null || brokerUrl.isBlank()) {
+      if (etxConfig == null || etxConfig.getEtxMqttUri() == null) {
+        throw new IllegalStateException("No MQTT broker URI configured");
+      }
+      brokerUrl = etxConfig.getEtxMqttUri().toString();
+    }
+
+    if (mqttProperties.isUseTls() && brokerUrl.startsWith("mqtt://")) {
+      brokerUrl = brokerUrl.replace("mqtt://", "ssl://");
+    }
 
     MqttConnectOptions options = new MqttConnectOptions();
     options.setServerURIs(new String[] {brokerUrl});
     options.setCleanSession(true);
-    options.setSocketFactory(EtxUtil.createSocketFactory(etxConfig.getCaCertPath(),
-        etxConfig.getClientCertPath(), etxConfig.getKeyFilePath()));
+    if (mqttProperties.isUseTls()) {
+      if (etxConfig == null) {
+        throw new IllegalStateException("TLS MQTT requires registration certificate configuration");
+      }
+      options.setSocketFactory(EtxUtil.createSocketFactory(etxConfig.getCaCertPath(),
+          etxConfig.getClientCertPath(), etxConfig.getKeyFilePath()));
+    }
     options.setConnectionTimeout(10);
     options.setKeepAliveInterval(30);
     options.setAutomaticReconnect(true);
     options.setMaxInflight(mqttProperties.getMaxInflight());
     options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
 
-    Mqttv3ClientManager clientManager = new Mqttv3ClientManager(options, etxConfig.getDeviceID());
+    String mqttClientId = mqttProperties.getClientId();
+    if (mqttClientId == null || mqttClientId.isBlank()) {
+      mqttClientId = etxConfig != null && etxConfig.getDeviceID() != null && !etxConfig.getDeviceID()
+          .isBlank() ? etxConfig.getDeviceID() : "jpo-mec-deposit-" + UUID.randomUUID();
+    }
+
+    Mqttv3ClientManager clientManager = new Mqttv3ClientManager(options, mqttClientId);
     String tmpDir = partnerApiProperties.getCertificatePath() + "/mqtt-persistence";
     clientManager.setPersistence(new MqttDefaultFilePersistence(tmpDir));
     return clientManager;
@@ -143,11 +174,14 @@ public class EtxMqttConfig {
   public IntegrationFlow mqttInFlow(
       ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager,
       EtxPartnerApiProperties partnerApi) {
-
-    RegistrationConfiguration etxConfig =
-        EtxUtil.readConfigFile(partnerApi.getCertificatePath() + "/config.json");
-
-    log.info("Setting up MQTT inbound adapter with deviceID: {}", etxConfig.getDeviceID());
+    String configuredClientId = mqttProperties.getClientId();
+    String logClientId = configuredClientId;
+    if ((logClientId == null || logClientId.isBlank()) && mqttProperties.isUseRegistration()) {
+      RegistrationConfiguration etxConfig =
+          EtxUtil.readConfigFile(partnerApi.getCertificatePath() + "/config.json");
+      logClientId = etxConfig != null ? etxConfig.getDeviceID() : null;
+    }
+    log.info("Setting up MQTT inbound adapter with clientID: {}", logClientId);
     log.info("Subscribing to topics: {}", Arrays.toString(mqttProperties.getSubscriptions()));
 
     MqttPahoMessageDrivenChannelAdapter messageProducer =

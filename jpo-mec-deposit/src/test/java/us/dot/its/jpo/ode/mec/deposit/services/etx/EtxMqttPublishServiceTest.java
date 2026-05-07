@@ -49,6 +49,7 @@ class EtxMqttPublishServiceTest {
   void setUp() {
     meterRegistry = new SimpleMeterRegistry();
     when(mqttProperties.getMaxMessagesPerSecond()).thenReturn(100);
+    when(mqttProperties.isRequireSessionId()).thenReturn(true);
     // Mock partnerApiProperties to return a valid certificate path
     when(partnerApiProperties.getCertificatePath()).thenReturn("src/test/resources/certs");
 

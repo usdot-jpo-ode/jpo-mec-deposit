@@ -8,19 +8,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.integration.mqtt.core.ClientManager;
 import org.springframework.integration.mqtt.support.MqttHeaders;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.stereotype.Service;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
-import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerApiProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
-import us.dot.its.jpo.ode.mec.deposit.config.mqtt.EtxMqttConfig;
 
 /**
  * Service for handling MQTT message publishing with rate limiting and retry capabilities.
@@ -37,6 +33,7 @@ public class EtxMqttPublishService {
   private final Counter rateLimitSkippedCounter;
   private final AtomicInteger currentRate = new AtomicInteger(0);
   private final AtomicInteger availableTokens;
+  private final boolean requireSessionId;
 
   /**
    * Constructs an EtxMqttService with the specified parameters.
@@ -52,6 +49,7 @@ public class EtxMqttPublishService {
     this.mqttOutboundChannel = mqttOutboundChannel;
     this.partnerApiProperties = partnerApiProperties;
     this.maxMessagesPerSecond = mqttProperties.getMaxMessagesPerSecond();
+    this.requireSessionId = mqttProperties.isRequireSessionId();
 
     this.rateLimitSkippedCounter = Counter.builder("mec-deposit.etx.mqtt.ratelimit.skipped")
         .description("Number of messages skipped due to rate limiting").register(registry);
@@ -91,7 +89,7 @@ public class EtxMqttPublishService {
     }
 
     // Check if we have a Verizon ETX session ID before attempting to publish
-    if (!hasEtxSessionId()) {
+    if (requireSessionId && !hasEtxSessionId()) {
       log.warn("No Verizon ETX session ID available, skipping message publish to topic: {}", topic);
       log.info("Waiting for Verizon ETX session ID from vzimp/1/ClientInfo topic...");
       availableTokens.incrementAndGet(); // Return the token since we're not using it

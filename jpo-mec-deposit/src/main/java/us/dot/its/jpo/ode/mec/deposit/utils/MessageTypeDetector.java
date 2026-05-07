@@ -53,4 +53,32 @@ public class MessageTypeDetector {
     }
   }
 
+  /**
+   * Maps message type to its registered PSID.
+   *
+   * @param messageType Message type to map
+   * @return Decimal PSID value as a string
+   */
+  public static String getPsidForMessageType(EtxMessageType messageType) {
+    if (messageType == null) {
+      return null;
+    }
+    switch (messageType) {
+      case BSM:
+        return "32";
+      case PSM:
+        return "39";
+      case SPAT:
+        return "130";
+      case TIM:
+        return "131";
+      case SDSM:
+        return "144";
+      case MAP:
+        return "2113687";
+      default:
+        return null;
+    }
+  }
+
 }

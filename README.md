@@ -162,6 +162,44 @@ The ETX MEC Deposit is a feature that allows the depositor to deposit messages t
 
 The ETX MQTT Deposit is a feature that allows the depositor to deposit messages to an ETX MQTT broker. This is done by setting the `ETX_MQTT_ENABLED` environment variable to `True` and providing the necessary ETX MQTT configuration. Please refer to the [sample.env](./sample.env) file for the necessary environment variables.
 
+For TrafficAuth/NMI MQTT publishing, use non-TLS MQTT and disable ETX registration-based connection:
+
+- `ETX_MQTT_BROKER_TYPE="NMI"`
+- `ETX_MQTT_USE_TLS="False"`
+- `ETX_MQTT_USE_REGISTRATION="False"`
+- `ETX_MQTT_REQUIRE_SESSION_ID="False"`
+- `ETX_MQTT_BROKER_URI="mqtt://mqtt.development.v2x.isscms.com:1883"` (test) or production URI
+
+When using the geohash MQTT depositor with `ETX_MQTT_BROKER_TYPE="NMI"`, topics follow the NMI topic structure: `/v1/g32/{g1}/{g2}/{g3}/{g4}/{g5}/{g6}/{g7}/{psid}` and publish the original signed payload bytes (signature preserved) instead of ETX wrapped payload definitions.
+
+To publish to ETX and NMI in the same application instance, enable dual fanout:
+
+- `ETX_MQTT_DUAL_PUBLISH_ENABLED="True"`
+- `ETX_MQTT_DUAL_PUBLISH_TARGETS="ETX,NMI"`
+- `NMI_MQTT_ENABLED="True"`
+
+### ETX + NMI Deployment Profiles
+
+Two deployment profile templates are included:
+
+- ETX-only deployment: [`.env.etx.example`](./.env.etx.example)
+- NMI-only deployment: [`.env.nmi.example`](./.env.nmi.example)
+
+Use distinct consumer groups per deployment (for example, `jpo-mec-deposit-etx` and `jpo-mec-deposit-nmi`) with `KAFKA_CONSUMER_GROUP_ID`.
+
+### Broker-Scoped Observability
+
+Dual publish mode records broker-tagged publish counters:
+
+- `mec-deposit.mqtt.publish{broker="etx|nmi",outcome="success|failure"}`
+- `mec-deposit.nmi.mqtt.circuit.skipped` (NMI circuit-breaker skips)
+
+Recommended rollout guardrails:
+
+- Canary enable dual mode on a single instance first.
+- Alert if NMI failure counter exceeds ETX success over a 5-minute window.
+- Roll back by setting `ETX_MQTT_DUAL_PUBLISH_ENABLED="False"` (or disable `NMI_MQTT_ENABLED`).
+
 #### ETX API Deposit
 
 The ETX API Deposit is a feature that allows the depositor to deposit messages to an ETX API. This is done by setting the `ETX_API_ENABLED` environment variable to `True` and providing the necessary ETX API configuration. Please refer to the [sample.env](./sample.env) file for the necessary environment variables.

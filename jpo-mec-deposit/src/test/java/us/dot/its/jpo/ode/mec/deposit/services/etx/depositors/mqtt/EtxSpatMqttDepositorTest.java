@@ -40,7 +40,9 @@ import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties.MecDepositMetrics;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.DepositorProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.EtxDepositors;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.EtxMqttBrokerProfile;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.MqttBrokerDepositors;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.MqttBrokers;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.MqttDepositorProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.SpatIntersectionFilterProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
@@ -105,17 +107,10 @@ class EtxSpatMqttDepositorTest {
 
     // Configure stale message threshold
     int staleMessageThreshold = 5000; // 5 seconds
-    EtxDepositors depositors = new EtxDepositors();
-    depositors.setStaleMessageThreshold(staleMessageThreshold);
-
-    MqttDepositorProperties mqtt = new MqttDepositorProperties();
-    SpatIntersectionFilterProperties intersectionFilter = new SpatIntersectionFilterProperties();
-    intersectionFilter.setEnabled(false);
-
-    mqtt.setIntersectionFilter(intersectionFilter);
-    depositors.setSpat(new DepositorProperties(mqtt, null));
-
-    when(etxProperties.getDepositors()).thenReturn(depositors);
+    when(etxProperties.resolveStaleMessageThresholdMs()).thenReturn(staleMessageThreshold);
+    when(etxProperties.isMqttDepositorEnabled(any(), anyString())).thenReturn(true);
+    when(etxProperties.passesSpatIntersectionFilter(any(), any(SPAT.class))).thenReturn(true);
+    when(etxProperties.nmiMqttTopicPrecision()).thenReturn(7);
     when(etxProperties.getClientType()).thenReturn(EtxClientType.SOFTWARE);
     when(etxProperties.getClientSubType()).thenReturn(EtxClientSubType.APPLICATION);
 
@@ -240,15 +235,12 @@ class EtxSpatMqttDepositorTest {
   @Test
   void testSpatDepositListener_IntersectionFilter_Enabled_AllowedIntersection()
       throws JsonProcessingException {
-    // override the intersection filter
-    ReflectionTestUtils.setField(depositor, "intersectionFilterEnabled", true);
-    ReflectionTestUtils.setField(depositor, "allowedIntersectionIds", List.of(9709L));
-
+    EtxSpatMqttDepositor d = depositorWithSpatFilter(true, List.of(9709L), null);
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
     String message = createSpatTestMessage(currentTime);
 
-    depositor.spatDepositListener(message);
+    d.spatDepositListener(message);
 
     verify(mqttService).publishAsn1Bytes(eq("test-topic"), any(byte[].class), eq(false));
     verify(kafkaTemplate).send(eq("test-metrics-topic"), anyString());
@@ -257,15 +249,12 @@ class EtxSpatMqttDepositorTest {
   @Test
   void testSpatDepositListener_IntersectionFilter_Enabled_DisallowedIntersection()
       throws JsonProcessingException {
-    // override the intersection filter
-    ReflectionTestUtils.setField(depositor, "intersectionFilterEnabled", true);
-    ReflectionTestUtils.setField(depositor, "allowedIntersectionIds", List.of(1111));
-
+    EtxSpatMqttDepositor d = depositorWithSpatFilter(true, List.of(1111L), null);
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
     String message = createSpatTestMessage(currentTime);
 
-    depositor.spatDepositListener(message);
+    d.spatDepositListener(message);
 
     verify(mqttService, never()).publishAsn1Bytes(anyString(), any(byte[].class), eq(false));
   }
@@ -273,34 +262,26 @@ class EtxSpatMqttDepositorTest {
   @Test
   void testSpatDepositListener_IntersectionFilter_BlockedIntersection()
       throws JsonProcessingException {
-    // Configure filter with blocked intersection ID 9709 (from sample message)
-    ReflectionTestUtils.setField(depositor, "intersectionFilterEnabled", true);
-    ReflectionTestUtils.setField(depositor, "blockedIntersectionIds", List.of(9709L));
-
+    EtxSpatMqttDepositor d = depositorWithSpatFilter(true, null, List.of(9709L));
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
     String message = createSpatTestMessage(currentTime);
 
-    depositor.spatDepositListener(message);
+    d.spatDepositListener(message);
 
-    // message should be filtered out
     verify(mqttService, never()).publishAsn1Bytes(anyString(), any(byte[].class), eq(false));
   }
 
   @Test
   void testSpatDepositListener_IntersectionFilter_NonBlockedIntersection()
       throws JsonProcessingException {
-    // Configure filter with different blocked intersection ID
-    ReflectionTestUtils.setField(depositor, "intersectionFilterEnabled", true);
-    ReflectionTestUtils.setField(depositor, "blockedIntersectionIds", List.of(1234));
-
+    EtxSpatMqttDepositor d = depositorWithSpatFilter(true, null, List.of(1234L));
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
     String message = createSpatTestMessage(currentTime);
 
-    depositor.spatDepositListener(message);
+    d.spatDepositListener(message);
 
-    // message should be processed
     verify(mqttService).publishAsn1Bytes(eq("test-topic"), any(byte[].class), eq(false));
     verify(kafkaTemplate).send(eq("test-metrics-topic"), anyString());
   }
@@ -308,38 +289,48 @@ class EtxSpatMqttDepositorTest {
   @Test
   void testSpatDepositListener_IntersectionFilter_BlockedTakesPrecedenceOverAllowed()
       throws JsonProcessingException {
-    // Configure filter with intersection both allowed and blocked
-    ReflectionTestUtils.setField(depositor, "intersectionFilterEnabled", true);
-    ReflectionTestUtils.setField(depositor, "allowedIntersectionIds", List.of(9709));
-    ReflectionTestUtils.setField(depositor, "blockedIntersectionIds", List.of(9709));
-
+    EtxSpatMqttDepositor d = depositorWithSpatFilter(true, List.of(9709L), List.of(9709L));
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
     String message = createSpatTestMessage(currentTime);
 
-    depositor.spatDepositListener(message);
+    d.spatDepositListener(message);
 
-    // message should be filtered out due to being blocked
     verify(mqttService, never()).publishAsn1Bytes(anyString(), any(byte[].class), eq(false));
   }
 
   @Test
   void testSpatDepositListener_IntersectionFilter_EmptyAllowlistAllowsNonBlocked()
       throws JsonProcessingException {
-    // Configure filter with empty allowlist and non-matching blocked list
-    ReflectionTestUtils.setField(depositor, "intersectionFilterEnabled", true);
-    ReflectionTestUtils.setField(depositor, "allowedIntersectionIds", List.of());
-    ReflectionTestUtils.setField(depositor, "blockedIntersectionIds", List.of(1234));
-
+    EtxSpatMqttDepositor d = depositorWithSpatFilter(true, List.of(), List.of(1234L));
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
     String message = createSpatTestMessage(currentTime);
 
-    depositor.spatDepositListener(message);
+    d.spatDepositListener(message);
 
-    // message should be processed since it's not blocked
     verify(mqttService).publishAsn1Bytes(eq("test-topic"), any(byte[].class), eq(false));
     verify(kafkaTemplate).send(eq("test-metrics-topic"), anyString());
+  }
+
+  private EtxSpatMqttDepositor depositorWithSpatFilter(boolean filterEnabled,
+      List<Long> allowedIntersectionIds, List<Long> blockedIntersectionIds) {
+    SpatIntersectionFilterProperties filt = SpatIntersectionFilterProperties.builder()
+        .enabled(filterEnabled).allowedIntersectionIds(allowedIntersectionIds)
+        .blockedIntersectionIds(blockedIntersectionIds).build();
+    MqttDepositorProperties mqtt =
+        MqttDepositorProperties.builder().enabled(true).intersectionFilter(filt).build();
+    DepositorProperties spatDep = DepositorProperties.builder().mqtt(mqtt).build();
+    MqttBrokerDepositors mbd =
+        MqttBrokerDepositors.builder().staleMessageThreshold(5000).spat(spatDep).build();
+    EtxMqttBrokerProfile etxProf = EtxMqttBrokerProfile.builder().depositors(mbd).build();
+    MqttBrokers mb = MqttBrokers.builder().etx(etxProf).build();
+    EtxProperties realEtx = EtxProperties.builder().mqttBrokers(mb)
+        .clientType(EtxClientType.SOFTWARE).clientSubType(EtxClientSubType.APPLICATION).build();
+    EtxSpatMqttDepositor d = new EtxSpatMqttDepositor(mecDepositProperties, realEtx, mqttProperties,
+        mqttService, registry, kafkaTemplate);
+    ReflectionTestUtils.setField(d, "mapDataCollector", mapDataCollector);
+    return d;
   }
 
 }

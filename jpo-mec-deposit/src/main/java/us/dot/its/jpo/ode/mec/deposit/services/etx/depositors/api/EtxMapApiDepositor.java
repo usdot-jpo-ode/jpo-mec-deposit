@@ -23,7 +23,7 @@ import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 @Component
 @Slf4j
 @ConditionalOnProperty(
-    value = {"mec-deposit.etx.depositors.map.api.enabled", "mec-deposit.etx.enabled"},
+    value = {"mec-deposit.etx.mqtt-brokers.etx.depositors.map.api.enabled", "mec-deposit.etx.enabled"},
     havingValue = "true")
 public class EtxMapApiDepositor extends AbstractEtxApiDepositor {
 
@@ -50,7 +50,7 @@ public class EtxMapApiDepositor extends AbstractEtxApiDepositor {
    *
    * @param message The MAP message to deposit
    */
-  @KafkaListener(topics = "${mec-deposit.etx.depositors.map.api.kafka-topic}",
+  @KafkaListener(topics = "${mec-deposit.etx.mqtt-brokers.etx.depositors.map.api.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-map-api-depositor",
       concurrency = "${spring.kafka.listener.concurrency:1}",
       containerFactory = "kafkaListenerContainerFactory")

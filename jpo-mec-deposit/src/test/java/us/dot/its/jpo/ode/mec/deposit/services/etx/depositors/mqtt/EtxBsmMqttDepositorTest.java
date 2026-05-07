@@ -37,7 +37,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties.MecDepositMetrics;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.EtxDepositors;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
@@ -92,9 +91,9 @@ class EtxBsmMqttDepositorTest {
 
     // Configure stale message threshold
     int staleMessageThreshold = 5000; // 5 seconds
-    EtxDepositors depositors = new EtxDepositors();
-    depositors.setStaleMessageThreshold(staleMessageThreshold);
-    when(etxProperties.getDepositors()).thenReturn(depositors);
+    when(etxProperties.resolveStaleMessageThresholdMs()).thenReturn(staleMessageThreshold);
+    when(etxProperties.isMqttDepositorEnabled(any(), anyString())).thenReturn(true);
+    when(etxProperties.nmiMqttTopicPrecision()).thenReturn(7);
     when(etxProperties.getClientType()).thenReturn(EtxClientType.SOFTWARE);
     when(etxProperties.getClientSubType()).thenReturn(EtxClientSubType.APPLICATION);
 

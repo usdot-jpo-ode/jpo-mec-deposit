@@ -4,24 +4,35 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
+import us.dot.its.jpo.ode.mec.deposit.config.condition.ConditionalOnAnyMqttBrokerMqttDepositor;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.BrokerPublishPayload;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.GeoRoutedMsg;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttBrokerTarget;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttFanoutPublishResult;
 import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxMqttDepositor;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
+import us.dot.its.jpo.ode.mec.deposit.services.etx.mqtt.EtxBrokerPublisher;
+import us.dot.its.jpo.ode.mec.deposit.services.mqtt.MultiBrokerPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.PositionConversionUtil;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttProtobufBuilder;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
+import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.NmiMqttTopicBuilder;
 import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 import us.dot.its.jpo.asn.j2735.r2024.BasicSafetyMessage.BasicSafetyMessage;
 
@@ -30,16 +41,31 @@ import us.dot.its.jpo.asn.j2735.r2024.BasicSafetyMessage.BasicSafetyMessage;
  */
 @Component
 @Slf4j
-@ConditionalOnProperty(
-    value = {"mec-deposit.etx.depositors.bsm.mqtt.enabled", "mec-deposit.etx.enabled"},
-    havingValue = "true")
+@ConditionalOnAnyMqttBrokerMqttDepositor("bsm")
 public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
+  private final MultiBrokerPublishService multiBrokerPublishService;
 
+  @Autowired
   public EtxBsmMqttDepositor(MecDepositProperties mecDepositProperties, EtxProperties etxProperties,
-      EtxMqttProperties mqttProperties, EtxMqttPublishService mqttService, MeterRegistry registry,
+      EtxMqttProperties mqttProperties, @Nullable EtxMqttPublishService mqttService,
+      MeterRegistry registry,
+      MultiBrokerPublishService multiBrokerPublishService,
       KafkaTemplate<String, String> kafkaTemplate) {
     super(mecDepositProperties, etxProperties, mqttProperties, EtxMessageType.BSM, mqttService,
         registry, kafkaTemplate);
+    this.multiBrokerPublishService = multiBrokerPublishService;
+  }
+
+  /**
+   * Backward-compatible constructor used by unit tests.
+   */
+  public EtxBsmMqttDepositor(MecDepositProperties mecDepositProperties, EtxProperties etxProperties,
+      EtxMqttProperties mqttProperties, EtxMqttPublishService mqttService, MeterRegistry registry,
+      KafkaTemplate<String, String> kafkaTemplate) {
+    this(mecDepositProperties, etxProperties, mqttProperties, mqttService, registry,
+        new MultiBrokerPublishService(List.of(new EtxBrokerPublisher(mqttService)), mqttProperties,
+            registry),
+        kafkaTemplate);
   }
 
   /**
@@ -47,7 +73,7 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
    *
    * @param message The BSM message from Kafka in JSON format
    */
-  @KafkaListener(topics = "${mec-deposit.etx.depositors.bsm.mqtt.kafka-topic}",
+  @KafkaListener(topics = "${mec-deposit.etx.mqtt-brokers.etx.depositors.bsm.mqtt.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-bsm-mqtt-depositor",
       concurrency = "${spring.kafka.listener.concurrency:1}",
       containerFactory = "kafkaListenerContainerFactory")
@@ -85,11 +111,33 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
           mqttProperties.getMessageFormat(), etxProperties.getClientType(),
           etxProperties.getClientSubType());
 
-      // This will now block until the message is published or throws an exception
-      mqttService.publishAsn1Bytes(topic, messageBytes, retain);
+      Map<MqttBrokerTarget, BrokerPublishPayload> payloads = new EnumMap<>(MqttBrokerTarget.class);
+      if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.ETX)
+          && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.ETX, "bsm")) {
+        payloads.put(MqttBrokerTarget.ETX, BrokerPublishPayload.builder().target(MqttBrokerTarget.ETX)
+            .topics(Set.of(topic)).payload(messageBytes).build());
+      }
+      if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.NMI)
+          && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.NMI, "bsm")) {
+        String nmiTopic = NmiMqttTopicBuilder.buildTopicFromCoordinates(latitude, longitude,
+            etxProperties.mqttTopicPrecision(MqttBrokerTarget.NMI), messageType);
+        payloads.put(MqttBrokerTarget.NMI, BrokerPublishPayload.builder().target(MqttBrokerTarget.NMI)
+            .topics(Set.of(nmiTopic)).payload(messageBytes).build());
+      }
+      if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.AV)
+          && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.AV, "bsm")) {
+        String avTopic = NmiMqttTopicBuilder.buildTopicFromCoordinates(latitude, longitude,
+            etxProperties.mqttTopicPrecision(MqttBrokerTarget.AV), messageType);
+        payloads.put(MqttBrokerTarget.AV, BrokerPublishPayload.builder().target(MqttBrokerTarget.AV)
+            .topics(Set.of(avTopic)).payload(messageBytes).build());
+      }
+      MqttFanoutPublishResult fanout = multiBrokerPublishService.publish(payloads, retain);
       log.debug("Successfully sent BSM message to MQTT topic: {}", topic);
 
-      handleProcessingSuccess(Set.of(topic), odeReceivedAt, depositedAt, asn1Hex);
+      Set<String> metricTopics = fanout.publishedTopics().isEmpty()
+          ? MultiBrokerPublishService.unionPayloadTopics(payloads) : fanout.publishedTopics();
+      handleProcessingSuccess(metricTopics, odeReceivedAt, depositedAt, asn1Hex,
+          fanout.mqttBrokerTargets().isEmpty() ? null : fanout.mqttBrokerTargets());
     } catch (Exception e) {
       handleProcessingError(e, Set.of(topic),
           odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);

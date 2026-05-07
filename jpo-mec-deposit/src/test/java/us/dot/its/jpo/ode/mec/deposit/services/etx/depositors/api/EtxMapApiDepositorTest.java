@@ -35,7 +35,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties.MecDepositMetrics;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.EtxDepositors;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.EtxMqttBrokerProfile;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.MqttBrokerDepositors;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.MqttBrokers;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.ApiDepositorProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.DepositorProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
@@ -92,10 +94,12 @@ class EtxMapApiDepositorTest {
     DepositorProperties depositorProperties =
         DepositorProperties.builder().api(apiDepositorProperties).build();
 
-    EtxDepositors depositors =
-        EtxDepositors.builder().staleMessageThreshold(5000).map(depositorProperties).build();
-
-    when(etxProperties.getDepositors()).thenReturn(depositors);
+    MqttBrokerDepositors mbd =
+        MqttBrokerDepositors.builder().staleMessageThreshold(5000).map(depositorProperties).build();
+    EtxMqttBrokerProfile etxProfile = EtxMqttBrokerProfile.builder().depositors(mbd).build();
+    MqttBrokers brokers = MqttBrokers.builder().etx(etxProfile).build();
+    when(etxProperties.getMqttBrokers()).thenReturn(brokers);
+    when(etxProperties.resolveStaleMessageThresholdMs()).thenReturn(5000);
     when(etxProperties.getClientType()).thenReturn(EtxClientType.SOFTWARE);
     when(etxProperties.getClientSubType()).thenReturn(EtxClientSubType.APPLICATION);
 

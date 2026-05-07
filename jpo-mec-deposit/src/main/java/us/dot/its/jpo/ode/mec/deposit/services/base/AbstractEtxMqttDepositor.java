@@ -6,6 +6,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.lang.Nullable;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
@@ -20,6 +21,7 @@ import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxRegistrationRefreshService
  */
 @Slf4j
 public abstract class AbstractEtxMqttDepositor extends AbstractEtxDepositor {
+  @Nullable
   protected final EtxMqttPublishService mqttService;
   protected final EtxMqttProperties mqttProperties;
 
@@ -28,7 +30,7 @@ public abstract class AbstractEtxMqttDepositor extends AbstractEtxDepositor {
 
   protected AbstractEtxMqttDepositor(MecDepositProperties mecDepositProperties,
       EtxProperties etxProperties, EtxMqttProperties mqttProperties, EtxMessageType messageType,
-      EtxMqttPublishService mqttService, MeterRegistry registry,
+      @Nullable EtxMqttPublishService mqttService, MeterRegistry registry,
       KafkaTemplate<String, String> kafkaTemplate) {
     super(mecDepositProperties, etxProperties, messageType, registry, "mec-deposit.etx.mqtt",
         kafkaTemplate);
@@ -75,12 +77,15 @@ public abstract class AbstractEtxMqttDepositor extends AbstractEtxDepositor {
   @Override
   protected void handleProcessingSuccess(Set<String> topics, String odeReceivedAt,
       LocalDateTime depositedAt, String asn1Hex) {
-    // Record successful publish to reset failure counter
+    handleProcessingSuccess(topics, odeReceivedAt, depositedAt, asn1Hex, null);
+  }
+
+  @Override
+  protected void handleProcessingSuccess(Set<String> topics, String odeReceivedAt,
+      LocalDateTime depositedAt, String asn1Hex, @Nullable Set<String> mqttBrokerTargets) {
     if (refreshService != null) {
       refreshService.recordSuccess();
     }
-
-    // Call parent's success handling for metrics and logging
-    super.handleProcessingSuccess(topics, odeReceivedAt, depositedAt, asn1Hex);
+    super.handleProcessingSuccess(topics, odeReceivedAt, depositedAt, asn1Hex, mqttBrokerTargets);
   }
 }
