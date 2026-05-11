@@ -3,6 +3,7 @@ package us.dot.its.jpo.ode.mec.deposit.utils.mqtt;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
 import java.time.Instant;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.GeoRoutedMsg;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.GeoHashRoutedMsg;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.Position;
@@ -83,5 +84,30 @@ public class EtxMqttProtobufBuilder {
    */
   public static GeoHashRoutedMsg buildGeoHashRoutedMsg(byte[] messageBytes, Instant timestamp) {
     return buildGeoHashRoutedMsg(messageBytes, timestamp, null);
+  }
+
+  /**
+   * ETX regional MQTT body: ODE ASN.1 bytes as-is unless {@link EtxMqttMessageFormat#J2735_GR}, in
+   * which case the payload is a serialized {@link GeoRoutedMsg} wrapping those bytes. NMI/AV should
+   * publish {@code rawAsn1} directly and not use this method.
+   */
+  public static byte[] toEtxMqttWirePayload(byte[] rawAsn1, EtxMqttMessageFormat format,
+      Instant timestamp, Double latitude, Double longitude) {
+    if (format != EtxMqttMessageFormat.J2735_GR) {
+      return rawAsn1;
+    }
+    return buildGeoRoutedMsg(rawAsn1, timestamp, latitude, longitude).toByteArray();
+  }
+
+  /**
+   * ETX geohash MQTT body: same rules as {@link #toEtxMqttWirePayload} but uses
+   * {@link GeoHashRoutedMsg} so geohash context is preserved on the wire.
+   */
+  public static byte[] toEtxMqttWirePayloadGeoHash(byte[] rawAsn1, EtxMqttMessageFormat format,
+      Instant timestamp, String geohash) {
+    if (format != EtxMqttMessageFormat.J2735_GR) {
+      return rawAsn1;
+    }
+    return buildGeoHashRoutedMsg(rawAsn1, timestamp, geohash).toByteArray();
   }
 }

@@ -31,14 +31,16 @@ import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxMqttDepositor;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.mqtt.EtxBrokerPublisher;
 import us.dot.its.jpo.ode.mec.deposit.services.mqtt.MultiBrokerPublishService;
+import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttProtobufBuilder;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.NmiMqttTopicBuilder;
 import us.dot.its.jpo.ode.mec.deposit.utils.MessageTypeDetector;
 
 /**
  * Publisher class for handling geohash-routed messages via MQTT integration with ETX. This
- * publisher consumes GeoHashRoutedMsg protobuf messages from Kafka and publishes GeoRoutedMsg
- * protobuf messages to MQTT topics.
+ * publisher consumes GeoHashRoutedMsg protobuf messages from Kafka. ETX may publish a
+ * GeoHashRoutedMsg wire form when {@code j2735_gr} is configured; NMI/AV always receive the inner
+ * ASN.1 bytes only.
  */
 @Component
 @Slf4j
@@ -46,6 +48,9 @@ import us.dot.its.jpo.ode.mec.deposit.utils.MessageTypeDetector;
 public class EtxGeohashMqttPublisher extends AbstractEtxMqttDepositor {
   private final MultiBrokerPublishService multiBrokerPublishService;
 
+  /**
+   * Primary Spring constructor.
+   */
   @Autowired
   public EtxGeohashMqttPublisher(MecDepositProperties mecDepositProperties,
       EtxProperties etxProperties, EtxMqttProperties mqttProperties,
@@ -70,8 +75,7 @@ public class EtxGeohashMqttPublisher extends AbstractEtxMqttDepositor {
   }
 
   /**
-   * Listens for GeoHashRoutedMsg protobuf messages from Kafka and publishes them as GeoRoutedMsg
-   * protobuf messages to MQTT topics.
+   * Listens for GeoHashRoutedMsg protobuf messages from Kafka and fans out to MQTT brokers.
    *
    * @param geoHashRoutedMsgBytes The GeoHashRoutedMsg protobuf message bytes from Kafka
    */
@@ -128,11 +132,14 @@ public class EtxGeohashMqttPublisher extends AbstractEtxMqttDepositor {
             etxProperties.mqttTopicPrecision(MqttBrokerTarget.AV),
             dsrcMsgId);
       }
+      Instant depositedInstant = depositedAt.toInstant(ZoneOffset.UTC);
+      byte[] etxPayload = EtxMqttProtobufBuilder.toEtxMqttWirePayloadGeoHash(originalMessageBytes,
+          mqttProperties.getMessageFormat(), depositedInstant, geohash);
       Map<MqttBrokerTarget, BrokerPublishPayload> payloads = new EnumMap<>(MqttBrokerTarget.class);
       if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.ETX)
           && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.ETX, "geohash")) {
         payloads.put(MqttBrokerTarget.ETX, BrokerPublishPayload.builder().target(MqttBrokerTarget.ETX)
-            .topics(Set.of(etxTopic)).payload(originalMessageBytes).build());
+            .topics(Set.of(etxTopic)).payload(etxPayload).build());
       }
       if (nmiTopic != null) {
         payloads.put(MqttBrokerTarget.NMI, BrokerPublishPayload.builder().target(MqttBrokerTarget.NMI)

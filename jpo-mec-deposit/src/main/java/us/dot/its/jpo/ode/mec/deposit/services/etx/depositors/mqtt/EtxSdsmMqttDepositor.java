@@ -21,8 +21,6 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.BrokerPublishPayload;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.GeoRoutedMsg;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttBrokerTarget;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttFanoutPublishResult;
 import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxMqttDepositor;
@@ -93,7 +91,7 @@ public class EtxSdsmMqttDepositor extends AbstractEtxMqttDepositor {
         return;
       }
 
-      byte[] messageBytes = Hex.decode(msg.getMetadata().getAsn1());
+      byte[] rawMessageBytes = Hex.decode(msg.getMetadata().getAsn1());
 
       SensorDataSharingMessage sdsm =
           (SensorDataSharingMessage) msg.getPayload().getData().getValue();
@@ -106,14 +104,9 @@ public class EtxSdsmMqttDepositor extends AbstractEtxMqttDepositor {
       Double longitude = (double) refPoint.getLong_().getValue()
           * MICRODEGREES_TO_DECIMAL_DEGREES_CONVERSION_FACTOR;
 
-      // If the message format is J2735_GR, we need to convert the message to a
-      // GeoRoutedMsg
-      if (mqttProperties.getMessageFormat() == EtxMqttMessageFormat.J2735_GR) {
-        Instant timestamp = depositedAt.toInstant(ZoneOffset.UTC);
-        GeoRoutedMsg geoRoutedMsg =
-            EtxMqttProtobufBuilder.buildGeoRoutedMsg(messageBytes, timestamp, latitude, longitude);
-        messageBytes = geoRoutedMsg.toByteArray();
-      }
+      Instant depositedInstant = depositedAt.toInstant(ZoneOffset.UTC);
+      byte[] etxPayload = EtxMqttProtobufBuilder.toEtxMqttWirePayload(rawMessageBytes,
+          mqttProperties.getMessageFormat(), depositedInstant, latitude, longitude);
 
       topic = EtxMqttTopicBuilder.buildRegionalTopic(messageType, latitude, longitude,
           mqttProperties.getPrecision(), mqttProperties.getVendor(),
@@ -124,21 +117,21 @@ public class EtxSdsmMqttDepositor extends AbstractEtxMqttDepositor {
       if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.ETX)
           && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.ETX, "sdsm")) {
         payloads.put(MqttBrokerTarget.ETX, BrokerPublishPayload.builder().target(MqttBrokerTarget.ETX)
-            .topics(Set.of(topic)).payload(messageBytes).build());
+            .topics(Set.of(topic)).payload(etxPayload).build());
       }
       if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.NMI)
           && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.NMI, "sdsm")) {
         String nmiTopic = NmiMqttTopicBuilder.buildTopicFromCoordinates(latitude, longitude,
             etxProperties.mqttTopicPrecision(MqttBrokerTarget.NMI), messageType);
         payloads.put(MqttBrokerTarget.NMI, BrokerPublishPayload.builder().target(MqttBrokerTarget.NMI)
-            .topics(Set.of(nmiTopic)).payload(messageBytes).build());
+            .topics(Set.of(nmiTopic)).payload(rawMessageBytes).build());
       }
       if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.AV)
           && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.AV, "sdsm")) {
         String avTopic = NmiMqttTopicBuilder.buildTopicFromCoordinates(latitude, longitude,
             etxProperties.mqttTopicPrecision(MqttBrokerTarget.AV), messageType);
         payloads.put(MqttBrokerTarget.AV, BrokerPublishPayload.builder().target(MqttBrokerTarget.AV)
-            .topics(Set.of(avTopic)).payload(messageBytes).build());
+            .topics(Set.of(avTopic)).payload(rawMessageBytes).build());
       }
       MqttFanoutPublishResult fanout = multiBrokerPublishService.publish(payloads, retain);
       log.debug("Successfully sent SDSM message to MQTT topic: {}", topic);

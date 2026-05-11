@@ -21,8 +21,6 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.BrokerPublishPayload;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.GeoRoutedMsg;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttBrokerTarget;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttFanoutPublishResult;
 import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxMqttDepositor;
@@ -119,16 +117,11 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
         return;
       }
 
-      byte[] messageBytes = Hex.decode(msg.getMetadata().getAsn1());
+      byte[] rawMessageBytes = Hex.decode(msg.getMetadata().getAsn1());
       LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
-
-      // If the message format is J2735_GR, we need to convert the message to a GeoRoutedMsg
-      if (mqttProperties.getMessageFormat() == EtxMqttMessageFormat.J2735_GR) {
-        Instant timestamp = depositedAt.toInstant(ZoneOffset.UTC);
-        GeoRoutedMsg geoRoutedMsg =
-            EtxMqttProtobufBuilder.buildGeoRoutedMsg(messageBytes, timestamp);
-        messageBytes = geoRoutedMsg.toByteArray();
-      }
+      Instant depositedInstant = depositedAt.toInstant(ZoneOffset.UTC);
+      byte[] etxPayload = EtxMqttProtobufBuilder.toEtxMqttWirePayload(rawMessageBytes,
+          mqttProperties.getMessageFormat(), depositedInstant, null, null);
 
       topicSet = EtxMqttTopicBuilder.getSpatTopicList(spatMsg, mapDataCollector,
           mqttProperties.getVendor(), mqttProperties.getPrecision(),
@@ -137,19 +130,19 @@ public class EtxSpatMqttDepositor extends AbstractEtxMqttDepositor {
       Map<MqttBrokerTarget, BrokerPublishPayload> payloads = new EnumMap<>(MqttBrokerTarget.class);
       if (wantEtx) {
         payloads.put(MqttBrokerTarget.ETX, BrokerPublishPayload.builder().target(MqttBrokerTarget.ETX)
-            .topics(topicSet).payload(messageBytes).build());
+            .topics(topicSet).payload(etxPayload).build());
       }
       if (wantNmi) {
         Set<String> nmiTopicSet = NmiMqttTopicBuilder.getSpatTopicList(spatMsg, mapDataCollector,
             etxProperties.mqttTopicPrecision(MqttBrokerTarget.NMI), messageType);
         payloads.put(MqttBrokerTarget.NMI, BrokerPublishPayload.builder().target(MqttBrokerTarget.NMI)
-            .topics(nmiTopicSet).payload(messageBytes).build());
+            .topics(nmiTopicSet).payload(rawMessageBytes).build());
       }
       if (wantAv) {
         Set<String> avTopicSet = NmiMqttTopicBuilder.getSpatTopicList(spatMsg, mapDataCollector,
             etxProperties.mqttTopicPrecision(MqttBrokerTarget.AV), messageType);
         payloads.put(MqttBrokerTarget.AV, BrokerPublishPayload.builder().target(MqttBrokerTarget.AV)
-            .topics(avTopicSet).payload(messageBytes).build());
+            .topics(avTopicSet).payload(rawMessageBytes).build());
       }
       MqttFanoutPublishResult fanout = multiBrokerPublishService.publish(payloads, retain);
       Set<String> metricTopics = fanout.publishedTopics().isEmpty()

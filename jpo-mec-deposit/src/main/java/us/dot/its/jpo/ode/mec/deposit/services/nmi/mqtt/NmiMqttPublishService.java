@@ -40,8 +40,9 @@ public class NmiMqttPublishService {
     this.availableTokens = new AtomicInteger(Math.max(properties.getMaxMessagesPerSecond(), 1));
     this.circuitBreakerSkippedCounter = Counter.builder("mec-deposit.nmi.mqtt.circuit.skipped")
         .description("Messages skipped while NMI circuit breaker is open").register(registry);
-    scheduler.scheduleAtFixedRate(() -> availableTokens.set(Math.max(properties.getMaxMessagesPerSecond(), 1)),
-        1, 1, TimeUnit.SECONDS);
+    scheduler.scheduleAtFixedRate(
+        () -> availableTokens.set(Math.max(properties.getMaxMessagesPerSecond(), 1)), 1, 1,
+        TimeUnit.SECONDS);
   }
 
   /**
@@ -88,7 +89,8 @@ public class NmiMqttPublishService {
     }
     String serverUri = toPahoConnectionUri(properties.getBrokerUri());
     String clientId = properties.getClientId() == null || properties.getClientId().isBlank()
-        ? "jpo-mec-deposit-nmi-" + UUID.randomUUID() : properties.getClientId();
+        ? "jpo-mec-deposit-nmi-" + UUID.randomUUID()
+        : properties.getClientId();
     mqttClient = new MqttClient(serverUri, clientId);
     MqttConnectOptions options = new MqttConnectOptions();
     options.setServerURIs(new String[] {serverUri});
@@ -116,25 +118,9 @@ public class NmiMqttPublishService {
       if (scheme == null) {
         return brokerUri.trim();
       }
-      String lower = scheme.toLowerCase(Locale.ROOT);
-      if ("mqtt".equals(lower)) {
-        return replaceScheme(uri, "tcp");
-      }
-      if ("mqtts".equals(lower)) {
-        return replaceScheme(uri, "ssl");
-      }
       return uri.toASCIIString();
     } catch (IllegalArgumentException e) {
       return brokerUri.trim();
-    }
-  }
-
-  private static String replaceScheme(URI uri, String newScheme) {
-    try {
-      return new URI(newScheme, uri.getUserInfo(), uri.getHost(), uri.getPort(), uri.getPath(),
-          uri.getQuery(), uri.getFragment()).toASCIIString();
-    } catch (URISyntaxException e) {
-      throw new IllegalArgumentException("Invalid MQTT broker URI: " + uri, e);
     }
   }
 }
