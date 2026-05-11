@@ -50,7 +50,7 @@ public class EtxMqttTopicBuilderTest {
   @Test
   void testBuildNmiTopicFromGeohash() {
     String topic = NmiMqttTopicBuilder.buildTopicFromGeohash("mqqtxyz", 7, "32");
-    assertEquals("/v1/g32/m/q/q/t/x/y/z/32", topic);
+    assertEquals("v1/g32/m/q/q/t/x/y/z/32", topic);
   }
 
   @Test

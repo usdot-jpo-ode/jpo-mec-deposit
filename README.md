@@ -48,7 +48,7 @@ This project is intended to serve as a consumer application to subscribe to a Ka
 
 ## Release Notes
 
-The current version and release history of the jpo-mec-deposit: [jpo-mec-deposit Release Notes](<docs/Release_notes.md>)
+The current version and release history of the jpo-mec-deposit: [jpo-mec-deposit Release Notes](docs/Release_notes.md)
 
 [Back to top](#table-of-contents)
 
@@ -170,7 +170,7 @@ For TrafficAuth/NMI MQTT publishing, use non-TLS MQTT and disable ETX registrati
 - `ETX_MQTT_REQUIRE_SESSION_ID="False"`
 - `ETX_MQTT_BROKER_URI="mqtt://mqtt.development.v2x.isscms.com:1883"` (test) or production URI
 
-When using the geohash MQTT depositor with `ETX_MQTT_BROKER_TYPE="NMI"`, topics follow the NMI topic structure: `/v1/g32/{g1}/{g2}/{g3}/{g4}/{g5}/{g6}/{g7}/{dsrcMsgID}` and publish the original signed payload bytes (signature preserved) instead of ETX wrapped payload definitions.
+When using the geohash MQTT depositor with `ETX_MQTT_BROKER_TYPE="NMI"`, topics follow the NMI topic structure: `v1/g32/{g1}/{g2}/{g3}/{g4}/{g5}/{g6}/{g7}/{dsrcMsgID}` and publish the original signed payload bytes (signature preserved) instead of ETX wrapped payload definitions. The same `v1/g32/...` pattern is used when publishing to the AV MQTT broker.
 
 To publish to ETX and NMI in the same application instance, enable dual fanout:
 
@@ -470,7 +470,7 @@ check the whole project. See [Checkstyle's Github](https://github.com/checkstyle
 
 To run the unit tests, reopen the project in the provided dev container and run the following command:
 
-``` bash
+```bash
 cd jpo-mec-deposit
 mvn test
 ```

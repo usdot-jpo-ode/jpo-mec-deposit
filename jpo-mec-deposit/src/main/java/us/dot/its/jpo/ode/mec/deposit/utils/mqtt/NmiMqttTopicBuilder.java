@@ -16,14 +16,13 @@ import us.dot.its.jpo.ode.mec.deposit.utils.MessageTypeDetector;
 import us.dot.its.jpo.ode.mec.deposit.utils.PositionConversionUtil;
 
 /**
- * Utility for building NMI-compliant MQTT topics.
+ * Utility for building NMI- and AV-compliant MQTT topics (same hierarchical naming).
  */
 public final class NmiMqttTopicBuilder {
 
-  private static final String NMI_PREFIX = "/v1/g32";
+  private static final String NMI_PREFIX = "v1/g32";
 
-  private NmiMqttTopicBuilder() {
-  }
+  private NmiMqttTopicBuilder() {}
 
   /**
    * Builds NMI topic using geohash hierarchy and DSRC message ID topic suffix.
@@ -37,7 +36,8 @@ public final class NmiMqttTopicBuilder {
     if (dsrcMsgId == null || dsrcMsgId.isBlank()) {
       throw new IllegalArgumentException("dsrcMsgId cannot be null or blank");
     }
-    String formattedGeohash = EtxMqttTopicBuilder.getPubTopicGeoHash(geohash, precision).replace("/-", "");
+    String formattedGeohash =
+        EtxMqttTopicBuilder.getPubTopicGeoHash(geohash, precision).replace("/-", "");
     return NMI_PREFIX + "/" + formattedGeohash + "/" + dsrcMsgId;
   }
 
@@ -46,7 +46,8 @@ public final class NmiMqttTopicBuilder {
    */
   public static String buildTopicFromCoordinates(double latitude, double longitude, int precision,
       EtxMessageType messageType) {
-    String geohash = EtxMqttTopicBuilder.getPubGeoHash(latitude, longitude, precision).replace("/-", "");
+    String geohash =
+        EtxMqttTopicBuilder.getPubGeoHash(latitude, longitude, precision).replace("/-", "");
     String dsrcMsgId = MessageTypeDetector.getDsrcMsgIdForMessageType(messageType);
     return NMI_PREFIX + "/" + geohash + "/" + dsrcMsgId;
   }
@@ -93,7 +94,8 @@ public final class NmiMqttTopicBuilder {
   /**
    * Builds NMI topic set for MAP intersections.
    */
-  public static Set<String> getMapTopicList(MapData mapMsg, int precision, EtxMessageType messageType) {
+  public static Set<String> getMapTopicList(MapData mapMsg, int precision,
+      EtxMessageType messageType) {
     Set<String> topics = new HashSet<>();
     if (mapMsg == null || mapMsg.getIntersections() == null) {
       return topics;
