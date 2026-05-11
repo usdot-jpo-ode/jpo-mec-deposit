@@ -170,7 +170,7 @@ For TrafficAuth/NMI MQTT publishing, use non-TLS MQTT and disable ETX registrati
 - `ETX_MQTT_REQUIRE_SESSION_ID="False"`
 - `ETX_MQTT_BROKER_URI="mqtt://mqtt.development.v2x.isscms.com:1883"` (test) or production URI
 
-When using the geohash MQTT depositor with `ETX_MQTT_BROKER_TYPE="NMI"`, topics follow the NMI topic structure: `/v1/g32/{g1}/{g2}/{g3}/{g4}/{g5}/{g6}/{g7}/{psid}` and publish the original signed payload bytes (signature preserved) instead of ETX wrapped payload definitions.
+When using the geohash MQTT depositor with `ETX_MQTT_BROKER_TYPE="NMI"`, topics follow the NMI topic structure: `/v1/g32/{g1}/{g2}/{g3}/{g4}/{g5}/{g6}/{g7}/{dsrcMsgID}` and publish the original signed payload bytes (signature preserved) instead of ETX wrapped payload definitions.
 
 To publish to ETX and NMI in the same application instance, enable dual fanout:
 

@@ -26,19 +26,19 @@ public final class NmiMqttTopicBuilder {
   }
 
   /**
-   * Builds NMI topic using geohash hierarchy and PSID.
+   * Builds NMI topic using geohash hierarchy and DSRC message ID topic suffix.
    *
    * @param geohash Geohash string (typically 7 chars)
    * @param precision Geohash precision to apply
-   * @param psid Message PSID in decimal form
+   * @param dsrcMsgId Message DSRCmsgID in decimal form
    * @return NMI MQTT topic
    */
-  public static String buildTopicFromGeohash(String geohash, int precision, String psid) {
-    if (psid == null || psid.isBlank()) {
-      throw new IllegalArgumentException("psid cannot be null or blank");
+  public static String buildTopicFromGeohash(String geohash, int precision, String dsrcMsgId) {
+    if (dsrcMsgId == null || dsrcMsgId.isBlank()) {
+      throw new IllegalArgumentException("dsrcMsgId cannot be null or blank");
     }
     String formattedGeohash = EtxMqttTopicBuilder.getPubTopicGeoHash(geohash, precision).replace("/-", "");
-    return NMI_PREFIX + "/" + formattedGeohash + "/" + psid;
+    return NMI_PREFIX + "/" + formattedGeohash + "/" + dsrcMsgId;
   }
 
   /**
@@ -47,8 +47,8 @@ public final class NmiMqttTopicBuilder {
   public static String buildTopicFromCoordinates(double latitude, double longitude, int precision,
       EtxMessageType messageType) {
     String geohash = EtxMqttTopicBuilder.getPubGeoHash(latitude, longitude, precision).replace("/-", "");
-    String psid = MessageTypeDetector.getPsidForMessageType(messageType);
-    return NMI_PREFIX + "/" + geohash + "/" + psid;
+    String dsrcMsgId = MessageTypeDetector.getDsrcMsgIdForMessageType(messageType);
+    return NMI_PREFIX + "/" + geohash + "/" + dsrcMsgId;
   }
 
   /**
