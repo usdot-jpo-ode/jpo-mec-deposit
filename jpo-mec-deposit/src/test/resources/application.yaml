@@ -52,6 +52,10 @@ mec-deposit:
             mqtt:
               enabled: false
               kafka-topic: "topic.OdeBsmJson"
+          psm:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdePsmJson"
           spat:
             mqtt:
               enabled: false
@@ -93,6 +97,10 @@ mec-deposit:
             mqtt:
               enabled: false
               kafka-topic: "topic.OdeBsmJson"
+          psm:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdePsmJson"
           spat:
             mqtt:
               enabled: false

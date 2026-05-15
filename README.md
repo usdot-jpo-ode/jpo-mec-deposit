@@ -162,6 +162,10 @@ The ETX MEC Deposit is a feature that allows the depositor to deposit messages t
 
 The ETX MQTT Deposit is a feature that allows the depositor to deposit messages to an ETX MQTT broker. This is done by setting the `ETX_MQTT_ENABLED` environment variable to `True` and providing the necessary ETX MQTT configuration. Please refer to the [sample.env](./sample.env) file for the necessary environment variables.
 
+Regional JSON depositors consume ODE topics such as BSM (`topic.OdeBsmJson`), PSM (`topic.OdePsmJson`), SPAT, TIM, MAP, and SDSM, and can fan out to **ETX**, **NMI**, and **AV** when those brokers are enabled. Shared defaults use `ETX_DEPOSITORS_*` keys (for example `ETX_DEPOSITORS_PSM_MQTT_ENABLED` and `ETX_DEPOSITORS_PSM_MQTT_KAFKA_TOPIC`); optional per-broker overrides follow the `ETX_MQTT_BROKERS_ETX_DEPOSITORS_*`, `NMI_MQTT_BROKERS_NMI_DEPOSITORS_*`, and `AV_MQTT_BROKERS_AV_DEPOSITORS_*` patterns. The [docker-compose.yml](./docker-compose.yml) `mec-deposit` service passes these variables through to the container environment.
+
+When `ETX_MQTT_MESSAGE_FORMAT` is `j2735_gr`, **ETX** receives a `GeoRoutedMsg` protobuf for regional depositors; **NMI** and **AV** still receive the **raw** ASN.1 bytes from the ODE metadata (same split as the geohash publisher for NMI/AV).
+
 For TrafficAuth/NMI MQTT publishing, use non-TLS MQTT and disable ETX registration-based connection:
 
 - `ETX_MQTT_BROKER_TYPE="NMI"`
@@ -172,18 +176,21 @@ For TrafficAuth/NMI MQTT publishing, use non-TLS MQTT and disable ETX registrati
 
 When using the geohash MQTT depositor with `ETX_MQTT_BROKER_TYPE="NMI"`, topics follow the NMI topic structure: `v1/g32/{g1}/{g2}/{g3}/{g4}/{g5}/{g6}/{g7}/{dsrcMsgID}` and publish the original signed payload bytes (signature preserved) instead of ETX wrapped payload definitions. The same `v1/g32/...` pattern is used when publishing to the AV MQTT broker.
 
-To publish to ETX and NMI in the same application instance, enable dual fanout:
+To publish to ETX, NMI, and AV in the same application instance, enable dual fanout:
 
 - `ETX_MQTT_DUAL_PUBLISH_ENABLED="True"`
-- `ETX_MQTT_DUAL_PUBLISH_TARGETS="ETX,NMI"`
-- `NMI_MQTT_ENABLED="True"`
+- `ETX_MQTT_DUAL_PUBLISH_TARGETS="ETX,NMI,AV"` (or a subset such as `ETX,NMI`)
+- `NMI_MQTT_ENABLED="True"` when including NMI
+- `AV_MQTT_ENABLED="True"` when including AV
 
-### ETX + NMI Deployment Profiles
+### ETX + NMI deployment profile templates
 
 Two deployment profile templates are included:
 
 - ETX-only deployment: [`.env.etx.example`](./.env.etx.example)
 - NMI-only deployment: [`.env.nmi.example`](./.env.nmi.example)
+
+AV (and dual or triple publish) uses the same `mec-deposit.etx.mqtt-brokers.*` property keys as in [sample.env](./sample.env); there is no separate `.env.av.example` in this repository.
 
 Use distinct consumer groups per deployment (for example, `jpo-mec-deposit-etx` and `jpo-mec-deposit-nmi`) with `KAFKA_CONSUMER_GROUP_ID`.
 
@@ -191,14 +198,14 @@ Use distinct consumer groups per deployment (for example, `jpo-mec-deposit-etx` 
 
 Dual publish mode records broker-tagged publish counters:
 
-- `mec-deposit.mqtt.publish{broker="etx|nmi",outcome="success|failure"}`
+- `mec-deposit.mqtt.publish{broker="etx|nmi|av",outcome="success|failure"}`
 - `mec-deposit.nmi.mqtt.circuit.skipped` (NMI circuit-breaker skips)
 
 Recommended rollout guardrails:
 
 - Canary enable dual mode on a single instance first.
 - Alert if NMI failure counter exceeds ETX success over a 5-minute window.
-- Roll back by setting `ETX_MQTT_DUAL_PUBLISH_ENABLED="False"` (or disable `NMI_MQTT_ENABLED`).
+- Roll back by setting `ETX_MQTT_DUAL_PUBLISH_ENABLED="False"` (or disable `NMI_MQTT_ENABLED` / `AV_MQTT_ENABLED`).
 
 #### ETX API Deposit
 
@@ -236,7 +243,7 @@ The following diagrams illustrate the different message flow patterns supported 
 
 ### ODE MQTT Publisher Message Flow
 
-The ODE MQTT Publisher flow handles direct publishing of ODE processed messages (BSM, TIM, SPaT, SDSM, etc.) to the Verizon MEC MQTT Server.
+The ODE MQTT Publisher flow handles direct publishing of ODE processed messages (BSM, PSM, TIM, SPaT, MAP, SDSM, etc.) to the Verizon MEC MQTT Server.
 
 ![ODE MQTT Publisher Message Flow](docs/ode-mqtt-publisher-diagram.png)
 
@@ -244,7 +251,7 @@ The ODE MQTT Publisher flow handles direct publishing of ODE processed messages 
 
 1. **Get Keycloak Token**: The jpo-mec-deposit consumer requests a Keycloak token from the Partner Backend API for authentication.
 2. **Request Certificate + MQTT URL**: The consumer requests the necessary certificate and MQTT URL from the Partner Backend API.
-3. **ODE Processed Messages**: JPO ODE sends processed messages (BSM, TIM, SPaT, SDSM, etc.) to the jpo-mec-deposit protobuf consumer.
+3. **ODE Processed Messages**: JPO ODE sends processed messages (BSM, PSM, TIM, SPaT, MAP, SDSM, etc.) to the jpo-mec-deposit Kafka consumers.
 4. **MQTT Regional Publish**: The consumer publishes messages directly to the Verizon MEC MQTT Server using MQTT.
 
 The Partner Backend API handles authentication with Keycloak, retrieves certificates and MQTT URLs from the Verizon ETX Registration API, and manages logging and TIM configuration in PostgreSQL.
@@ -276,7 +283,7 @@ The GeoHash MQTT Publisher flow handles publishing V2X messages using geohash-ba
 1. **Get Keycloak Token**: The jpo-mec-deposit consumer requests a Keycloak token from the Partner Backend API.
 2. **Request Certificate + MQTT URL**: The consumer requests certificate and MQTT URL from the Partner Backend API.
 3. **Publishing V2X Messages**: V2X messages are published in `geoHashRoutedMsg` protobuf definitions to a Config Kafka publisher.
-4. **MQTT Publish (TIM)**: The consumer publishes messages to the Verizon MEC MQTT Server using MQTT.
+4. **MQTT Publish**: The consumer publishes to the configured MQTT broker targets (ETX and/or NMI/AV depending on dual-publish settings).
 
 The Partner Backend API manages authentication, certificate retrieval, and interacts with PostgreSQL for logging, TIM configuration, and user database operations. PostgreSQL publishes TIM deployment configurations to the Config Kafka publisher, which feeds into the geohash routing system.
 
@@ -330,15 +337,15 @@ For more detailed information about the V2X App API, including setup, configurat
 
 ### Overview
 
-The GeoHash MQTT Publisher (`EtxGeohashMqttPublisher`) is a specialized component that consumes geohash-routed protobuf messages from Kafka and publishes them as geo-routed messages to MQTT topics. This publisher enables efficient geographic routing of V2X messages using geohash-based topic organization.
+The GeoHash MQTT Publisher (`EtxGeohashMqttPublisher`) consumes `GeoHashRoutedMsg` protobuf messages from Kafka and publishes to MQTT. When **NMI** or **AV** targets are active, it publishes the **inner ASN.1 bytes** to NMI/AV topics (`v1/g32/...` with a DSRC message ID suffix). When **ETX** is active, it publishes an **ETX-specific wire form**: raw ASN.1 if `j2735`, or a serialized `GeoHashRoutedMsg` (timestamp + geohash + inner bytes) when the ETX MQTT message format is `j2735_gr`—matching the split used by regional JSON depositors (NMI/AV always receive raw bytes from the decoded frame).
 
 ### Architecture
 
 The GeoHash MQTT Publisher operates as a Kafka consumer that:
 
 - **Consumes**: `GeoHashRoutedMsg` protobuf messages from a configured Kafka topic
-- **Transforms**: Converts `GeoHashRoutedMsg` to `GeoRoutedMsg` protobuf format
-- **Publishes**: Sends messages to MQTT topics organized by geohash and message type
+- **Extracts**: Original V2X message bytes and geohash from the protobuf
+- **Publishes**: Fan-out to enabled MQTT broker targets with per-broker payloads and topics (ETX vs NMI/AV as described above)
 
 **Key Components:**
 
@@ -347,10 +354,7 @@ The GeoHash MQTT Publisher operates as a Kafka consumer that:
   - Timestamp
   - Geohash string (base32 encoded geographic identifier)
 
-- **GeoRoutedMsg**: Output protobuf message containing:
-  - Original message bytes
-  - Timestamp
-  - Position (latitude/longitude derived from geohash)
+- **ETX `j2735_gr` wire payload**: Serialized `GeoHashRoutedMsg` built from those inner bytes, the consumption timestamp, and the geohash (ETX only when configured).
 
 ### Message Processing Flow
 
@@ -365,7 +369,7 @@ The GeoHash MQTT Publisher operates as a Kafka consumer that:
    - Extracts latitude and longitude coordinates from the geohash originating point
 
 4. **Message Type Detection**:
-   - Analyzes the original message bytes to detect the V2X message type (BSM, TIM, SPaT, MAP, SDSM, etc.)
+   - Analyzes the original message bytes to detect the V2X message type (BSM, PSM, TIM, SPaT, MAP, SDSM, etc.)
    - Defaults to TIM if detection fails
 
 5. **Topic Generation**:
@@ -373,17 +377,11 @@ The GeoHash MQTT Publisher operates as a Kafka consumer that:
    - Topic structure includes: namespace (REGIONAL or REGIONAL_STATIC), geohash path, message type, vendor, client type/subtype, and message format
    - Uses geohash directly to avoid redundant coordinate conversions
 
-6. **Protobuf Construction**:
-   - Builds a `GeoRoutedMsg` protobuf message containing:
-     - Original message bytes
-     - Timestamp (UTC)
-     - Position (latitude/longitude from geohash)
+6. **Per-broker payload and publish**:
+   - Computes NMI/AV topics under `v1/g32/...` and publishes **raw** message bytes to those brokers when enabled
+   - Computes the ETX topic and publishes the **ETX wire payload** (raw or `GeoHashRoutedMsg` per `j2735` / `j2735_gr`) when ETX is enabled
 
-7. **MQTT Publishing**:
-   - Publishes the `GeoRoutedMsg` as ASN.1 bytes to the generated MQTT topic
-   - Uses configured QoS and retain settings
-
-8. **Metrics & Logging**:
+7. **Metrics & Logging**:
    - Records processing success/failure metrics
    - Logs debug information including topic, message type, and geohash
 
@@ -406,16 +404,13 @@ ETX_DEPOSITORS_GEOHASH_MQTT_KAFKA_TOPIC="topic.GeoHashRoutedMsg"
 
 - `mec-deposit.etx.mqtt.precision`: Geohash precision (default: 7, range: 6-8)
 - `mec-deposit.etx.mqtt.vendor`: Vendor identifier for MQTT topics
-- `mec-deposit.etx.mqtt.message-format`: Message format (e.g., "j2735")
+- `mec-deposit.etx.mqtt.message-format`: Message format for the ETX leg (`j2735` raw ASN.1 on the wire, or `j2735_gr` to wrap in `GeoRoutedMsg` / `GeoHashRoutedMsg` as above)
 - `mec-deposit.etx.client-type`: Client type (e.g., "Software")
 - `mec-deposit.etx.client-sub-type`: Client subtype (e.g., "Application")
 
 **Conditional Activation:**
 
-The publisher is only activated when both of the following conditions are met:
-
-- `mec-deposit.etx.depositors.geohash.mqtt.enabled=true`
-- `mec-deposit.etx.enabled=true`
+The publisher bean is created when geohash MQTT is enabled on **at least one** of the ETX, NMI, or AV broker profiles (`mec-deposit.etx.mqtt-brokers.*.depositors.geohash.mqtt.enabled`, bound from `ETX_DEPOSITORS_GEOHASH_MQTT_ENABLED` and optional per-broker overrides). Publishing to a given broker still requires that broker’s client to be configured and enabled (for example ETX registration/TLS settings for ETX, or `NMI_MQTT_ENABLED` / `AV_MQTT_ENABLED` for those targets).
 
 **Kafka Consumer Group:**
 

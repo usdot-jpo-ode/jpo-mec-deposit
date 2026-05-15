@@ -101,6 +101,7 @@ public class EtxProperties {
   public static class MqttBrokerDepositors {
     private int staleMessageThreshold;
     private DepositorProperties bsm;
+    private DepositorProperties psm;
     private DepositorProperties spat;
     private DepositorProperties tim;
     private DepositorProperties map;
@@ -283,6 +284,7 @@ public class EtxProperties {
     }
     return switch (kind) {
       case "bsm" -> d.getBsm();
+      case "psm" -> d.getPsm();
       case "spat" -> d.getSpat();
       case "tim" -> d.getTim();
       case "map" -> d.getMap();

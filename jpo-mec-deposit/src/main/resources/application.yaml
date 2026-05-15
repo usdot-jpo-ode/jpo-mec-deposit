@@ -57,6 +57,10 @@ mec-deposit:
             mqtt:
               enabled: ${ETX_MQTT_BROKERS_ETX_DEPOSITORS_BSM_MQTT_ENABLED:${ETX_DEPOSITORS_BSM_MQTT_ENABLED:true}}
               kafka-topic: ${ETX_DEPOSITORS_BSM_MQTT_KAFKA_TOPIC:topic.OdeBsmJson}
+          psm:
+            mqtt:
+              enabled: ${ETX_MQTT_BROKERS_ETX_DEPOSITORS_PSM_MQTT_ENABLED:${ETX_DEPOSITORS_PSM_MQTT_ENABLED:true}}
+              kafka-topic: ${ETX_DEPOSITORS_PSM_MQTT_KAFKA_TOPIC:topic.OdePsmJson}
           spat:
             mqtt:
               enabled: ${ETX_MQTT_BROKERS_ETX_DEPOSITORS_SPAT_MQTT_ENABLED:${ETX_DEPOSITORS_SPAT_MQTT_ENABLED:true}}
@@ -102,6 +106,10 @@ mec-deposit:
             mqtt:
               enabled: ${NMI_MQTT_BROKERS_NMI_DEPOSITORS_BSM_MQTT_ENABLED:${ETX_DEPOSITORS_BSM_MQTT_ENABLED:true}}
               kafka-topic: ${ETX_DEPOSITORS_BSM_MQTT_KAFKA_TOPIC:topic.OdeBsmJson}
+          psm:
+            mqtt:
+              enabled: ${NMI_MQTT_BROKERS_NMI_DEPOSITORS_PSM_MQTT_ENABLED:${ETX_DEPOSITORS_PSM_MQTT_ENABLED:true}}
+              kafka-topic: ${ETX_DEPOSITORS_PSM_MQTT_KAFKA_TOPIC:topic.OdePsmJson}
           spat:
             mqtt:
               enabled: ${NMI_MQTT_BROKERS_NMI_DEPOSITORS_SPAT_MQTT_ENABLED:${ETX_DEPOSITORS_SPAT_MQTT_ENABLED:true}}
@@ -141,6 +149,10 @@ mec-deposit:
             mqtt:
               enabled: ${AV_MQTT_BROKERS_AV_DEPOSITORS_BSM_MQTT_ENABLED:${ETX_DEPOSITORS_BSM_MQTT_ENABLED:true}}
               kafka-topic: ${ETX_DEPOSITORS_BSM_MQTT_KAFKA_TOPIC:topic.OdeBsmJson}
+          psm:
+            mqtt:
+              enabled: ${AV_MQTT_BROKERS_AV_DEPOSITORS_PSM_MQTT_ENABLED:${ETX_DEPOSITORS_PSM_MQTT_ENABLED:true}}
+              kafka-topic: ${ETX_DEPOSITORS_PSM_MQTT_KAFKA_TOPIC:topic.OdePsmJson}
           spat:
             mqtt:
               enabled: ${AV_MQTT_BROKERS_AV_DEPOSITORS_SPAT_MQTT_ENABLED:${ETX_DEPOSITORS_SPAT_MQTT_ENABLED:true}}

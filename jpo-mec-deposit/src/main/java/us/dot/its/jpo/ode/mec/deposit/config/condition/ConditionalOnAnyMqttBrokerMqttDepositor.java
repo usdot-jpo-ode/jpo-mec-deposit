@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 import org.springframework.context.annotation.Conditional;
 
 /**
- * Enables a bean when the MQTT depositor kind (e.g. {@code bsm}) is enabled on at least one MQTT
+ * Enables a bean when the MQTT depositor kind (e.g. {@code bsm}, {@code psm}) is enabled on at least one MQTT
  * broker profile under {@code mec-deposit.etx.mqtt-brokers} (ETX or NMI). Does not require
  * {@code mec-deposit.etx.enabled}.
  */
@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Conditional;
 public @interface ConditionalOnAnyMqttBrokerMqttDepositor {
 
   /**
-   * Depositor key matching YAML nodes under {@code depositors} (e.g. {@code bsm}, {@code spat}).
+   * Depositor key matching YAML nodes under {@code depositors} (e.g. {@code bsm}, {@code psm}, {@code spat}).
    */
   String value();
 }
