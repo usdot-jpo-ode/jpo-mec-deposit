@@ -40,7 +40,7 @@ public class MessageTypeDetector {
         case 41: // sensorDataSharingMessage
           return EtxMessageType.SDSM;
         case 32: // personalSafetyMessage
-          return EtxMessageType.RSA;
+          return EtxMessageType.PSM;
         case 33: // roadSafetyMessage
           return EtxMessageType.RSA;
         default:

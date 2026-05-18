@@ -28,10 +28,27 @@ public class OnAnyMqttBrokerMqttDepositorEnabledCondition implements Condition {
     }
     Environment env = context.getEnvironment();
     String path = "depositors." + depositor + ".mqtt.enabled";
-    boolean etx = truthy(env.getProperty(PREFIX + "etx." + path, "false"));
-    boolean nmi = truthy(env.getProperty(PREFIX + "nmi." + path, "false"));
-    boolean av = truthy(env.getProperty(PREFIX + "av." + path, "false"));
+    boolean etx = brokerDepositorEnabled(env, "etx", depositor, path);
+    boolean nmi = brokerDepositorEnabled(env, "nmi", depositor, path);
+    boolean av = brokerDepositorEnabled(env, "av", depositor, path);
     return etx || nmi || av;
+  }
+
+  private static boolean brokerDepositorEnabled(Environment env, String broker, String depositor,
+      String path) {
+    String value = env.getProperty(PREFIX + broker + "." + path);
+    if (!isBlank(value)) {
+      return truthy(value);
+    }
+    return truthy(env.getProperty(sharedDepositorEnvKey(depositor)));
+  }
+
+  private static String sharedDepositorEnvKey(String depositor) {
+    return "ETX_DEPOSITORS_" + depositor.toUpperCase() + "_MQTT_ENABLED";
+  }
+
+  private static boolean isBlank(String value) {
+    return value == null || value.isBlank();
   }
 
   private static boolean truthy(String value) {

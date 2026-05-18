@@ -50,8 +50,7 @@ public class EtxPsmMqttDepositor extends AbstractEtxMqttDepositor {
   @Autowired
   public EtxPsmMqttDepositor(MecDepositProperties mecDepositProperties, EtxProperties etxProperties,
       EtxMqttProperties mqttProperties, @Nullable EtxMqttPublishService mqttService,
-      MeterRegistry registry,
-      MultiBrokerPublishService multiBrokerPublishService,
+      MeterRegistry registry, MultiBrokerPublishService multiBrokerPublishService,
       KafkaTemplate<String, String> kafkaTemplate) {
     super(mecDepositProperties, etxProperties, mqttProperties, EtxMessageType.PSM, mqttService,
         registry, kafkaTemplate);
@@ -116,15 +115,16 @@ public class EtxPsmMqttDepositor extends AbstractEtxMqttDepositor {
       Map<MqttBrokerTarget, BrokerPublishPayload> payloads = new EnumMap<>(MqttBrokerTarget.class);
       if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.ETX)
           && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.ETX, "psm")) {
-        payloads.put(MqttBrokerTarget.ETX, BrokerPublishPayload.builder().target(MqttBrokerTarget.ETX)
-            .topics(Set.of(topic)).payload(etxPayload).build());
+        payloads.put(MqttBrokerTarget.ETX, BrokerPublishPayload.builder()
+            .target(MqttBrokerTarget.ETX).topics(Set.of(topic)).payload(etxPayload).build());
       }
       if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.NMI)
           && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.NMI, "psm")) {
         String nmiTopic = NmiMqttTopicBuilder.buildTopicFromCoordinates(latitude, longitude,
             etxProperties.mqttTopicPrecision(MqttBrokerTarget.NMI), messageType);
-        payloads.put(MqttBrokerTarget.NMI, BrokerPublishPayload.builder().target(MqttBrokerTarget.NMI)
-            .topics(Set.of(nmiTopic)).payload(rawMessageBytes).build());
+        payloads.put(MqttBrokerTarget.NMI,
+            BrokerPublishPayload.builder().target(MqttBrokerTarget.NMI).topics(Set.of(nmiTopic))
+                .payload(rawMessageBytes).build());
       }
       if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.AV)
           && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.AV, "psm")) {
@@ -134,10 +134,16 @@ public class EtxPsmMqttDepositor extends AbstractEtxMqttDepositor {
             .topics(Set.of(avTopic)).payload(rawMessageBytes).build());
       }
       MqttFanoutPublishResult fanout = multiBrokerPublishService.publish(payloads, retain);
-      log.debug("Successfully sent PSM message to MQTT topic: {}", topic);
+      if (fanout.publishedTopics().isEmpty()) {
+        log.warn("PSM MQTT fanout completed with zero publishes (targets in map: {})",
+            payloads.keySet());
+      } else {
+        log.debug("Successfully sent PSM message to MQTT topic: {}", topic);
+      }
 
       Set<String> metricTopics = fanout.publishedTopics().isEmpty()
-          ? MultiBrokerPublishService.unionPayloadTopics(payloads) : fanout.publishedTopics();
+          ? MultiBrokerPublishService.unionPayloadTopics(payloads)
+          : fanout.publishedTopics();
       handleProcessingSuccess(metricTopics, odeReceivedAt, depositedAt, asn1Hex,
           fanout.mqttBrokerTargets().isEmpty() ? null : fanout.mqttBrokerTargets());
     } catch (Exception e) {
