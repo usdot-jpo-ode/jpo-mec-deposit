@@ -28,6 +28,7 @@ public class MapRefPointCollector {
   @KafkaListener(topics = "${mec-deposit.etx.mqtt-brokers.etx.depositors.map.mqtt.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-map-collector",
       concurrency = "${spring.kafka.listener.concurrency:1}",
+      containerFactory = "collectorKafkaListenerContainerFactory",
       properties = {"auto.offset.reset=earliest"})
   public void jsonMapListener(String message) {
     try {

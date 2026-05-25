@@ -16,11 +16,11 @@ import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxRegistrationRefreshService;
 
 /**
- * Abstract base class for ETX MQTT depositors. Extends AbstractEtxDepositor to provide common MQTT
- * deposit functionality.
+ * Abstract base class for multi-broker MQTT depositors. Extends AbstractDepositor to provide
+ * common MQTT deposit functionality across ETX, NMI, and AV brokers.
  */
 @Slf4j
-public abstract class AbstractEtxMqttDepositor extends AbstractEtxDepositor {
+public abstract class AbstractMqttDepositor extends AbstractDepositor {
   @Nullable
   protected final EtxMqttPublishService mqttService;
   protected final EtxMqttProperties mqttProperties;
@@ -28,7 +28,7 @@ public abstract class AbstractEtxMqttDepositor extends AbstractEtxDepositor {
   @Autowired(required = false)
   protected EtxRegistrationRefreshService refreshService;
 
-  protected AbstractEtxMqttDepositor(MecDepositProperties mecDepositProperties,
+  protected AbstractMqttDepositor(MecDepositProperties mecDepositProperties,
       EtxProperties etxProperties, EtxMqttProperties mqttProperties, EtxMessageType messageType,
       @Nullable EtxMqttPublishService mqttService, MeterRegistry registry,
       KafkaTemplate<String, String> kafkaTemplate) {

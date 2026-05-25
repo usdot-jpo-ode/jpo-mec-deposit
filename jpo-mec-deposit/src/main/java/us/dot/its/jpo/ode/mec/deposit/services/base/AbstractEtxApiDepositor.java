@@ -10,10 +10,10 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxDepositorType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 
 /**
- * Abstract base class for ETX API depositors. Extends AbstractEtxDepositor to provide common API
+ * Abstract base class for ETX API depositors. Extends AbstractDepositor to provide common API
  * deposit functionality.
  */
-public abstract class AbstractEtxApiDepositor extends AbstractEtxDepositor {
+public abstract class AbstractEtxApiDepositor extends AbstractDepositor {
   protected final EtxPartnerClient partnerApi;
   protected final EtxTokenManager tokenManager;
 

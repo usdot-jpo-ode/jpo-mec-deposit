@@ -67,7 +67,7 @@ public class EtxMqttPublishService {
       if (count > 0) {
         log.info("Published {} messages in the last second", count);
       } else {
-        log.debug("No messages published in the last second");
+        log.info("No messages published in the last second");
       }
     }, 1, 1, TimeUnit.SECONDS);
   }

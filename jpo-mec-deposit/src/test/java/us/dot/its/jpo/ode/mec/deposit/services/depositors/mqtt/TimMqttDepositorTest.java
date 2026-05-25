@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit.services.etx.depositors.mqtt;
+package us.dot.its.jpo.ode.mec.deposit.services.depositors.mqtt;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -49,7 +49,7 @@ import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrameList;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class EtxTimMqttDepositorTest {
+class TimMqttDepositorTest {
 
   @Mock
   private MecDepositProperties mecDepositProperties;
@@ -76,7 +76,7 @@ class EtxTimMqttDepositorTest {
   private MapRefPointCollector mapDataCollector;
 
   private MeterRegistry registry;
-  private EtxTimMqttDepositor depositor;
+  private TimMqttDepositor depositor;
   private ObjectMapper objectMapper;
   private String sampleTimJson;
   private MockedStatic<EtxMqttTopicBuilder> mockedTopicBuilder;
@@ -104,7 +104,7 @@ class EtxTimMqttDepositorTest {
     when(mqttProperties.getVendor()).thenReturn("test-vendor");
     when(mqttProperties.getMessageFormat()).thenReturn(EtxMqttMessageFormat.J2735);
 
-    depositor = new EtxTimMqttDepositor(mecDepositProperties, etxProperties, mqttProperties,
+    depositor = new TimMqttDepositor(mecDepositProperties, etxProperties, mqttProperties,
         mqttService, registry, kafkaTemplate);
     objectMapper = new ObjectMapper();
 
