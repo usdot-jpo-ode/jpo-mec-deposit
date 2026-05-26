@@ -143,11 +143,29 @@ public abstract class AbstractEtxDepositor {
   }
 
   /**
+   * Handles successful message processing using the class-level {@link #messageType}.
+   *
    * @param mqttBrokerTargets broker names that successfully received the message (e.g. ETX, NMI);
    *        omit by passing null for non-MQTT or legacy paths
    */
   protected void handleProcessingSuccess(Set<String> topics, String odeReceivedAt,
       LocalDateTime depositedAt, String asn1Hex, @Nullable Set<String> mqttBrokerTargets) {
+    handleProcessingSuccess(topics, odeReceivedAt, depositedAt, asn1Hex, mqttBrokerTargets,
+        messageType);
+  }
+
+  /**
+   * Overload that accepts an explicit {@code detectedMessageType}, used by publishers (e.g.
+   * geohash) that handle multiple message types and detect the type at runtime rather than relying
+   * on the class-level {@link #messageType} field.
+   *
+   * @param detectedMessageType the actual message type determined from the message bytes
+   * @param mqttBrokerTargets broker names that successfully received the message (e.g. ETX, NMI);
+   *        omit by passing null for non-MQTT or legacy paths
+   */
+  protected void handleProcessingSuccess(Set<String> topics, String odeReceivedAt,
+      LocalDateTime depositedAt, String asn1Hex, @Nullable Set<String> mqttBrokerTargets,
+      EtxMessageType detectedMessageType) {
 
     if (!mecDepositProperties.getMetrics().isEnabled()) {
       log.debug("Metrics are disabled, skipping success processing");
@@ -164,9 +182,8 @@ public abstract class AbstractEtxDepositor {
 
     // Publish success metrics
     publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
-        .messageType(messageType).odeReceivedAt(odeReceivedAtMillis)
-        .mecDepositedAt(depositedAtMillis).latencyMs(latencyMs)
-        .success(true).topics(topics)
+        .messageType(detectedMessageType).odeReceivedAt(odeReceivedAtMillis)
+        .mecDepositedAt(depositedAtMillis).latencyMs(latencyMs).success(true).topics(topics)
         .mqttBrokerTargets(
             mqttBrokerTargets != null && !mqttBrokerTargets.isEmpty() ? mqttBrokerTargets : null)
         .asn1Hex(asn1Hex).build());

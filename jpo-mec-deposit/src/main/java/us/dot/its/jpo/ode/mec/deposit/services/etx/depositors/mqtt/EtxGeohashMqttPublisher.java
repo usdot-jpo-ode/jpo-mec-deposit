@@ -160,7 +160,8 @@ public class EtxGeohashMqttPublisher extends AbstractEtxMqttDepositor {
 
       Instant timestamp = depositedAt.toInstant(ZoneOffset.UTC);
       handleProcessingSuccess(metricTopics, timestamp.toString(), depositedAt, asn1Hex,
-          fanout.mqttBrokerTargets().isEmpty() ? null : fanout.mqttBrokerTargets());
+          fanout.mqttBrokerTargets().isEmpty() ? null : fanout.mqttBrokerTargets(),
+          detectedMessageType);
     } catch (Exception e) {
       handleProcessingError(e, topicSet, depositedAt.toInstant(ZoneOffset.UTC).toEpochMilli(),
           asn1Hex);
