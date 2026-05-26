@@ -10,7 +10,8 @@ import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.integration.channel.DirectChannel;
+import java.util.concurrent.Executors;
+import org.springframework.integration.channel.ExecutorChannel;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.mqtt.core.ClientManager;
 import org.springframework.integration.mqtt.core.Mqttv3ClientManager;
@@ -161,7 +162,7 @@ public class EtxMqttConfig {
    */
   @Bean
   public MessageChannel mqttOutboundChannel() {
-    return new DirectChannel();
+    return new ExecutorChannel(Executors.newCachedThreadPool());
   }
 
   /**
@@ -203,6 +204,7 @@ public class EtxMqttConfig {
       ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager) {
     MqttPahoMessageHandler messageHandler = new MqttPahoMessageHandler(clientManager);
     messageHandler.setAsync(true);
+    messageHandler.setAsyncEvents(true);
     messageHandler.setDefaultQos(0);
     messageHandler.setDefaultRetained(false);
     return messageHandler;
@@ -211,12 +213,20 @@ public class EtxMqttConfig {
   /**
    * Creates and configures the MQTT outbound message flow.
    *
-   * @param clientManager The MQTT client manager
+   * <p>The {@code mqttOutboundChannel} bean is injected by reference (not by string name) so the
+   * DSL uses the pre-existing {@link ExecutorChannel} instead of creating a new
+   * {@code DirectChannel} that would override it and make all publishes synchronous on the calling
+   * thread.
+   *
+   * @param mqttOutboundChannel The executor-backed outbound channel
+   * @param mqttOutboundMessageHandler The async MQTT outbound message handler
    * @return Configured IntegrationFlow for outbound messages
    */
   @Bean
-  public IntegrationFlow mqttOutFlow(
-      ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager) {
-    return f -> f.channel("mqttOutboundChannel").handle(new MqttPahoMessageHandler(clientManager));
+  public IntegrationFlow mqttOutFlow(MessageChannel mqttOutboundChannel,
+      MqttPahoMessageHandler mqttOutboundMessageHandler) {
+    return IntegrationFlow.from(mqttOutboundChannel)
+        .handle(mqttOutboundMessageHandler)
+        .get();
   }
 }

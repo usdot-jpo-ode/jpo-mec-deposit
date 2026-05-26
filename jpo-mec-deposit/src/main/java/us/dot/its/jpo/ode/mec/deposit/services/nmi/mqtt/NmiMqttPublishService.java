@@ -6,8 +6,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +34,16 @@ public class NmiMqttPublishService {
   private final AtomicInteger consecutiveFailures = new AtomicInteger(0);
   private volatile boolean circuitOpen = false;
   private MqttClient mqttClient;
+  /**
+   * Single-threaded executor with a bounded queue used to serialize and offload the blocking
+   * connect+publish operations so the Kafka listener thread is never held.  When the broker is
+   * unreachable the queue will fill; the DiscardOldestPolicy drops the oldest pending task rather
+   * than accumulating an unbounded backlog.
+   */
+  private final ExecutorService publishExecutor = new ThreadPoolExecutor(
+      1, 1, 0L, TimeUnit.MILLISECONDS,
+      new ArrayBlockingQueue<>(200),
+      new ThreadPoolExecutor.DiscardOldestPolicy());
 
   /**
    * Creates NMI MQTT publish service.
@@ -47,8 +60,12 @@ public class NmiMqttPublishService {
 
   /**
    * Publishes binary ASN.1 payload to NMI broker.
+   *
+   * <p>Fast-path checks (enabled flag, circuit breaker, rate limit) run on the calling thread.
+   * The blocking {@code connect + publish} work is submitted to a bounded single-threaded executor
+   * so the Kafka listener thread is never held waiting for a potentially unreachable broker.
    */
-  public synchronized void publishAsn1Bytes(String topic, byte[] payload, boolean retain) {
+  public void publishAsn1Bytes(String topic, byte[] payload, boolean retain) {
     if (!properties.isEnabled()) {
       return;
     }
@@ -60,6 +77,15 @@ public class NmiMqttPublishService {
       availableTokens.incrementAndGet();
       return;
     }
+    publishExecutor.submit(() -> doPublish(topic, payload, retain));
+  }
+
+  public void resetCircuitBreaker() {
+    circuitOpen = false;
+    consecutiveFailures.set(0);
+  }
+
+  private synchronized void doPublish(String topic, byte[] payload, boolean retain) {
     try {
       ensureConnected();
       MqttMessage message = new MqttMessage(payload);
@@ -74,13 +100,7 @@ public class NmiMqttPublishService {
         circuitOpen = true;
         log.error("Opening NMI circuit breaker after {} failures", failures);
       }
-      throw new RuntimeException(e);
     }
-  }
-
-  public synchronized void resetCircuitBreaker() {
-    circuitOpen = false;
-    consecutiveFailures.set(0);
   }
 
   private void ensureConnected() throws MqttException {

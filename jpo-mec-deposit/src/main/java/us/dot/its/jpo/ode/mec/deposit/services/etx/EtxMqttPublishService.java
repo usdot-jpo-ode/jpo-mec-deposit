@@ -2,6 +2,7 @@ package us.dot.its.jpo.ode.mec.deposit.services.etx;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PostConstruct;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerApiProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttClientInfo;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
 
 /**
@@ -34,6 +36,7 @@ public class EtxMqttPublishService {
   private final AtomicInteger currentRate = new AtomicInteger(0);
   private final AtomicInteger availableTokens;
   private final boolean requireSessionId;
+  private volatile boolean sessionIdAvailable = false;
 
   /**
    * Constructs an EtxMqttService with the specified parameters.
@@ -73,6 +76,36 @@ public class EtxMqttPublishService {
   }
 
   /**
+   * Checks the config file once at startup to pre-populate the in-memory session ID cache so the
+   * hot publish path does not read disk when a session ID was already persisted from a prior run.
+   */
+  @PostConstruct
+  public void init() {
+    if (requireSessionId) {
+      sessionIdAvailable = readSessionIdFromDisk();
+      if (sessionIdAvailable) {
+        log.info("Verizon ETX session ID found on disk at startup — caching in memory");
+      } else {
+        log.info("No Verizon ETX session ID on disk at startup — will cache when received");
+      }
+    }
+  }
+
+  /**
+   * Called by the MQTT subscription service when a ClientInfo message arrives with a new session
+   * ID. Updates the in-memory cache so subsequent publishes skip the disk check.
+   *
+   * @param clientInfo The client info received from the vzimp/1/ClientInfo topic
+   */
+  public void notifySessionId(EtxMqttClientInfo clientInfo) {
+    if (clientInfo != null && clientInfo.getSessionId() != null
+        && !clientInfo.getSessionId().trim().isEmpty()) {
+      sessionIdAvailable = true;
+      log.info("Verizon ETX session ID received and cached in memory");
+    }
+  }
+
+  /**
    * Publishes ASN.1 encoded bytes to the specified MQTT topic.
    *
    * @param topic The MQTT topic to publish to
@@ -89,7 +122,7 @@ public class EtxMqttPublishService {
     }
 
     // Check if we have a Verizon ETX session ID before attempting to publish
-    if (requireSessionId && !hasEtxSessionId()) {
+    if (requireSessionId && !sessionIdAvailable) {
       log.warn("No Verizon ETX session ID available, skipping message publish to topic: {}", topic);
       log.info("Waiting for Verizon ETX session ID from vzimp/1/ClientInfo topic...");
       availableTokens.incrementAndGet(); // Return the token since we're not using it
@@ -104,7 +137,7 @@ public class EtxMqttPublishService {
 
       log.debug("Attempting to publish message to topic: {} (size: {} bytes)", topic,
           asn1Bytes.length);
-      boolean sent = mqttOutboundChannel.send(message, 1000);
+      boolean sent = mqttOutboundChannel.send(message, 500);
       if (!sent) {
         throw new RuntimeException("Failed to send message to MQTT channel");
       }
@@ -119,26 +152,20 @@ public class EtxMqttPublishService {
   }
 
   /**
-   * Checks if we have a Verizon ETX session ID.
+   * Reads config.json from disk to check for an existing session ID. Only called once at startup
+   * and should not be used in the hot publish path.
    *
-   * @return true if session ID is available, false otherwise
+   * @return true if a non-empty session ID is present on disk
    */
-  private boolean hasEtxSessionId() {
+  private boolean readSessionIdFromDisk() {
     try {
       String configPath = partnerApiProperties.getCertificatePath() + "/config.json";
       RegistrationConfiguration config = EtxUtil.readConfigFile(configPath);
-      boolean hasSessionId =
-          config.getEtxSessionID() != null && config.getEtxSessionID().getSessionId() != null
-              && !config.getEtxSessionID().getSessionId().trim().isEmpty();
-
-      if (hasSessionId) {
-        log.debug("Verizon ETX session ID available: {}", config.getEtxSessionID().getSessionId());
-      } else {
-        log.debug("No Verizon ETX session ID available yet");
-      }
-      return hasSessionId;
+      return config.getEtxSessionID() != null
+          && config.getEtxSessionID().getSessionId() != null
+          && !config.getEtxSessionID().getSessionId().trim().isEmpty();
     } catch (Exception e) {
-      log.debug("Error checking Verizon ETX session ID: {}", e.getMessage());
+      log.debug("Error reading session ID from disk: {}", e.getMessage());
       return false;
     }
   }

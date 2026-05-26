@@ -212,8 +212,10 @@ spring:
       group-id: ${KAFKA_CONSUMER_GROUP_ID:jpo-mec-deposit}
       fetch-min-size: 1
       fetch-max-wait: 10
-      max-poll-records: 100
+      max-poll-records: ${KAFKA_MAX_POLL_RECORDS:10}
       auto-offset-reset: latest
+      properties:
+        max.poll.interval.ms: ${KAFKA_MAX_POLL_INTERVAL_MS:120000}
       enable-auto-commit: true
       auto-commit-interval: 50
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer

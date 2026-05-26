@@ -3,8 +3,11 @@ package us.dot.its.jpo.ode.mec.deposit.services.av.mqtt;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +32,14 @@ public class AvMqttPublishService {
   private final AtomicInteger consecutiveFailures = new AtomicInteger(0);
   private volatile boolean circuitOpen = false;
   private MqttClient mqttClient;
+  /**
+   * Single-threaded executor with a bounded queue used to serialize and offload the blocking
+   * connect+publish operations so the Kafka listener thread is never held.
+   */
+  private final ExecutorService publishExecutor = new ThreadPoolExecutor(
+      1, 1, 0L, TimeUnit.MILLISECONDS,
+      new ArrayBlockingQueue<>(200),
+      new ThreadPoolExecutor.DiscardOldestPolicy());
 
   public AvMqttPublishService(AvMqttProperties properties, MeterRegistry registry) {
     this.properties = properties;
@@ -41,8 +52,12 @@ public class AvMqttPublishService {
 
   /**
    * Publishes binary ASN.1 payload to AV broker.
+   *
+   * <p>Fast-path checks (enabled flag, circuit breaker, rate limit) run on the calling thread.
+   * The blocking {@code connect + publish} work is submitted to a bounded single-threaded executor
+   * so the Kafka listener thread is never held waiting for a potentially unreachable broker.
    */
-  public synchronized void publishAsn1Bytes(String topic, byte[] payload, boolean retain) {
+  public void publishAsn1Bytes(String topic, byte[] payload, boolean retain) {
     if (!properties.isEnabled()) {
       return;
     }
@@ -54,6 +69,10 @@ public class AvMqttPublishService {
       availableTokens.incrementAndGet();
       return;
     }
+    publishExecutor.submit(() -> doPublish(topic, payload, retain));
+  }
+
+  private synchronized void doPublish(String topic, byte[] payload, boolean retain) {
     try {
       ensureConnected();
       MqttMessage message = new MqttMessage(payload);
@@ -68,7 +87,6 @@ public class AvMqttPublishService {
         circuitOpen = true;
         log.error("Opening AV circuit breaker after {} failures", failures);
       }
-      throw new RuntimeException(e);
     }
   }
 

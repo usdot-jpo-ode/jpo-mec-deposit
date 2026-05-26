@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
@@ -21,6 +23,7 @@ import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 public class EtxMqttSubscriptionService {
   protected final ObjectMapper mapper;
   private final String configPath;
+  private EtxMqttPublishService etxMqttPublishService;
 
   /**
    * Constructor for EtxMqttSubscriptionService.
@@ -30,6 +33,15 @@ public class EtxMqttSubscriptionService {
   public EtxMqttSubscriptionService(EtxPartnerApiProperties partnerApi) {
     this.configPath = partnerApi.getCertificatePath() + "/config.json";
     this.mapper = DateJsonMapper.getInstance();
+  }
+
+  /**
+   * Optional: injected when ETX is enabled so the publish service session ID cache is updated
+   * immediately when a ClientInfo message arrives rather than waiting for the next disk read.
+   */
+  @Autowired(required = false)
+  public void setEtxMqttPublishService(@Nullable EtxMqttPublishService etxMqttPublishService) {
+    this.etxMqttPublishService = etxMqttPublishService;
   }
 
   @PostConstruct
@@ -73,6 +85,9 @@ public class EtxMqttSubscriptionService {
       RegistrationConfiguration configData = EtxUtil.readConfigFile(configPath);
       configData.setEtxSessionID(payload);
       EtxUtil.writeToFile(configData.getConfigFilePath(), mapper.writeValueAsString(configData));
+      if (etxMqttPublishService != null) {
+        etxMqttPublishService.notifySessionId(payload);
+      }
     } catch (Exception e) {
       log.error("Failed to handle client info: {}", payload, e);
     }
