@@ -3,8 +3,6 @@ package us.dot.its.jpo.ode.mec.deposit.services.nmi.mqtt;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
@@ -56,6 +54,12 @@ public class NmiMqttPublishService {
     scheduler.scheduleAtFixedRate(
         () -> availableTokens.set(Math.max(properties.getMaxMessagesPerSecond(), 1)), 1, 1,
         TimeUnit.SECONDS);
+    scheduler.scheduleAtFixedRate(() -> {
+      if (circuitOpen) {
+        log.info("NMI circuit breaker: half-open probe — resetting to allow retry");
+        resetCircuitBreaker();
+      }
+    }, 60, 60, TimeUnit.SECONDS);
   }
 
   /**
@@ -80,9 +84,13 @@ public class NmiMqttPublishService {
     publishExecutor.submit(() -> doPublish(topic, payload, retain));
   }
 
+  /**
+   * Resets the NMI circuit breaker, allowing publish attempts to resume.
+   */
   public void resetCircuitBreaker() {
     circuitOpen = false;
     consecutiveFailures.set(0);
+    log.info("NMI circuit breaker reset");
   }
 
   private synchronized void doPublish(String topic, byte[] payload, boolean retain) {
@@ -106,6 +114,18 @@ public class NmiMqttPublishService {
   private void ensureConnected() throws MqttException {
     if (mqttClient != null && mqttClient.isConnected()) {
       return;
+    }
+    if (mqttClient != null) {
+      try {
+        mqttClient.disconnect(0);
+      } catch (MqttException ignored) {
+        // client may already be disconnected or mid-reconnect
+      }
+      try {
+        mqttClient.close();
+      } catch (MqttException ignored) {
+        // best-effort cleanup of stale client
+      }
     }
     String serverUri = toPahoConnectionUri(properties.getBrokerUri());
     String clientId = properties.getClientId() == null || properties.getClientId().isBlank()

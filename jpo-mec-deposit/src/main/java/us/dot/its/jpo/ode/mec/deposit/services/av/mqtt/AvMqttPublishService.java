@@ -41,6 +41,9 @@ public class AvMqttPublishService {
       new ArrayBlockingQueue<>(200),
       new ThreadPoolExecutor.DiscardOldestPolicy());
 
+  /**
+   * Creates AV MQTT publish service.
+   */
   public AvMqttPublishService(AvMqttProperties properties, MeterRegistry registry) {
     this.properties = properties;
     this.availableTokens = new AtomicInteger(Math.max(properties.getMaxMessagesPerSecond(), 1));
@@ -48,6 +51,12 @@ public class AvMqttPublishService {
         .description("Messages skipped while AV circuit breaker is open").register(registry);
     scheduler.scheduleAtFixedRate(() -> availableTokens.set(Math.max(properties.getMaxMessagesPerSecond(), 1)),
         1, 1, TimeUnit.SECONDS);
+    scheduler.scheduleAtFixedRate(() -> {
+      if (circuitOpen) {
+        log.info("AV circuit breaker: half-open probe — resetting to allow retry");
+        resetCircuitBreaker();
+      }
+    }, 60, 60, TimeUnit.SECONDS);
   }
 
   /**
@@ -72,6 +81,15 @@ public class AvMqttPublishService {
     publishExecutor.submit(() -> doPublish(topic, payload, retain));
   }
 
+  /**
+   * Resets the AV circuit breaker, allowing publish attempts to resume.
+   */
+  public void resetCircuitBreaker() {
+    circuitOpen = false;
+    consecutiveFailures.set(0);
+    log.info("AV circuit breaker reset");
+  }
+
   private synchronized void doPublish(String topic, byte[] payload, boolean retain) {
     try {
       ensureConnected();
@@ -93,6 +111,18 @@ public class AvMqttPublishService {
   private void ensureConnected() throws MqttException {
     if (mqttClient != null && mqttClient.isConnected()) {
       return;
+    }
+    if (mqttClient != null) {
+      try {
+        mqttClient.disconnect(0);
+      } catch (MqttException ignored) {
+        // client may already be disconnected or mid-reconnect
+      }
+      try {
+        mqttClient.close();
+      } catch (MqttException ignored) {
+        // best-effort cleanup of stale client
+      }
     }
     String serverUri = NmiMqttPublishService.toPahoConnectionUri(properties.getBrokerUri());
     String clientId = properties.getClientId() == null || properties.getClientId().isBlank()
