@@ -139,6 +139,11 @@
         </dependency>
         <dependency>
             <groupId>usdot.jpo.ode</groupId>
+            <artifactId>jpo-ode-svcs</artifactId>
+            <version>${jpo-ode.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>usdot.jpo.ode</groupId>
             <artifactId>jpo-ode-plugins</artifactId>
             <version>${jpo-ode.version}</version>
         </dependency>

@@ -1,55 +1,71 @@
 package us.dot.its.jpo.ode.mec.deposit.utils;
 
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.util.encoders.Hex;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
+import us.dot.its.jpo.ode.uper.UperUtil;
 
 /**
- * Utility class for detecting message types from ASN.1 payloads by reading DSRC message IDs. Maps
- * DSRC message IDs to corresponding EtxMessageType values.
+ * Utility class for detecting message types from raw ASN.1/J2735 payloads. Uses start-flag scanning
+ * (the same approach as {@link UperUtil}) to identify the message type, which correctly handles
+ * payloads that may be prefixed with IEEE 1609.2/1609.3 security or transport headers.
  */
 @Slf4j
 public class MessageTypeDetector {
 
+  private MessageTypeDetector() {
+    throw new UnsupportedOperationException();
+  }
+
   /**
-   * Extracts the message type from the ASN.1 payload by reading the DSRC message ID. Maps the DSRC
-   * message ID to the corresponding EtxMessageType.
+   * Detects the J2735 message type from raw ASN.1 payload bytes by scanning for known start flags
+   * via {@link UperUtil#determineHexPacketType(String)}. This approach handles signed/unsigned
+   * 1609.2 and 1609.3 headers transparently, unlike a fixed-offset DSRC message ID read.
    *
-   * @param messageBytes The ASN.1 message bytes
-   * @return The detected EtxMessageType, or null if unable to determine
+   * @param messageBytes The raw message bytes (may include 1609.2/1609.3 headers)
+   * @return The detected {@link EtxMessageType}, or {@code null} if the type cannot be determined
    */
   public static EtxMessageType detectMessageType(byte[] messageBytes) {
     try {
-      if (messageBytes.length < 2) {
-        log.warn("Message too short to contain DSRC message ID (need at least 2 bytes)");
+      String hexString = Hex.toHexString(messageBytes).toLowerCase();
+      String detectedType = UperUtil.determineHexPacketType(hexString);
+      if (detectedType == null || detectedType.isEmpty()) {
+        log.warn("Could not determine message type from hex payload");
         return null;
       }
-
-      // Read the first 2 bytes as the message ID
-      int messageId = ((messageBytes[0] & 0xFF) << 8) | (messageBytes[1] & 0xFF);
-
-      // Map DSRC message ID to EtxMessageType based on the DSRCmsgID values
-      switch (messageId) {
-        case 20: // basicSafetyMessage
-          return EtxMessageType.BSM;
-        case 18: // mapData
-          return EtxMessageType.MAP;
-        case 19: // signalPhaseAndTimingMessage
-          return EtxMessageType.SPAT;
-        case 31: // travelerInformation
-          return EtxMessageType.TIM;
-        case 41: // sensorDataSharingMessage
-          return EtxMessageType.SDSM;
-        case 32: // personalSafetyMessage
-          return EtxMessageType.PSM;
-        case 33: // roadSafetyMessage
-          return EtxMessageType.RSA;
-        default:
-          log.warn("Unknown DSRC message ID: {}", messageId);
-          return null;
-      }
+      return mapToEtxMessageType(detectedType);
     } catch (Exception e) {
       log.warn("Failed to extract message type from payload", e);
       return null;
+    }
+  }
+
+  /**
+   * Maps the string type returned by {@link UperUtil#determineHexPacketType(String)} to the
+   * corresponding {@link EtxMessageType}.
+   *
+   * @param typeString Type string as returned by UperUtil (e.g. "BSM", "TIM")
+   * @return The matching {@link EtxMessageType}, or {@code null} for types with no ETX equivalent
+   */
+  private static EtxMessageType mapToEtxMessageType(String typeString) {
+    switch (typeString) {
+      case "BSM":
+        return EtxMessageType.BSM;
+      case "PSM":
+        return EtxMessageType.PSM;
+      case "TIM":
+        return EtxMessageType.TIM;
+      case "MAP":
+        return EtxMessageType.MAP;
+      case "SPAT":
+        return EtxMessageType.SPAT;
+      case "SDSM":
+        return EtxMessageType.SDSM;
+      case "RSM":
+        return EtxMessageType.RSA;
+      default:
+        log.warn("No EtxMessageType mapping for detected type: {}", typeString);
+        return null;
     }
   }
 
@@ -81,5 +97,4 @@ public class MessageTypeDetector {
         return null;
     }
   }
-
 }
