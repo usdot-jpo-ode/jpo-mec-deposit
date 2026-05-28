@@ -38,9 +38,10 @@ import us.dot.its.jpo.ode.mec.deposit.utils.MessageTypeDetector;
 
 /**
  * Publisher class for handling geohash-routed messages via MQTT integration with ETX. This
- * publisher consumes GeoHashRoutedMsg protobuf messages from Kafka. ETX may publish a
- * GeoHashRoutedMsg wire form when {@code j2735_gr} is configured; NMI/AV always receive the inner
- * ASN.1 bytes only.
+ * publisher consumes {@link GeoHashRoutedMsg} protobuf messages from Kafka, converts the geohash
+ * to lat/lon coordinates, and deposits a {@link us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.GeoRoutedMsg}
+ * to ETX when {@code j2735_gr} is configured — matching the wire format produced by all other
+ * depositors. NMI/AV always receive the inner ASN.1 bytes only.
  */
 @Component
 @Slf4j
@@ -133,8 +134,10 @@ public class EtxGeohashMqttPublisher extends AbstractEtxMqttDepositor {
             dsrcMsgId);
       }
       Instant depositedInstant = depositedAt.toInstant(ZoneOffset.UTC);
-      byte[] etxPayload = EtxMqttProtobufBuilder.toEtxMqttWirePayloadGeoHash(originalMessageBytes,
-          mqttProperties.getMessageFormat(), depositedInstant, geohash);
+      double latitude = geohashObject.getOriginatingPoint().getLatitude();
+      double longitude = geohashObject.getOriginatingPoint().getLongitude();
+      byte[] etxPayload = EtxMqttProtobufBuilder.toEtxMqttWirePayload(originalMessageBytes,
+          mqttProperties.getMessageFormat(), depositedInstant, latitude, longitude);
       Map<MqttBrokerTarget, BrokerPublishPayload> payloads = new EnumMap<>(MqttBrokerTarget.class);
       if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.ETX)
           && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.ETX, "geohash")) {
@@ -155,8 +158,7 @@ public class EtxGeohashMqttPublisher extends AbstractEtxMqttDepositor {
           fanout.publishedTopics().isEmpty() ? topicSet : fanout.publishedTopics();
       log.debug("Sending signed payload to ETX/NMI topics: {} / {} (detected type: {}, geohash: {}, lat: {}, lon: {})",
           etxTopic, nmiTopic != null ? nmiTopic : "-", detectedMessageType, geohash,
-          geohashObject.getOriginatingPoint().getLatitude(),
-          geohashObject.getOriginatingPoint().getLongitude());
+          latitude, longitude);
 
       Instant timestamp = depositedAt.toInstant(ZoneOffset.UTC);
       handleProcessingSuccess(metricTopics, timestamp.toString(), depositedAt, asn1Hex,
