@@ -22,8 +22,9 @@ import us.dot.its.jpo.ode.mec.deposit.services.nmi.mqtt.NmiMqttPublishService;
 /**
  * Dedicated MB MQTT publish service.
  *
- * <p>Identical to {@link NmiMqttPublishService} in structure but connects to the MB broker
- * using username/password credentials.
+ * <p>
+ * Identical to {@link NmiMqttPublishService} in structure but connects to the MB broker using
+ * username/password credentials.
  */
 @Slf4j
 @Service
@@ -42,10 +43,9 @@ public class MbMqttPublishService {
    * unreachable the queue will fill; the DiscardOldestPolicy drops the oldest pending task rather
    * than accumulating an unbounded backlog.
    */
-  private final ExecutorService publishExecutor = new ThreadPoolExecutor(
-      1, 1, 0L, TimeUnit.MILLISECONDS,
-      new ArrayBlockingQueue<>(200),
-      new ThreadPoolExecutor.DiscardOldestPolicy());
+  private final ExecutorService publishExecutor =
+      new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(200),
+          new ThreadPoolExecutor.DiscardOldestPolicy());
 
   /**
    * Creates MB MQTT publish service.
@@ -69,9 +69,10 @@ public class MbMqttPublishService {
   /**
    * Publishes binary ASN.1 payload to MB broker.
    *
-   * <p>Fast-path checks (enabled flag, circuit breaker, rate limit) run on the calling thread.
-   * The blocking {@code connect + publish} work is submitted to a bounded single-threaded executor
-   * so the Kafka listener thread is never held waiting for a potentially unreachable broker.
+   * <p>
+   * Fast-path checks (enabled flag, circuit breaker, rate limit) run on the calling thread. The
+   * blocking {@code connect + publish} work is submitted to a bounded single-threaded executor so
+   * the Kafka listener thread is never held waiting for a potentially unreachable broker.
    */
   public void publishAsn1Bytes(String topic, byte[] payload, boolean retain) {
     if (!properties.isEnabled()) {
@@ -142,6 +143,7 @@ public class MbMqttPublishService {
     options.setAutomaticReconnect(true);
     options.setConnectionTimeout(10);
     options.setKeepAliveInterval(30);
+    options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
     if (properties.getUsername() != null && !properties.getUsername().isBlank()) {
       options.setUserName(properties.getUsername());
     }
