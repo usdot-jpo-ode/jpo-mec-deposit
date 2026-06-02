@@ -133,9 +133,7 @@ public class MbMqttPublishService {
       }
     }
     String serverUri = NmiMqttPublishService.toPahoConnectionUri(properties.getBrokerUri());
-    String clientId = properties.getClientId() == null || properties.getClientId().isBlank()
-        ? "jpo-mec-deposit-mb-" + UUID.randomUUID()
-        : properties.getClientId();
+    String clientId = "jpo-mec-deposit-mb-" + UUID.randomUUID();
     mqttClient = new MqttClient(serverUri, clientId);
     MqttConnectOptions options = new MqttConnectOptions();
     options.setServerURIs(new String[] {serverUri});
