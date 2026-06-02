@@ -31,7 +31,8 @@ public class OnAnyMqttBrokerMqttDepositorEnabledCondition implements Condition {
     boolean etx = brokerDepositorEnabled(env, "etx", depositor, path);
     boolean nmi = brokerDepositorEnabled(env, "nmi", depositor, path);
     boolean av = brokerDepositorEnabled(env, "av", depositor, path);
-    return etx || nmi || av;
+    boolean mb = brokerDepositorEnabled(env, "mb", depositor, path);
+    return etx || nmi || av || mb;
   }
 
   private static boolean brokerDepositorEnabled(Environment env, String broker, String depositor,

@@ -118,6 +118,13 @@ public class EtxMapMqttDepositor extends AbstractEtxMqttDepositor {
         payloads.put(MqttBrokerTarget.AV, BrokerPublishPayload.builder().target(MqttBrokerTarget.AV)
             .topics(avTopicSet).payload(rawMessageBytes).build());
       }
+      if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.MB)
+          && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.MB, "map")) {
+        Set<String> mbTopicSet = NmiMqttTopicBuilder.getMapTopicList(mapMsg,
+            etxProperties.mqttTopicPrecision(MqttBrokerTarget.MB), messageType);
+        payloads.put(MqttBrokerTarget.MB, BrokerPublishPayload.builder().target(MqttBrokerTarget.MB)
+            .topics(mbTopicSet).payload(rawMessageBytes).build());
+      }
 
       MqttFanoutPublishResult fanout = multiBrokerPublishService.publish(payloads, retain);
       Set<String> metricTopics = fanout.publishedTopics().isEmpty()

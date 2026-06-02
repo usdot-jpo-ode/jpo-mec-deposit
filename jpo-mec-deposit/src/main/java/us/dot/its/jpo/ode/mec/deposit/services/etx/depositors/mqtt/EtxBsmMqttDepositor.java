@@ -117,14 +117,21 @@ public class EtxBsmMqttDepositor extends AbstractEtxMqttDepositor {
         payloads.put(MqttBrokerTarget.NMI, BrokerPublishPayload.builder().target(MqttBrokerTarget.NMI)
             .topics(Set.of(nmiTopic)).payload(rawMessageBytes).build());
       }
-      if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.AV)
-          && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.AV, "bsm")) {
-        String avTopic = NmiMqttTopicBuilder.buildTopicFromCoordinates(latitude, longitude,
-            etxProperties.mqttTopicPrecision(MqttBrokerTarget.AV), messageType);
-        payloads.put(MqttBrokerTarget.AV, BrokerPublishPayload.builder().target(MqttBrokerTarget.AV)
-            .topics(Set.of(avTopic)).payload(rawMessageBytes).build());
-      }
-      MqttFanoutPublishResult fanout = multiBrokerPublishService.publish(payloads, retain);
+        if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.AV)
+            && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.AV, "bsm")) {
+          String avTopic = NmiMqttTopicBuilder.buildTopicFromCoordinates(latitude, longitude,
+              etxProperties.mqttTopicPrecision(MqttBrokerTarget.AV), messageType);
+          payloads.put(MqttBrokerTarget.AV, BrokerPublishPayload.builder().target(MqttBrokerTarget.AV)
+              .topics(Set.of(avTopic)).payload(rawMessageBytes).build());
+        }
+        if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.MB)
+            && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.MB, "bsm")) {
+          String mbTopic = NmiMqttTopicBuilder.buildTopicFromCoordinates(latitude, longitude,
+              etxProperties.mqttTopicPrecision(MqttBrokerTarget.MB), messageType);
+          payloads.put(MqttBrokerTarget.MB, BrokerPublishPayload.builder().target(MqttBrokerTarget.MB)
+              .topics(Set.of(mbTopic)).payload(rawMessageBytes).build());
+        }
+        MqttFanoutPublishResult fanout = multiBrokerPublishService.publish(payloads, retain);
       log.debug("Successfully sent BSM message to MQTT topic: {}", topic);
 
       Set<String> metricTopics = fanout.publishedTopics().isEmpty()

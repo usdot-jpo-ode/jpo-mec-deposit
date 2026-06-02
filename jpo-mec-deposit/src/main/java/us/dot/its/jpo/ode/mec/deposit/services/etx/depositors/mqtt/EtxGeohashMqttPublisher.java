@@ -121,6 +121,7 @@ public class EtxGeohashMqttPublisher extends AbstractEtxMqttDepositor {
       String dsrcMsgId = MessageTypeDetector.getDsrcMsgIdForMessageType(detectedMessageType);
       String nmiTopic = null;
       String avTopic = null;
+      String mbTopic = null;
       if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.NMI)
           && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.NMI, "geohash")) {
         nmiTopic = NmiMqttTopicBuilder.buildTopicFromGeohash(geohash,
@@ -131,6 +132,12 @@ public class EtxGeohashMqttPublisher extends AbstractEtxMqttDepositor {
           && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.AV, "geohash")) {
         avTopic = NmiMqttTopicBuilder.buildTopicFromGeohash(geohash,
             etxProperties.mqttTopicPrecision(MqttBrokerTarget.AV),
+            dsrcMsgId);
+      }
+      if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.MB)
+          && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.MB, "geohash")) {
+        mbTopic = NmiMqttTopicBuilder.buildTopicFromGeohash(geohash,
+            etxProperties.mqttTopicPrecision(MqttBrokerTarget.MB),
             dsrcMsgId);
       }
       Instant depositedInstant = depositedAt.toInstant(ZoneOffset.UTC);
@@ -151,6 +158,10 @@ public class EtxGeohashMqttPublisher extends AbstractEtxMqttDepositor {
       if (avTopic != null) {
         payloads.put(MqttBrokerTarget.AV, BrokerPublishPayload.builder().target(MqttBrokerTarget.AV)
             .topics(Set.of(avTopic)).payload(originalMessageBytes).build());
+      }
+      if (mbTopic != null) {
+        payloads.put(MqttBrokerTarget.MB, BrokerPublishPayload.builder().target(MqttBrokerTarget.MB)
+            .topics(Set.of(mbTopic)).payload(originalMessageBytes).build());
       }
       topicSet = MultiBrokerPublishService.unionPayloadTopics(payloads);
       MqttFanoutPublishResult fanout = multiBrokerPublishService.publish(payloads, retain);

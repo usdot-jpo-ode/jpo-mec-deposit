@@ -6,5 +6,6 @@ package us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt;
 public enum MqttBrokerTarget {
   ETX,
   NMI,
-  AV
+  AV,
+  MB
 }

@@ -47,7 +47,7 @@ mec-deposit:
           client-id: ${ETX_MQTT_CLIENT_ID:}
           broker-type: ${ETX_MQTT_BROKER_TYPE:ETX}
           dual-publish-enabled: ${ETX_MQTT_DUAL_PUBLISH_ENABLED:false}
-          dual-publish-targets: ${ETX_MQTT_DUAL_PUBLISH_TARGETS:ETX,NMI,AV}
+          dual-publish-targets: ${ETX_MQTT_DUAL_PUBLISH_TARGETS:ETX,NMI,AV,MB}
           registration-refresh-failure-threshold: ${ETX_REGISTRATION_REFRESH_FAILURE_THRESHOLD:10}
           subscriptions:
             - "vzimp/1/ClientInfo"
@@ -177,6 +177,51 @@ mec-deposit:
             mqtt:
               enabled: ${AV_MQTT_BROKERS_AV_DEPOSITORS_GEOHASH_MQTT_ENABLED:${ETX_DEPOSITORS_GEOHASH_MQTT_ENABLED:false}}
               kafka-topic: ${ETX_DEPOSITORS_GEOHASH_MQTT_KAFKA_TOPIC:topic.GeoHashRoutedMsg}
+      mb:
+        mqtt:
+          enabled: ${MB_MQTT_ENABLED:false}
+          broker-uri: ${MB_MQTT_BROKER_URI:tcp://15.237.156.97:18883}
+          client-id: ${MB_MQTT_CLIENT_ID:jpo-mec-deposit-mb}
+          username: ${MB_MQTT_USERNAME:rsp-rsp-itsamericaexpo-001}
+          password: ${MB_MQTT_PASSWORD:}
+          qos: ${MB_MQTT_QOS:0}
+          max-messages-per-second: ${MB_MQTT_PUBLISH_RATE:100}
+          precision: ${MB_MQTT_PRECISION:7}
+          circuit-breaker-failure-threshold: ${MB_MQTT_CIRCUIT_BREAKER_FAILURE_THRESHOLD:10}
+        depositors:
+          stale-message-threshold: ${MB_DEPOSITORS_STALE_MESSAGE_THRESHOLD:${ETX_DEPOSITORS_STALE_MESSAGE_THRESHOLD:250}}
+          bsm:
+            mqtt:
+              enabled: ${MB_MQTT_BROKERS_MB_DEPOSITORS_BSM_MQTT_ENABLED:${ETX_DEPOSITORS_BSM_MQTT_ENABLED:true}}
+              kafka-topic: ${ETX_DEPOSITORS_BSM_MQTT_KAFKA_TOPIC:topic.OdeBsmJson}
+          psm:
+            mqtt:
+              enabled: ${MB_MQTT_BROKERS_MB_DEPOSITORS_PSM_MQTT_ENABLED:${ETX_DEPOSITORS_PSM_MQTT_ENABLED:true}}
+              kafka-topic: ${ETX_DEPOSITORS_PSM_MQTT_KAFKA_TOPIC:topic.OdePsmJson}
+          spat:
+            mqtt:
+              enabled: ${MB_MQTT_BROKERS_MB_DEPOSITORS_SPAT_MQTT_ENABLED:${ETX_DEPOSITORS_SPAT_MQTT_ENABLED:true}}
+              kafka-topic: ${ETX_DEPOSITORS_SPAT_MQTT_KAFKA_TOPIC:topic.OdeSpatJson}
+              intersection-filter:
+                enabled: ${MB_DEPOSITORS_SPAT_INTERSECTION_FILTER_ENABLED:${ETX_DEPOSITORS_SPAT_INTERSECTION_FILTER_ENABLED:false}}
+                allowed-intersection-ids: ${MB_DEPOSITORS_SPAT_ALLOWED_INTERSECTIONS:${ETX_DEPOSITORS_SPAT_ALLOWED_INTERSECTIONS:}}
+                blocked-intersection-ids: ${MB_DEPOSITORS_SPAT_BLOCKED_INTERSECTIONS:${ETX_DEPOSITORS_SPAT_BLOCKED_INTERSECTIONS:}}
+          tim:
+            mqtt:
+              enabled: ${MB_MQTT_BROKERS_MB_DEPOSITORS_TIM_MQTT_ENABLED:${ETX_DEPOSITORS_TIM_MQTT_ENABLED:true}}
+              kafka-topic: ${ETX_DEPOSITORS_TIM_MQTT_KAFKA_TOPIC:topic.OdeTimJson}
+          map:
+            mqtt:
+              enabled: ${MB_MQTT_BROKERS_MB_DEPOSITORS_MAP_MQTT_ENABLED:${ETX_DEPOSITORS_MAP_MQTT_ENABLED:true}}
+              kafka-topic: ${ETX_DEPOSITORS_MAP_MQTT_KAFKA_TOPIC:topic.OdeMapJson}
+          sdsm:
+            mqtt:
+              enabled: ${MB_MQTT_BROKERS_MB_DEPOSITORS_SDSM_MQTT_ENABLED:${ETX_DEPOSITORS_SDSM_MQTT_ENABLED:true}}
+              kafka-topic: ${ETX_DEPOSITORS_SDSM_MQTT_KAFKA_TOPIC:topic.OdeSdsmJson}
+          geohash:
+            mqtt:
+              enabled: ${MB_MQTT_BROKERS_MB_DEPOSITORS_GEOHASH_MQTT_ENABLED:${ETX_DEPOSITORS_GEOHASH_MQTT_ENABLED:false}}
+              kafka-topic: ${ETX_DEPOSITORS_GEOHASH_MQTT_KAFKA_TOPIC:topic.GeoHashRoutedMsg}
 
 # microservice actuator
 management:
@@ -200,6 +245,10 @@ logging:
     org.springframework.integration.mqtt: INFO
     us.dot.its.jpo.ode.mec.deposit: ${LOGGING_LEVEL:INFO}
     org.apache.kafka: WARN
+
+springdoc:
+  data-rest:
+    enabled: false
 
 # Spring boot properties
 spring:

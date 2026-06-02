@@ -126,14 +126,21 @@ public class EtxPsmMqttDepositor extends AbstractEtxMqttDepositor {
             BrokerPublishPayload.builder().target(MqttBrokerTarget.NMI).topics(Set.of(nmiTopic))
                 .payload(rawMessageBytes).build());
       }
-      if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.AV)
-          && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.AV, "psm")) {
-        String avTopic = NmiMqttTopicBuilder.buildTopicFromCoordinates(latitude, longitude,
-            etxProperties.mqttTopicPrecision(MqttBrokerTarget.AV), messageType);
-        payloads.put(MqttBrokerTarget.AV, BrokerPublishPayload.builder().target(MqttBrokerTarget.AV)
-            .topics(Set.of(avTopic)).payload(rawMessageBytes).build());
-      }
-      MqttFanoutPublishResult fanout = multiBrokerPublishService.publish(payloads, retain);
+        if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.AV)
+            && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.AV, "psm")) {
+          String avTopic = NmiMqttTopicBuilder.buildTopicFromCoordinates(latitude, longitude,
+              etxProperties.mqttTopicPrecision(MqttBrokerTarget.AV), messageType);
+          payloads.put(MqttBrokerTarget.AV, BrokerPublishPayload.builder().target(MqttBrokerTarget.AV)
+              .topics(Set.of(avTopic)).payload(rawMessageBytes).build());
+        }
+        if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.MB)
+            && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.MB, "psm")) {
+          String mbTopic = NmiMqttTopicBuilder.buildTopicFromCoordinates(latitude, longitude,
+              etxProperties.mqttTopicPrecision(MqttBrokerTarget.MB), messageType);
+          payloads.put(MqttBrokerTarget.MB, BrokerPublishPayload.builder().target(MqttBrokerTarget.MB)
+              .topics(Set.of(mbTopic)).payload(rawMessageBytes).build());
+        }
+        MqttFanoutPublishResult fanout = multiBrokerPublishService.publish(payloads, retain);
       if (fanout.publishedTopics().isEmpty()) {
         log.warn("PSM MQTT fanout completed with zero publishes (targets in map: {})",
             payloads.keySet());

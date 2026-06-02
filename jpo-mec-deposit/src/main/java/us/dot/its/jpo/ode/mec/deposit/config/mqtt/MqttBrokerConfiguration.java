@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.av.mqtt.AvMqttProperties;
+import us.dot.its.jpo.ode.mec.deposit.models.mb.mqtt.MbMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.nmi.mqtt.NmiMqttProperties;
 
 /**
@@ -38,5 +39,14 @@ public class MqttBrokerConfiguration {
     }
     AvMqttProperties mqtt = etxProperties.getMqttBrokers().getAv().getMqtt();
     return mqtt != null ? mqtt : new AvMqttProperties();
+  }
+
+  @Bean
+  public MbMqttProperties mbMqttProperties(EtxProperties etxProperties) {
+    if (etxProperties.getMqttBrokers() == null || etxProperties.getMqttBrokers().getMb() == null) {
+      return new MbMqttProperties();
+    }
+    MbMqttProperties mqtt = etxProperties.getMqttBrokers().getMb().getMqtt();
+    return mqtt != null ? mqtt : new MbMqttProperties();
   }
 }

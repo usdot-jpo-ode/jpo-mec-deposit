@@ -47,6 +47,7 @@ public class MultiBrokerPublishService {
       configured = Set.of( switch (brokerType) {
         case NMI -> MqttBrokerTarget.NMI;
         case AV -> MqttBrokerTarget.AV;
+        case MB -> MqttBrokerTarget.MB;
         default -> MqttBrokerTarget.ETX;
       });
     }

@@ -113,14 +113,21 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
         payloads.put(MqttBrokerTarget.NMI, BrokerPublishPayload.builder().target(MqttBrokerTarget.NMI)
             .topics(nmiTopicSet).payload(rawMessageBytes).build());
       }
-      if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.AV)
-          && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.AV, "tim")) {
-        Set<String> avTopicSet = NmiMqttTopicBuilder.getTimTopicList(dataFramesList,
-            etxProperties.mqttTopicPrecision(MqttBrokerTarget.AV), messageType);
-        payloads.put(MqttBrokerTarget.AV, BrokerPublishPayload.builder().target(MqttBrokerTarget.AV)
-            .topics(avTopicSet).payload(rawMessageBytes).build());
-      }
-      MqttFanoutPublishResult fanout = multiBrokerPublishService.publish(payloads, retain);
+        if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.AV)
+            && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.AV, "tim")) {
+          Set<String> avTopicSet = NmiMqttTopicBuilder.getTimTopicList(dataFramesList,
+              etxProperties.mqttTopicPrecision(MqttBrokerTarget.AV), messageType);
+          payloads.put(MqttBrokerTarget.AV, BrokerPublishPayload.builder().target(MqttBrokerTarget.AV)
+              .topics(avTopicSet).payload(rawMessageBytes).build());
+        }
+        if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.MB)
+            && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.MB, "tim")) {
+          Set<String> mbTopicSet = NmiMqttTopicBuilder.getTimTopicList(dataFramesList,
+              etxProperties.mqttTopicPrecision(MqttBrokerTarget.MB), messageType);
+          payloads.put(MqttBrokerTarget.MB, BrokerPublishPayload.builder().target(MqttBrokerTarget.MB)
+              .topics(mbTopicSet).payload(rawMessageBytes).build());
+        }
+        MqttFanoutPublishResult fanout = multiBrokerPublishService.publish(payloads, retain);
       Set<String> metricTopics = fanout.publishedTopics().isEmpty()
           ? MultiBrokerPublishService.unionPayloadTopics(payloads) : fanout.publishedTopics();
       handleProcessingSuccess(metricTopics, odeReceivedAt, depositedAt, asn1Hex,

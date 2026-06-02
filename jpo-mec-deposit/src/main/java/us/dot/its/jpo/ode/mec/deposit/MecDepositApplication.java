@@ -17,7 +17,9 @@ import us.dot.its.jpo.ode.mec.deposit.config.SystemConfig;
 /**
  * Main application class for the MEC Deposit service.
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+    org.springdoc.core.configuration.SpringDocDataRestConfiguration.class
+})
 @EnableKafka
 @EnableScheduling
 @EnableConfigurationProperties

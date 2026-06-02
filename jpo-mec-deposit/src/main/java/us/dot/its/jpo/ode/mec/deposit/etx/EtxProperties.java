@@ -15,6 +15,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttBrokerTarget;
 import us.dot.its.jpo.ode.mec.deposit.models.av.mqtt.AvMqttProperties;
+import us.dot.its.jpo.ode.mec.deposit.models.mb.mqtt.MbMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.nmi.mqtt.NmiMqttProperties;
 import us.dot.its.jpo.asn.j2735.r2024.SPAT.SPAT;
 
@@ -51,6 +52,8 @@ public class EtxProperties {
     private NmiMqttBrokerProfile nmi;
     @NestedConfigurationProperty
     private AvMqttBrokerProfile av;
+    @NestedConfigurationProperty
+    private MbMqttBrokerProfile mb;
   }
 
   /** ETX Traffic Exchange MQTT broker profile. */
@@ -85,6 +88,18 @@ public class EtxProperties {
   public static class AvMqttBrokerProfile {
     @NestedConfigurationProperty
     private AvMqttProperties mqtt;
+    @NestedConfigurationProperty
+    private MqttBrokerDepositors depositors;
+  }
+
+  /** MB MQTT broker profile. */
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class MbMqttBrokerProfile {
+    @NestedConfigurationProperty
+    private MbMqttProperties mqtt;
     @NestedConfigurationProperty
     private MqttBrokerDepositors depositors;
   }
@@ -165,16 +180,20 @@ public class EtxProperties {
   public int resolveStaleMessageThresholdMs() {
     int max = 0;
     Optional<MqttBrokerDepositors> etxDeps = optionalEtxBrokerDepositors();
-    Optional<MqttBrokerDepositors> nmiDeps = optionalNmiBrokerDepositors();
-    Optional<MqttBrokerDepositors> avDeps = optionalAvBrokerDepositors();
     if (etxDeps.isPresent()) {
       max = Math.max(max, etxDeps.get().getStaleMessageThreshold());
     }
+    Optional<MqttBrokerDepositors> nmiDeps = optionalNmiBrokerDepositors();
     if (nmiDeps.isPresent()) {
       max = Math.max(max, nmiDeps.get().getStaleMessageThreshold());
     }
+    Optional<MqttBrokerDepositors> avDeps = optionalAvBrokerDepositors();
     if (avDeps.isPresent()) {
       max = Math.max(max, avDeps.get().getStaleMessageThreshold());
+    }
+    Optional<MqttBrokerDepositors> mbDeps = optionalMbBrokerDepositors();
+    if (mbDeps.isPresent()) {
+      max = Math.max(max, mbDeps.get().getStaleMessageThreshold());
     }
     return max > 0 ? max : 250;
   }
@@ -203,6 +222,10 @@ public class EtxProperties {
     if (target == MqttBrokerTarget.AV && mqttBrokers.getAv() != null
         && mqttBrokers.getAv().getMqtt() != null) {
       return mqttBrokers.getAv().getMqtt().getPrecision();
+    }
+    if (target == MqttBrokerTarget.MB && mqttBrokers.getMb() != null
+        && mqttBrokers.getMb().getMqtt() != null) {
+      return mqttBrokers.getMb().getMqtt().getPrecision();
     }
     return 7;
   }
@@ -266,6 +289,13 @@ public class EtxProperties {
     return Optional.ofNullable(mqttBrokers.getAv().getDepositors());
   }
 
+  private Optional<MqttBrokerDepositors> optionalMbBrokerDepositors() {
+    if (mqttBrokers == null || mqttBrokers.getMb() == null) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(mqttBrokers.getMb().getDepositors());
+  }
+
   private Optional<MqttBrokerDepositors> optionalBrokerDepositors(MqttBrokerTarget target) {
     if (target == null) {
       return Optional.empty();
@@ -274,6 +304,7 @@ public class EtxProperties {
       case ETX -> optionalEtxBrokerDepositors();
       case NMI -> optionalNmiBrokerDepositors();
       case AV -> optionalAvBrokerDepositors();
+      case MB -> optionalMbBrokerDepositors();
     };
   }
 

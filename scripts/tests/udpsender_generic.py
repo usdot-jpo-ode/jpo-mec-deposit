@@ -15,7 +15,7 @@ print("UDP target IP:", UDP_IP)
 print("UDP target port:", UDP_PORT)
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-frequency = 5
+frequency = 1
 
 while True:
   print("sending Messages every", frequency, "seconds")
