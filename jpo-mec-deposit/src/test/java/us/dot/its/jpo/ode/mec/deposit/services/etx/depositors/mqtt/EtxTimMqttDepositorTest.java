@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,10 +38,15 @@ import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties.MecDepositMetrics;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.GeofencePreviewResponse;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
+import us.dot.its.jpo.ode.mec.deposit.services.etx.mqtt.EtxBrokerPublisher;
+import us.dot.its.jpo.ode.mec.deposit.services.mqtt.MultiBrokerPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
 import us.dot.its.jpo.ode.model.OdeMessageFrameData;
@@ -75,6 +81,12 @@ class EtxTimMqttDepositorTest {
   @Mock
   private MapRefPointCollector mapDataCollector;
 
+  @Mock
+  private EtxPartnerClient partnerClient;
+
+  @Mock
+  private EtxTokenManager tokenManager;
+
   private MeterRegistry registry;
   private EtxTimMqttDepositor depositor;
   private ObjectMapper objectMapper;
@@ -97,6 +109,8 @@ class EtxTimMqttDepositorTest {
     when(etxProperties.resolveStaleMessageThresholdMs()).thenReturn(staleMessageThreshold);
     when(etxProperties.isMqttDepositorEnabled(any(), anyString())).thenReturn(true);
     when(etxProperties.nmiMqttTopicPrecision()).thenReturn(7);
+    when(etxProperties.mqttTopicPrecision(any())).thenReturn(7);
+    when(etxProperties.isTimMqttGeofencePreviewEnabled()).thenReturn(false);
     when(etxProperties.getClientType()).thenReturn(EtxClientType.SOFTWARE);
     when(etxProperties.getClientSubType()).thenReturn(EtxClientSubType.APPLICATION);
 
@@ -184,6 +198,38 @@ class EtxTimMqttDepositorTest {
     double staleCount =
         registry.get("mec-deposit.etx.mqtt.stale").tag("message.type", "TIM").counter().count();
     assert (staleCount > 0);
+  }
+
+  @Test
+  void testTimDepositListener_GeofencePreviewTopics() throws Exception {
+    when(etxProperties.isTimMqttGeofencePreviewEnabled()).thenReturn(true);
+    when(tokenManager.getValidToken()).thenReturn("token");
+    when(partnerClient.previewGeofence(eq("token"), anyString())).thenReturn(
+        GeofencePreviewResponse.builder().geohashes(List.of("dpsb2yq", "dpsb3n2")).build());
+
+    mockedTopicBuilder
+        .when(() -> EtxMqttTopicBuilder.getTimTopicListFromGeohashes(any(), anyString(), anyInt(),
+            any(EtxMqttMessageFormat.class), eq(EtxClientType.SOFTWARE),
+            eq(EtxClientSubType.APPLICATION)))
+        .thenReturn(Set.of("preview-etx-topic-1", "preview-etx-topic-2"));
+
+    String currentTimestamp =
+        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
+    depositor = new EtxTimMqttDepositor(mecDepositProperties, etxProperties, mqttProperties,
+        mqttService, registry,
+        new MultiBrokerPublishService(List.of(new EtxBrokerPublisher(mqttService)), mqttProperties,
+            registry),
+        kafkaTemplate, partnerClient, tokenManager);
+    depositor.timDepositListener(createTimTestMessage(currentTimestamp));
+
+    verify(partnerClient).previewGeofence(eq("token"), anyString());
+    verify(mqttService).publishAsn1Bytes(eq("preview-etx-topic-1"), any(byte[].class), eq(false));
+    verify(mqttService).publishAsn1Bytes(eq("preview-etx-topic-2"), any(byte[].class), eq(false));
+    mockedTopicBuilder.verify(
+        () -> EtxMqttTopicBuilder.getTimTopicList(any(TravelerDataFrameList.class), anyString(),
+            anyInt(), any(EtxMqttMessageFormat.class), eq(EtxClientType.SOFTWARE),
+            eq(EtxClientSubType.APPLICATION)),
+        never());
   }
 
   @Test

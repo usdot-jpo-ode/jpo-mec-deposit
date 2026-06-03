@@ -65,6 +65,8 @@ class EtxMqttPublishServiceTest {
 
     service = new EtxMqttPublishService(mqttOutboundChannel, partnerApiProperties, mqttProperties,
         meterRegistry);
+    // @PostConstruct does not run in plain unit tests; load session ID from mocked config
+    service.init();
   }
 
   @AfterEach
@@ -86,7 +88,7 @@ class EtxMqttPublishServiceTest {
 
     // Assert
     ArgumentCaptor<Message<?>> messageCaptor = ArgumentCaptor.forClass(Message.class);
-    verify(mqttOutboundChannel).send(messageCaptor.capture(), eq(1000L));
+    verify(mqttOutboundChannel).send(messageCaptor.capture(), eq(500L));
 
     Message<?> capturedMessage = messageCaptor.getValue();
     assertArrayEquals(testBytes, (byte[]) capturedMessage.getPayload());

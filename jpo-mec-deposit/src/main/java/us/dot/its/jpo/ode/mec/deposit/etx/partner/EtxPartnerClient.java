@@ -28,6 +28,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientRegistrationGetRe
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientRegistrationPostRequest;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientRegistrationResponse;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.DepositRequest;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.GeofencePreviewResponse;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
 
 /**
@@ -353,6 +354,44 @@ public class EtxPartnerClient {
       }
     }
     return valid;
+  }
+
+  /**
+   * Previews geofence coverage and geohashes for an ASN.1-encoded TIM (or other) message.
+   *
+   * @param token Authentication token
+   * @param asn1Hex ASN.1 hex string to preview
+   * @return Geofence preview response, or null when the request fails
+   */
+  @Nullable
+  public GeofencePreviewResponse previewGeofence(String token, String asn1Hex) {
+    if (!StringUtils.hasText(token)) {
+      throw new IllegalArgumentException("Token cannot be null or empty");
+    }
+    if (!StringUtils.hasText(asn1Hex)) {
+      throw new IllegalArgumentException("asn1Hex cannot be null or empty");
+    }
+
+    DepositRequest request = new DepositRequest(asn1Hex);
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", "Bearer " + token);
+    headers.set("Content-Type", "application/json");
+    HttpEntity<DepositRequest> entity = new HttpEntity<>(request, headers);
+
+    try {
+      ResponseEntity<GeofencePreviewResponse> response = restTemplate.exchange(
+          partnerApiProperties.getBaseUri() + "/prd/v2/deposit/geofence/preview", HttpMethod.POST,
+          entity, GeofencePreviewResponse.class);
+      if (response.getStatusCode().is2xxSuccessful()) {
+        return response.getBody();
+      }
+      log.error("Geofence preview response: {}", response.getStatusCode());
+    } catch (HttpClientErrorException.Unauthorized e) {
+      log.error("Unauthorized geofence preview error", e);
+    } catch (Exception e) {
+      log.error("Geofence preview request failed", e);
+    }
+    return null;
   }
 
   /**

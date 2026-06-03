@@ -73,6 +73,7 @@ mec-deposit:
             mqtt:
               enabled: ${ETX_MQTT_BROKERS_ETX_DEPOSITORS_TIM_MQTT_ENABLED:${ETX_DEPOSITORS_TIM_MQTT_ENABLED:true}}
               kafka-topic: ${ETX_DEPOSITORS_TIM_MQTT_KAFKA_TOPIC:topic.OdeTimJson}
+              geofence-preview-enabled: ${ETX_DEPOSITORS_TIM_MQTT_GEOFENCE_PREVIEW_ENABLED:false}
             api:
               enabled: ${ETX_DEPOSITORS_TIM_API_ENABLED:true}
               kafka-topic: ${ETX_DEPOSITORS_TIM_API_KAFKA_TOPIC:topic.OdeTimJsonTMCFiltered}

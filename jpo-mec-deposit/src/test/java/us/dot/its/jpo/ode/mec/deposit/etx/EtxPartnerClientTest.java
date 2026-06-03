@@ -30,6 +30,7 @@ import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.AuthToken;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.GeofencePreviewResponse;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientConnectionResponse;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.ClientRegistrationResponse;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.NetworkType;
@@ -204,6 +205,29 @@ class EtxPartnerClientTest {
 
     // Assert
     assertNull(result);
+  }
+
+  @Test
+  void previewGeofence_WithValidToken_ReturnsResponse() {
+    when(mockPartnerApiProperties.getBaseUri()).thenReturn("https://api.example.com");
+    GeofencePreviewResponse expected = GeofencePreviewResponse.builder()
+        .geohashes(java.util.List.of("dpsb2yq")).build();
+    when(mockRestTemplate.exchange(
+        eq("https://api.example.com/prd/v2/deposit/geofence/preview"), eq(HttpMethod.POST),
+        any(HttpEntity.class), eq(GeofencePreviewResponse.class)))
+        .thenReturn(ResponseEntity.ok(expected));
+
+    GeofencePreviewResponse result = etxApi.previewGeofence("token", "abc123");
+
+    assertNotNull(result);
+    assertEquals(1, result.getGeohashes().size());
+    assertEquals("dpsb2yq", result.getGeohashes().get(0));
+  }
+
+  @Test
+  void previewGeofence_WithNullToken_ThrowsException() {
+    assertThrows(IllegalArgumentException.class, () -> etxApi.previewGeofence(null, "abc"));
+    assertThrows(IllegalArgumentException.class, () -> etxApi.previewGeofence("", "abc"));
   }
 
   @Test

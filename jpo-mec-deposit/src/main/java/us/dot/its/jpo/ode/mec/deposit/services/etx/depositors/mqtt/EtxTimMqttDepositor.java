@@ -4,8 +4,8 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -15,14 +15,19 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
-import us.dot.its.jpo.ode.mec.deposit.config.condition.ConditionalOnAnyMqttBrokerMqttDepositor;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrameList;
+import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerInformation;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
+import us.dot.its.jpo.ode.mec.deposit.config.condition.ConditionalOnAnyMqttBrokerMqttDepositor;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.BrokerPublishPayload;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttBrokerTarget;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttFanoutPublishResult;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.GeofencePreviewResponse;
 import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractEtxMqttDepositor;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.mqtt.EtxBrokerPublisher;
@@ -31,7 +36,6 @@ import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttProtobufBuilder;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.NmiMqttTopicBuilder;
 import us.dot.its.jpo.ode.model.OdeMessageFrameData;
-import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerInformation;
 
 /**
  * Depositor class for handling TIM messages via MQTT integration with ETX.
@@ -41,16 +45,22 @@ import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerInformation;
 @ConditionalOnAnyMqttBrokerMqttDepositor("tim")
 public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
   private final MultiBrokerPublishService multiBrokerPublishService;
+  @Nullable
+  private final EtxPartnerClient partnerClient;
+  @Nullable
+  private final EtxTokenManager tokenManager;
 
   @Autowired
   public EtxTimMqttDepositor(MecDepositProperties mecDepositProperties, EtxProperties etxProperties,
       EtxMqttProperties mqttProperties, @Nullable EtxMqttPublishService mqttService,
-      MeterRegistry registry,
-      MultiBrokerPublishService multiBrokerPublishService,
-      KafkaTemplate<String, String> kafkaTemplate) {
+      MeterRegistry registry, MultiBrokerPublishService multiBrokerPublishService,
+      KafkaTemplate<String, String> kafkaTemplate, @Nullable EtxPartnerClient partnerClient,
+      @Nullable EtxTokenManager tokenManager) {
     super(mecDepositProperties, etxProperties, mqttProperties, EtxMessageType.TIM, mqttService,
         registry, kafkaTemplate);
     this.multiBrokerPublishService = multiBrokerPublishService;
+    this.partnerClient = partnerClient;
+    this.tokenManager = tokenManager;
   }
 
   /**
@@ -62,7 +72,7 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
     this(mecDepositProperties, etxProperties, mqttProperties, mqttService, registry,
         new MultiBrokerPublishService(List.of(new EtxBrokerPublisher(mqttService)), mqttProperties,
             registry),
-        kafkaTemplate);
+        kafkaTemplate, null, null);
   }
 
   /**
@@ -96,38 +106,32 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
           mqttProperties.getMessageFormat(), depositedInstant, null, null);
 
       var dataFramesList = timMsg.getDataFrames();
-      topicSet = EtxMqttTopicBuilder.getTimTopicList(dataFramesList, mqttProperties.getVendor(),
-          mqttProperties.getPrecision(), mqttProperties.getMessageFormat(),
-          etxProperties.getClientType(), etxProperties.getClientSubType());
+      boolean etxPublish = shouldPublishTo(MqttBrokerTarget.ETX);
+      boolean nmiPublish = shouldPublishTo(MqttBrokerTarget.NMI);
+      boolean avPublish = shouldPublishTo(MqttBrokerTarget.AV);
+      boolean mbPublish = shouldPublishTo(MqttBrokerTarget.MB);
+      TimTopicSets topicSets =
+          resolveTimTopicSets(dataFramesList, asn1Hex, etxPublish, nmiPublish, avPublish, mbPublish);
 
       Map<MqttBrokerTarget, BrokerPublishPayload> payloads = new EnumMap<>(MqttBrokerTarget.class);
-      if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.ETX)
-          && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.ETX, "tim")) {
+      if (etxPublish) {
         payloads.put(MqttBrokerTarget.ETX, BrokerPublishPayload.builder().target(MqttBrokerTarget.ETX)
-            .topics(topicSet).payload(etxPayload).build());
+            .topics(topicSets.etxTopics()).payload(etxPayload).build());
       }
-      if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.NMI)
-          && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.NMI, "tim")) {
-        Set<String> nmiTopicSet = NmiMqttTopicBuilder.getTimTopicList(dataFramesList,
-            etxProperties.mqttTopicPrecision(MqttBrokerTarget.NMI), messageType);
+      if (nmiPublish) {
         payloads.put(MqttBrokerTarget.NMI, BrokerPublishPayload.builder().target(MqttBrokerTarget.NMI)
-            .topics(nmiTopicSet).payload(rawMessageBytes).build());
+            .topics(topicSets.nmiTopics()).payload(rawMessageBytes).build());
       }
-        if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.AV)
-            && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.AV, "tim")) {
-          Set<String> avTopicSet = NmiMqttTopicBuilder.getTimTopicList(dataFramesList,
-              etxProperties.mqttTopicPrecision(MqttBrokerTarget.AV), messageType);
-          payloads.put(MqttBrokerTarget.AV, BrokerPublishPayload.builder().target(MqttBrokerTarget.AV)
-              .topics(avTopicSet).payload(rawMessageBytes).build());
-        }
-        if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.MB)
-            && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.MB, "tim")) {
-          Set<String> mbTopicSet = NmiMqttTopicBuilder.getTimTopicList(dataFramesList,
-              etxProperties.mqttTopicPrecision(MqttBrokerTarget.MB), messageType);
-          payloads.put(MqttBrokerTarget.MB, BrokerPublishPayload.builder().target(MqttBrokerTarget.MB)
-              .topics(mbTopicSet).payload(rawMessageBytes).build());
-        }
-        MqttFanoutPublishResult fanout = multiBrokerPublishService.publish(payloads, retain);
+      if (avPublish) {
+        payloads.put(MqttBrokerTarget.AV, BrokerPublishPayload.builder().target(MqttBrokerTarget.AV)
+            .topics(topicSets.avTopics()).payload(rawMessageBytes).build());
+      }
+      if (mbPublish) {
+        payloads.put(MqttBrokerTarget.MB, BrokerPublishPayload.builder().target(MqttBrokerTarget.MB)
+            .topics(topicSets.mbTopics()).payload(rawMessageBytes).build());
+      }
+      topicSet = topicSets.etxTopics();
+      MqttFanoutPublishResult fanout = multiBrokerPublishService.publish(payloads, retain);
       Set<String> metricTopics = fanout.publishedTopics().isEmpty()
           ? MultiBrokerPublishService.unionPayloadTopics(payloads) : fanout.publishedTopics();
       handleProcessingSuccess(metricTopics, odeReceivedAt, depositedAt, asn1Hex,
@@ -137,5 +141,89 @@ public class EtxTimMqttDepositor extends AbstractEtxMqttDepositor {
           odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);
     }
   }
-}
 
+  private boolean shouldPublishTo(MqttBrokerTarget target) {
+    return multiBrokerPublishService.isTargetActive(target)
+        && etxProperties.isMqttDepositorEnabled(target, "tim");
+  }
+
+  private TimTopicSets resolveTimTopicSets(TravelerDataFrameList dataFramesList, String asn1Hex,
+      boolean etxPublish, boolean nmiPublish, boolean avPublish, boolean mbPublish) {
+    if (etxProperties.isTimMqttGeofencePreviewEnabled()) {
+      List<String> geohashes = fetchGeofencePreviewGeohashes(asn1Hex);
+      if (!geohashes.isEmpty()) {
+        log.debug("Using {} geofence preview geohashes for TIM MQTT topics", geohashes.size());
+        return buildTopicSetsFromGeohashes(geohashes, etxPublish, nmiPublish, avPublish, mbPublish);
+      }
+      log.warn(
+          "TIM geofence preview enabled but no geohashes returned; falling back to data-frame regions");
+    }
+    return buildTopicSetsFromDataFrames(dataFramesList, etxPublish, nmiPublish, avPublish,
+        mbPublish);
+  }
+
+  private List<String> fetchGeofencePreviewGeohashes(String asn1Hex) {
+    if (partnerClient == null || tokenManager == null) {
+      log.warn("TIM geofence preview enabled but Partner API client/token manager unavailable");
+      return List.of();
+    }
+    try {
+      String token = tokenManager.getValidToken();
+      GeofencePreviewResponse preview = partnerClient.previewGeofence(token, asn1Hex);
+      if (preview == null || preview.getGeohashes() == null || preview.getGeohashes().isEmpty()) {
+        return List.of();
+      }
+      return preview.getGeohashes();
+    } catch (Exception e) {
+      log.warn("TIM geofence preview request failed; falling back to data-frame regions", e);
+      return List.of();
+    }
+  }
+
+  private TimTopicSets buildTopicSetsFromGeohashes(List<String> geohashes, boolean etxPublish,
+      boolean nmiPublish, boolean avPublish, boolean mbPublish) {
+    Set<String> etxTopics = etxPublish
+        ? EtxMqttTopicBuilder.getTimTopicListFromGeohashes(geohashes, mqttProperties.getVendor(),
+            mqttProperties.getPrecision(), mqttProperties.getMessageFormat(),
+            etxProperties.getClientType(), etxProperties.getClientSubType())
+        : Set.of();
+    Set<String> nmiTopics = nmiPublish
+        ? NmiMqttTopicBuilder.getTimTopicListFromGeohashes(geohashes,
+            etxProperties.mqttTopicPrecision(MqttBrokerTarget.NMI), messageType)
+        : Set.of();
+    Set<String> avTopics = avPublish
+        ? NmiMqttTopicBuilder.getTimTopicListFromGeohashes(geohashes,
+            etxProperties.mqttTopicPrecision(MqttBrokerTarget.AV), messageType)
+        : Set.of();
+    Set<String> mbTopics = mbPublish
+        ? NmiMqttTopicBuilder.getTimTopicListFromGeohashes(geohashes,
+            etxProperties.mqttTopicPrecision(MqttBrokerTarget.MB), messageType)
+        : Set.of();
+    return new TimTopicSets(etxTopics, nmiTopics, avTopics, mbTopics);
+  }
+
+  private TimTopicSets buildTopicSetsFromDataFrames(TravelerDataFrameList dataFramesList,
+      boolean etxPublish, boolean nmiPublish, boolean avPublish, boolean mbPublish) {
+    Set<String> etxTopics = etxPublish
+        ? EtxMqttTopicBuilder.getTimTopicList(dataFramesList, mqttProperties.getVendor(),
+            mqttProperties.getPrecision(), mqttProperties.getMessageFormat(),
+            etxProperties.getClientType(), etxProperties.getClientSubType())
+        : Set.of();
+    Set<String> nmiTopics = nmiPublish
+        ? NmiMqttTopicBuilder.getTimTopicList(dataFramesList,
+            etxProperties.mqttTopicPrecision(MqttBrokerTarget.NMI), messageType)
+        : Set.of();
+    Set<String> avTopics = avPublish
+        ? NmiMqttTopicBuilder.getTimTopicList(dataFramesList,
+            etxProperties.mqttTopicPrecision(MqttBrokerTarget.AV), messageType)
+        : Set.of();
+    Set<String> mbTopics = mbPublish
+        ? NmiMqttTopicBuilder.getTimTopicList(dataFramesList,
+            etxProperties.mqttTopicPrecision(MqttBrokerTarget.MB), messageType)
+        : Set.of();
+    return new TimTopicSets(etxTopics, nmiTopics, avTopics, mbTopics);
+  }
+
+  private record TimTopicSets(Set<String> etxTopics, Set<String> nmiTopics, Set<String> avTopics,
+      Set<String> mbTopics) {}
+}

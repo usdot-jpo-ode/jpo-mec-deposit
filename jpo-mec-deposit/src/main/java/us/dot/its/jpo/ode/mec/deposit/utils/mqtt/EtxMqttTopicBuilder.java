@@ -1,6 +1,7 @@
 package us.dot.its.jpo.ode.mec.deposit.utils.mqtt;
 
 import ch.hsr.geohash.GeoHash;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -152,6 +153,26 @@ public class EtxMqttTopicBuilder {
 
         topicSet.add(topic);
       }
+    }
+    return topicSet;
+  }
+
+  /**
+   * Generates ETX MQTT topics for TIM from Partner API geofence preview geohashes.
+   */
+  public static Set<String> getTimTopicListFromGeohashes(Collection<String> geohashes,
+      String mqttVendorId, int precision, EtxMqttMessageFormat messageFormat,
+      EtxClientType clientType, EtxClientSubType clientSubType) {
+    Set<String> topicSet = new HashSet<>();
+    if (geohashes == null) {
+      return topicSet;
+    }
+    for (String geohash : geohashes) {
+      if (geohash == null || geohash.isBlank()) {
+        continue;
+      }
+      topicSet.add(buildTopicFromGeohash(EtxMqttNamespace.REGIONAL, geohash.trim(),
+          EtxMessageType.TIM, precision, mqttVendorId, messageFormat, clientType, clientSubType));
     }
     return topicSet;
   }

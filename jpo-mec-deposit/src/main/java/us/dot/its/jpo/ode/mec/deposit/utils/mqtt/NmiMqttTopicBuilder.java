@@ -1,5 +1,6 @@
 package us.dot.its.jpo.ode.mec.deposit.utils.mqtt;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import us.dot.its.jpo.asn.j2735.r2024.Common.Position3D;
@@ -68,6 +69,25 @@ public final class NmiMqttTopicBuilder {
         double longitude = PositionConversionUtil.convertRefPointToLon(refPoint);
         topics.add(buildTopicFromCoordinates(latitude, longitude, precision, messageType));
       }
+    }
+    return topics;
+  }
+
+  /**
+   * Builds NMI/AV/MB topic set for TIM from Partner API geofence preview geohashes.
+   */
+  public static Set<String> getTimTopicListFromGeohashes(Collection<String> geohashes,
+      int precision, EtxMessageType messageType) {
+    Set<String> topics = new HashSet<>();
+    if (geohashes == null) {
+      return topics;
+    }
+    String dsrcMsgId = MessageTypeDetector.getDsrcMsgIdForMessageType(messageType);
+    for (String geohash : geohashes) {
+      if (geohash == null || geohash.isBlank()) {
+        continue;
+      }
+      topics.add(buildTopicFromGeohash(geohash.trim(), precision, dsrcMsgId));
     }
     return topics;
   }

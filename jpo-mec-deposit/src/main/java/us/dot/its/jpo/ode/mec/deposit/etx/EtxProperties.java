@@ -146,6 +146,7 @@ public class EtxProperties {
   public static class MqttDepositorProperties {
     private Boolean enabled;
     private String kafkaTopic;
+    private Boolean geofencePreviewEnabled;
     private SpatIntersectionFilterProperties intersectionFilter;
   }
 
@@ -235,6 +236,19 @@ public class EtxProperties {
    */
   public int nmiMqttTopicPrecision() {
     return mqttTopicPrecision(MqttBrokerTarget.NMI);
+  }
+
+  /**
+   * When true, TIM MQTT depositors resolve publish topics from Partner API geofence preview
+   * geohashes instead of TIM data-frame region anchors.
+   */
+  public boolean isTimMqttGeofencePreviewEnabled() {
+    return optionalEtxBrokerDepositors()
+        .map(MqttBrokerDepositors::getTim)
+        .map(DepositorProperties::getMqtt)
+        .map(MqttDepositorProperties::getGeofencePreviewEnabled)
+        .map(Boolean.TRUE::equals)
+        .orElse(false);
   }
 
   /**
