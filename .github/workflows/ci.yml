@@ -87,7 +87,7 @@ jobs:
             -s ./settings.xml \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.organization=usdot-jpo-ode \
-            -Dsonar.projectKey=usdot-jpo-ode_jpo-mec-deposit \
+            -Dsonar.projectKey=jpo-mec-deposit \
             -Dsonar.projectName=jpo-mec-deposit \
             -Dsonar.sources=src/main/java \
             -Dsonar.tests=src/test/java \

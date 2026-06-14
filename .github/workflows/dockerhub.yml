@@ -14,7 +14,7 @@ jobs:
   dockerhub-mec-deposit:
     uses: usdot-jpo-ode/actions/.github/workflows/dockerhub.yml@main
     with:
-      image: usdotjpoode/mec-deposit
+      image: usdotjpoode/jpo-mec-deposit
       context: .
       file: Dockerfile
       build-args: |
