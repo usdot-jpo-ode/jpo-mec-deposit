@@ -1,73 +1,96 @@
-name: ci
-
+name: CI
 on:
+  workflow_dispatch:
   pull_request:
     types: [opened, reopened, synchronize]
   push:
     branches: [develop, master]
 
 jobs:
-  docker:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Build
-        uses: docker/build-push-action@v5
-        with:
-          build-args: |
-            MAVEN_GITHUB_TOKEN_NAME=${{ vars.MAVEN_GITHUB_TOKEN_NAME }}
-            MAVEN_GITHUB_TOKEN=${{ secrets.MAVEN_GITHUB_TOKEN }}
-            MAVEN_GITHUB_ORG=${{ github.repository_owner }}
-          secrets: |
-            MAVEN_GITHUB_TOKEN: ${{ secrets.MAVEN_GITHUB_TOKEN }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+      - name: Checkout ${{ github.event.repository.name }}
+        uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: "21"
           distribution: "temurin"
       - name: Cache Maven packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-${{ hashFiles('**/settings.xml') }}-${{ runner.os }}-java-21
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-${{ hashFiles('**/settings.xml') }}-java-21
           restore-keys: |
-            ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-${{ runner.os }}-java-21
-            ${{ runner.os }}-maven-${{ runner.os }}-java-21
+            ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-java-21
+            ${{ runner.os }}-maven-java-21
             ${{ runner.os }}-maven
-
-      - name: Install Dependencies
+      - name: Build and Run Tests
         env:
           MAVEN_GITHUB_TOKEN: ${{ secrets.MAVEN_GITHUB_TOKEN }}
           MAVEN_GITHUB_ORG: ${{ github.repository_owner }}
         run: |
           cd $GITHUB_WORKSPACE/jpo-mec-deposit
-          mvn clean install -DskipTests -s ./settings.xml
-          mvn dependency:go-offline -s ./settings.xml
-
-      - name: Run tests
-        env:
-          MAVEN_GITHUB_TOKEN: ${{ secrets.MAVEN_GITHUB_TOKEN }}
-          MAVEN_GITHUB_ORG: ${{ github.repository_owner }}
-        run: |
-          cd $GITHUB_WORKSPACE/jpo-mec-deposit
-          mvn verify -s ./settings.xml
-
-      - name: Archive Test Results
-        uses: actions/upload-artifact@v4
+          mvn -e clean verify -s ./settings.xml
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v6
         with:
-          name: jpo-mec-deposit-test-results
-          path: $GITHUB_WORKSPACE/jpo-mec-deposit/target/surefire-reports
+          name: jpo-mec-deposit
+          path: jpo-mec-deposit/target
+          if-no-files-found: error
 
-      - name: Clean up
+  # Run SonarCloud analysis on:
+  #   - pushes to develop/master (internal)
+  #   - PRs opened from branches within the usdot-jpo-ode org
+  # Skipped for fork PRs (e.g. from cdot-dev) because GitHub does not expose
+  # SONAR_TOKEN to workflows triggered from forks.
+  sonar:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'usdot-jpo-ode')
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ${{ github.event.repository.name }}
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: "21"
+          distribution: "temurin"
+      - name: Cache Maven packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-${{ hashFiles('**/settings.xml') }}-java-21
+          restore-keys: |
+            ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-java-21
+            ${{ runner.os }}-maven-java-21
+            ${{ runner.os }}-maven
+      - name: Download code coverage results
+        uses: actions/download-artifact@v7
+        with:
+          name: jpo-mec-deposit
+          path: jpo-mec-deposit/target
+      - name: Run Sonar Analysis
+        env:
+          MAVEN_GITHUB_TOKEN: ${{ secrets.MAVEN_GITHUB_TOKEN }}
+          MAVEN_GITHUB_ORG: ${{ github.repository_owner }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          rm -rf $GITHUB_WORKSPACE/jpo-mec-deposit/target
+          cd $GITHUB_WORKSPACE/jpo-mec-deposit
+          mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -s ./settings.xml \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.organization=usdot-jpo-ode \
+            -Dsonar.projectKey=usdot-jpo-ode_jpo-mec-deposit \
+            -Dsonar.projectName=jpo-mec-deposit \
+            -Dsonar.sources=src/main/java \
+            -Dsonar.tests=src/test/java \
+            -Dsonar.java.binaries=target/classes \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+            -Dsonar.token=$SONAR_TOKEN

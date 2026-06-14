@@ -1,3 +1,6 @@
+![GitHub Release](https://img.shields.io/github/v/release/usdot-jpo-ode/jpo-mec-deposit) [![CI](https://github.com/usdot-jpo-ode/jpo-mec-deposit/actions/workflows/ci.yml/badge.svg)](https://github.com/usdot-jpo-ode/jpo-mec-deposit/actions/workflows/ci.yml) ![Docker Pulls](https://img.shields.io/docker/pulls/usdotjpoode/mec-deposit) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=usdot-jpo-ode_jpo-mec-deposit&metric=alert_status)](https://sonarcloud.io/dashboard?id=usdot-jpo-ode_jpo-mec-deposit) ![GitHub License](https://img.shields.io/github/license/usdot-jpo-ode/jpo-ode)
+
+
 # jpo-mec-deposit
 
 This project is intended to serve as a consumer application to subscribe to a Kafka topic of streaming JSON from the [ODE](https://github.com/usdot-jpo-ode/jpo-ode) and stream this data to MQTT based Mobile Edge Compute (MEC) datacenters depending on the provided configuration to allow for network based V2X integrations. This runs alongside the ODE and when deployed using Docker Compose, runs in a Docker container.
