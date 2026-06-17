@@ -34,7 +34,6 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttBrokerType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.GeoHashRoutedMsg;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.GeoRoutedMsg;
@@ -109,7 +108,7 @@ class GeohashMqttPublisherTest {
     when(mqttProperties.getPrecision()).thenReturn(7);
     when(mqttProperties.getVendor()).thenReturn("test-vendor");
     when(mqttProperties.getMessageFormat()).thenReturn(EtxMqttMessageFormat.J2735);
-    when(mqttProperties.getBrokerType()).thenReturn(EtxMqttBrokerType.ETX);
+    when(mqttProperties.getBrokerType()).thenReturn(MqttBrokerTarget.ETX);
     when(mqttProperties.isMultiBrokerEnabled()).thenReturn(false);
 
     publisher = new GeohashMqttPublisher(mecDepositProperties, etxProperties, mqttProperties,

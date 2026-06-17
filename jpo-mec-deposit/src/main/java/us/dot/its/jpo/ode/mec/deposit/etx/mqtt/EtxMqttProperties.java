@@ -2,7 +2,6 @@ package us.dot.its.jpo.ode.mec.deposit.etx.mqtt;
 
 import java.util.List;
 import lombok.Data;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttBrokerType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttBrokerTarget;
 
@@ -28,7 +27,7 @@ public class EtxMqttProperties {
   private boolean requireSessionId = true;
   private String brokerUri;
   private String clientId;
-  private EtxMqttBrokerType brokerType = EtxMqttBrokerType.ETX;
+  private MqttBrokerTarget brokerType = MqttBrokerTarget.ETX;
   private boolean multiBrokerEnabled = false;
   private List<MqttBrokerTarget> multiBrokerTargets =
       List.of(MqttBrokerTarget.ETX, MqttBrokerTarget.NMI, MqttBrokerTarget.AV);

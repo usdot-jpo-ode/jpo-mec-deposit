@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Configuration;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.av.mqtt.AvMqttProperties;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttBrokerType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttBrokerTarget;
 import us.dot.its.jpo.ode.mec.deposit.models.mb.mqtt.MbMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.nmi.mqtt.NmiMqttProperties;
@@ -42,16 +41,10 @@ public class MqttBrokerConfiguration {
     if (mqttProperties.isMultiBrokerEnabled()) {
       configured = mqttProperties.getMultiBrokerTargets().stream().collect(Collectors.toSet());
     } else {
-      EtxMqttBrokerType brokerType =
+      MqttBrokerTarget brokerType =
           mqttProperties.getBrokerType() != null ? mqttProperties.getBrokerType()
-              : EtxMqttBrokerType.ETX;
-      MqttBrokerTarget single = switch (brokerType) {
-        case NMI -> MqttBrokerTarget.NMI;
-        case AV -> MqttBrokerTarget.AV;
-        case MB -> MqttBrokerTarget.MB;
-        default -> MqttBrokerTarget.ETX;
-      };
-      configured = Set.of(single);
+              : MqttBrokerTarget.ETX;
+      configured = Set.of(brokerType);
     }
 
     EnumSet<MqttBrokerTarget> resolved = configured.stream()
