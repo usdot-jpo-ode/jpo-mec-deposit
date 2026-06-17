@@ -42,8 +42,8 @@ mec-deposit:
           broker-uri: ""
           client-id: ""
           broker-type: "ETX"
-          dual-publish-enabled: false
-          dual-publish-targets: "ETX,NMI"
+          multi-broker-enabled: false
+          multi-broker-targets: "ETX,NMI"
           subscriptions:
             - "vzimp/1/ClientInfo"
         depositors:

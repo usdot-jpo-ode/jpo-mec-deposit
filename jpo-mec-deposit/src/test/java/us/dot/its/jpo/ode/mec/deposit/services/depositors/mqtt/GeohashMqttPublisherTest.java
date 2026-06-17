@@ -110,7 +110,7 @@ class GeohashMqttPublisherTest {
     when(mqttProperties.getVendor()).thenReturn("test-vendor");
     when(mqttProperties.getMessageFormat()).thenReturn(EtxMqttMessageFormat.J2735);
     when(mqttProperties.getBrokerType()).thenReturn(EtxMqttBrokerType.ETX);
-    when(mqttProperties.isDualPublishEnabled()).thenReturn(false);
+    when(mqttProperties.isMultiBrokerEnabled()).thenReturn(false);
 
     publisher = new GeohashMqttPublisher(mecDepositProperties, etxProperties, mqttProperties,
         mqttService, registry, kafkaTemplate);

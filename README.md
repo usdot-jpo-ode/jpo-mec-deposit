@@ -176,10 +176,10 @@ For TrafficAuth/NMI MQTT publishing, use non-TLS MQTT and disable ETX registrati
 
 When using the geohash MQTT depositor with `ETX_MQTT_BROKER_TYPE="NMI"`, topics follow the NMI topic structure: `v1/g32/{g1}/{g2}/{g3}/{g4}/{g5}/{g6}/{g7}/{dsrcMsgID}` and publish the original signed payload bytes (signature preserved) instead of ETX wrapped payload definitions. The same `v1/g32/...` pattern is used when publishing to the AV MQTT broker.
 
-To publish to ETX, NMI, and AV in the same application instance, enable dual fanout:
+To publish to ETX, NMI, and AV in the same application instance, enable multi-broker fanout:
 
-- `ETX_MQTT_DUAL_PUBLISH_ENABLED="True"`
-- `ETX_MQTT_DUAL_PUBLISH_TARGETS="ETX,NMI,AV"` (or a subset such as `ETX,NMI`)
+- `ETX_MQTT_MULTI_BROKER_ENABLED="True"`
+- `ETX_MQTT_MULTI_BROKER_TARGETS="ETX,NMI,AV"` (or a subset such as `ETX,NMI`)
 - `NMI_MQTT_ENABLED="True"` when including NMI
 - `AV_MQTT_ENABLED="True"` when including AV
 
@@ -196,7 +196,7 @@ Use distinct consumer groups per deployment (for example, `jpo-mec-deposit-etx` 
 
 ### Broker-Scoped Observability
 
-Dual publish mode records broker-tagged publish counters:
+Multi-broker mode records broker-tagged publish counters:
 
 - `mec-deposit.mqtt.publish{broker="etx|nmi|av",outcome="success|failure"}`
 - `mec-deposit.nmi.mqtt.circuit.skipped` (NMI circuit-breaker skips)
@@ -205,7 +205,7 @@ Recommended rollout guardrails:
 
 - Canary enable dual mode on a single instance first.
 - Alert if NMI failure counter exceeds ETX success over a 5-minute window.
-- Roll back by setting `ETX_MQTT_DUAL_PUBLISH_ENABLED="False"` (or disable `NMI_MQTT_ENABLED` / `AV_MQTT_ENABLED`).
+- Roll back by setting `ETX_MQTT_MULTI_BROKER_ENABLED="False"` (or disable `NMI_MQTT_ENABLED` / `AV_MQTT_ENABLED`).
 
 #### ETX API Deposit
 
@@ -283,7 +283,7 @@ The GeoHash MQTT Publisher flow handles publishing V2X messages using geohash-ba
 1. **Get Keycloak Token**: The jpo-mec-deposit consumer requests a Keycloak token from the Partner Backend API.
 2. **Request Certificate + MQTT URL**: The consumer requests certificate and MQTT URL from the Partner Backend API.
 3. **Publishing V2X Messages**: V2X messages are published in `geoHashRoutedMsg` protobuf definitions to a Config Kafka publisher.
-4. **MQTT Publish**: The consumer publishes to the configured MQTT broker targets (ETX and/or NMI/AV depending on dual-publish settings).
+4. **MQTT Publish**: The consumer publishes to the configured MQTT broker targets (ETX and/or NMI/AV depending on multi-broker settings).
 
 The Partner Backend API manages authentication, certificate retrieval, and interacts with PostgreSQL for logging, TIM configuration, and user database operations. PostgreSQL publishes TIM deployment configurations to the Config Kafka publisher, which feeds into the geohash routing system.
 

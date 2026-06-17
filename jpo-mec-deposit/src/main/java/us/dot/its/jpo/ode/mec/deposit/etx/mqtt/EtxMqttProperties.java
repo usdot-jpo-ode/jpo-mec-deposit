@@ -29,7 +29,7 @@ public class EtxMqttProperties {
   private String brokerUri;
   private String clientId;
   private EtxMqttBrokerType brokerType = EtxMqttBrokerType.ETX;
-  private boolean dualPublishEnabled = false;
-  private List<MqttBrokerTarget> dualPublishTargets =
+  private boolean multiBrokerEnabled = false;
+  private List<MqttBrokerTarget> multiBrokerTargets =
       List.of(MqttBrokerTarget.ETX, MqttBrokerTarget.NMI, MqttBrokerTarget.AV);
 }

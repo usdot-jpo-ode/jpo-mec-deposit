@@ -26,7 +26,7 @@ public class MqttBrokerConfiguration {
    * Resolves the set of active {@link MqttBrokerTarget}s from ETX MQTT routing configuration and
    * the set of registered {@link BrokerPublisher} beans.
    *
-   * <p>When dual-publish is enabled the configured target list is used directly. When
+   * <p>When multi-broker mode is enabled the configured target list is used directly. When
    * single-broker mode is active the ETX {@code brokerType} property maps to the corresponding
    * target. In both cases the result is intersected with registered publishers — a target without a
    * publisher is silently dropped. If the intersection is empty all registered publishers are
@@ -39,8 +39,8 @@ public class MqttBrokerConfiguration {
         brokerPublishers.stream().map(BrokerPublisher::target).collect(Collectors.toSet());
 
     Set<MqttBrokerTarget> configured;
-    if (mqttProperties.isDualPublishEnabled()) {
-      configured = mqttProperties.getDualPublishTargets().stream().collect(Collectors.toSet());
+    if (mqttProperties.isMultiBrokerEnabled()) {
+      configured = mqttProperties.getMultiBrokerTargets().stream().collect(Collectors.toSet());
     } else {
       EtxMqttBrokerType brokerType =
           mqttProperties.getBrokerType() != null ? mqttProperties.getBrokerType()

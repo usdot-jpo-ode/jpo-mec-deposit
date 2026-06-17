@@ -20,7 +20,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttFanoutPublishResult;
 class MultiBrokerPublishServiceTest {
 
   @Test
-  void dualPublish_shouldIsolateFailuresPerTarget() {
+  void multiBrokerPublish_shouldIsolateFailuresPerTarget() {
     BrokerPublisher etxPublisher = mock(BrokerPublisher.class);
     BrokerPublisher nmiPublisher = mock(BrokerPublisher.class);
     when(etxPublisher.target()).thenReturn(MqttBrokerTarget.ETX);

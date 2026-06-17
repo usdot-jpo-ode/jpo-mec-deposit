@@ -46,8 +46,8 @@ mec-deposit:
           broker-uri: ${ETX_MQTT_BROKER_URI:}
           client-id: ${ETX_MQTT_CLIENT_ID:}
           broker-type: ${ETX_MQTT_BROKER_TYPE:ETX}
-          dual-publish-enabled: ${ETX_MQTT_DUAL_PUBLISH_ENABLED:false}
-          dual-publish-targets: ${ETX_MQTT_DUAL_PUBLISH_TARGETS:ETX,NMI,AV,MB}
+          multi-broker-enabled: ${ETX_MQTT_MULTI_BROKER_ENABLED:false}
+          multi-broker-targets: ${ETX_MQTT_MULTI_BROKER_TARGETS:ETX,NMI,AV,MB}
           registration-refresh-failure-threshold: ${ETX_REGISTRATION_REFRESH_FAILURE_THRESHOLD:10}
           subscriptions:
             - "vzimp/1/ClientInfo"
