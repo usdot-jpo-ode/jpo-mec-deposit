@@ -194,7 +194,6 @@ class GeohashMqttPublisherTest {
     byte[] kafkaPayload = buildInputGeoHashRoutedMsg(SAMPLE_BSM_BYTES, SAMPLE_GEOHASH);
     ArgumentCaptor<byte[]> payloadCaptor = ArgumentCaptor.forClass(byte[].class);
 
-    long beforeEpochSec = Instant.now().getEpochSecond();
     publisher.geohashPublishListener(kafkaPayload);
     long afterEpochSec = Instant.now().getEpochSecond();
 
@@ -203,6 +202,7 @@ class GeohashMqttPublisherTest {
 
     assertTrue(decoded.hasTime(), "GeoRoutedMsg must include a deposit timestamp");
     long ts = decoded.getTime().getSeconds();
+    long beforeEpochSec = Instant.now().getEpochSecond();
     assertTrue(ts >= beforeEpochSec && ts <= afterEpochSec,
         "GeoRoutedMsg timestamp must fall within the deposit window");
   }

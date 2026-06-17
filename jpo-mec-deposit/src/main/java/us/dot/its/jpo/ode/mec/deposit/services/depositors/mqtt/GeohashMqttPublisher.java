@@ -106,10 +106,6 @@ public class GeohashMqttPublisher extends AbstractMqttDepositor {
         detectedMessageType = EtxMessageType.TIM;
       }
 
-      String etxTopic = EtxMqttTopicBuilder.buildTopicFromGeohash(namespace, geohash,
-          detectedMessageType, mqttProperties.getPrecision(), mqttProperties.getVendor(),
-          mqttProperties.getMessageFormat(), etxProperties.getClientType(),
-          etxProperties.getClientSubType());
       String dsrcMsgId = MessageTypeDetector.getDsrcMsgIdForMessageType(detectedMessageType);
       String nmiTopic = null;
       String avTopic = null;
@@ -135,6 +131,10 @@ public class GeohashMqttPublisher extends AbstractMqttDepositor {
       byte[] etxPayload = EtxMqttProtobufBuilder.toEtxMqttWirePayload(originalMessageBytes,
           mqttProperties.getMessageFormat(), depositedInstant, latitude, longitude);
       Map<MqttBrokerTarget, BrokerPublishPayload> payloads = new EnumMap<>(MqttBrokerTarget.class);
+      String etxTopic = EtxMqttTopicBuilder.buildTopicFromGeohash(namespace, geohash,
+          detectedMessageType, mqttProperties.getPrecision(), mqttProperties.getVendor(),
+          mqttProperties.getMessageFormat(), etxProperties.getClientType(),
+          etxProperties.getClientSubType());
       if (multiBrokerPublishService.isTargetActive(MqttBrokerTarget.ETX)
           && etxProperties.isMqttDepositorEnabled(MqttBrokerTarget.ETX, "geohash")) {
         payloads.put(MqttBrokerTarget.ETX, BrokerPublishPayload.builder()
