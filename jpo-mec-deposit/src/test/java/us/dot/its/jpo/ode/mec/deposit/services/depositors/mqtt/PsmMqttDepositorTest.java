@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit.services.etx.depositors.mqtt;
+package us.dot.its.jpo.ode.mec.deposit.services.depositors.mqtt;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
@@ -43,13 +43,13 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
-import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
+import us.dot.its.jpo.ode.mec.deposit.services.etx.mqtt.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
 import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class EtxPsmMqttDepositorTest {
+class PsmMqttDepositorTest {
 
   @Mock
   private MecDepositProperties mecDepositProperties;
@@ -73,7 +73,7 @@ class EtxPsmMqttDepositorTest {
   private Counter counter;
 
   private MeterRegistry registry;
-  private EtxPsmMqttDepositor depositor;
+  private PsmMqttDepositor depositor;
   private ObjectMapper objectMapper;
   private String samplePsmJson;
 
@@ -99,7 +99,7 @@ class EtxPsmMqttDepositorTest {
     when(mqttProperties.getVendor()).thenReturn("test-vendor");
     when(mqttProperties.getMessageFormat()).thenReturn(EtxMqttMessageFormat.J2735);
 
-    depositor = new EtxPsmMqttDepositor(mecDepositProperties, etxProperties, mqttProperties,
+    depositor = new PsmMqttDepositor(mecDepositProperties, etxProperties, mqttProperties,
         mqttService, registry, kafkaTemplate);
     objectMapper = DateJsonMapper.getInstance();
 
@@ -107,9 +107,11 @@ class EtxPsmMqttDepositorTest {
         getClass().getClassLoader().getResource("sample_messages/sample-ode-psm.json").toURI())));
 
     mockedTopicBuilder = Mockito.mockStatic(EtxMqttTopicBuilder.class);
-    mockedTopicBuilder.when(() -> EtxMqttTopicBuilder.buildRegionalTopic(any(EtxMessageType.class),
-        anyDouble(), anyDouble(), anyInt(), anyString(), any(EtxMqttMessageFormat.class),
-        eq(EtxClientType.SOFTWARE), eq(EtxClientSubType.APPLICATION))).thenReturn("test-topic-psm");
+    mockedTopicBuilder
+        .when(() -> EtxMqttTopicBuilder.buildRegionalTopic(any(EtxMessageType.class), anyDouble(),
+            anyDouble(), anyInt(), anyString(), any(EtxMqttMessageFormat.class),
+            eq(EtxClientType.SOFTWARE), eq(EtxClientSubType.APPLICATION)))
+        .thenReturn("test-topic-psm");
   }
 
   @AfterEach

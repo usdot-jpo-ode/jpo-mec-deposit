@@ -4,7 +4,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.BrokerPublishPayload;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttBrokerTarget;
-import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.services.mqtt.BrokerPublisher;
 
 /**

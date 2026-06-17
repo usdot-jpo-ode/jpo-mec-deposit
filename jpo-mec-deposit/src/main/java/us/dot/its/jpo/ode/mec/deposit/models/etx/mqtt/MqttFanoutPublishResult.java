@@ -9,6 +9,9 @@ import java.util.Set;
  * written (one Kafka metrics record can describe the whole fanout).
  */
 public record MqttFanoutPublishResult(Set<String> mqttBrokerTargets, Set<String> publishedTopics) {
+  /**
+   * Compact canonical constructor that normalises null or empty inputs to immutable empty sets.
+   */
   public MqttFanoutPublishResult {
     mqttBrokerTargets = mqttBrokerTargets == null || mqttBrokerTargets.isEmpty()
         ? Set.of()

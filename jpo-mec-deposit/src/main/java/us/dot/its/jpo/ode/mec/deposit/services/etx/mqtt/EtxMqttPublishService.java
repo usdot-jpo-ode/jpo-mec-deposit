@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit.services.etx;
+package us.dot.its.jpo.ode.mec.deposit.services.etx.mqtt;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -161,8 +161,7 @@ public class EtxMqttPublishService {
     try {
       String configPath = partnerApiProperties.getCertificatePath() + "/config.json";
       RegistrationConfiguration config = EtxUtil.readConfigFile(configPath);
-      return config.getEtxSessionID() != null
-          && config.getEtxSessionID().getSessionId() != null
+      return config.getEtxSessionID() != null && config.getEtxSessionID().getSessionId() != null
           && !config.getEtxSessionID().getSessionId().trim().isEmpty();
     } catch (Exception e) {
       log.debug("Error reading session ID from disk: {}", e.getMessage());

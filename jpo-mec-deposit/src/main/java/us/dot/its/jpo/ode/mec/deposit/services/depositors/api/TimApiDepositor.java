@@ -1,0 +1,78 @@
+package us.dot.its.jpo.ode.mec.deposit.services.depositors.api;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Component;
+import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
+import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractApiDepositor;
+import us.dot.its.jpo.ode.model.OdeTimData;
+
+/**
+ * Depositor for handling TIM messages via ETX API integration.
+ */
+@Component
+@Slf4j
+@ConditionalOnProperty(
+    value = {"mec-deposit.etx.mqtt-brokers.etx.depositors.tim.api.enabled",
+        "mec-deposit.etx.enabled"},
+    havingValue = "true")
+public class TimApiDepositor extends AbstractApiDepositor {
+
+  /**
+   * Constructs a new TimApiDepositor.
+   *
+   * @param mecDepositProperties Configuration properties for MEC deposit
+   * @param etxProperties ETX-specific configuration properties
+   * @param etxApi Service for interacting with ETX API
+   * @param tokenManager Manager for ETX authentication tokens
+   * @param meterRegistry Registry for metrics collection
+   * @param kafkaTemplate Template for Kafka operations
+   */
+  public TimApiDepositor(MecDepositProperties mecDepositProperties, EtxProperties etxProperties,
+      EtxPartnerClient etxApi, EtxTokenManager tokenManager, MeterRegistry meterRegistry,
+      KafkaTemplate<String, String> kafkaTemplate) {
+    super(mecDepositProperties, etxProperties, etxApi, tokenManager, meterRegistry, kafkaTemplate,
+        EtxMessageType.TIM);
+  }
+
+  /**
+   * Listens for TIM messages on the configured Kafka topic and deposits them via the ETX API.
+   *
+   * @param message The TIM message to deposit
+   */
+  @KafkaListener(topics = "${mec-deposit.etx.mqtt-brokers.etx.depositors.tim.api.kafka-topic}",
+      groupId = "${spring.kafka.consumer.group-id}-tim-api-depositor",
+      concurrency = "${spring.kafka.listener.concurrency:1}",
+      containerFactory = "kafkaListenerContainerFactory")
+  public void timDepositListener(String message) {
+    String odeReceivedAt = null;
+    String asn1Hex = "";
+    try {
+      OdeTimData msg = mapper.readValue(message, OdeTimData.class);
+      odeReceivedAt = msg.getMetadata().getOdeReceivedAt();
+
+      asn1Hex = msg.getMetadata().getAsn1();
+
+      String token = tokenManager.getValidToken();
+      log.debug("Depositing TIM message to ETX API");
+
+      LocalDateTime depositedAt = LocalDateTime.now(ZoneOffset.UTC);
+      partnerApi.deposit(token, asn1Hex);
+
+      handleProcessingSuccess(null, odeReceivedAt, depositedAt, asn1Hex);
+    } catch (Exception e) {
+      handleProcessingError(e, null,
+          odeReceivedAt != null ? Instant.parse(odeReceivedAt).toEpochMilli() : 0, asn1Hex);
+    }
+  }
+}

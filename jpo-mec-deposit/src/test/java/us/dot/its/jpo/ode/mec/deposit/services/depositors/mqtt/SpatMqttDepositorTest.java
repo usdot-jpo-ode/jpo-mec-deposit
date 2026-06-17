@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit.services.etx.depositors.mqtt;
+package us.dot.its.jpo.ode.mec.deposit.services.depositors.mqtt;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -36,6 +36,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
+import us.dot.its.jpo.asn.j2735.r2024.SPAT.SPAT;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties.MecDepositMetrics;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
@@ -45,22 +46,21 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.MqttBrokerDepositors;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.MqttBrokers;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.MqttDepositorProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.SpatIntersectionFilterProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
+import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttClientInfo;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttClientInfo;
-import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
+import us.dot.its.jpo.ode.mec.deposit.services.etx.mqtt.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.MapRefPointCollector;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
 import us.dot.its.jpo.ode.model.OdeMessageFrameData;
-import us.dot.its.jpo.asn.j2735.r2024.SPAT.SPAT;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class EtxSpatMqttDepositorTest {
+class SpatMqttDepositorTest {
 
   @Mock
   private MecDepositProperties mecDepositProperties;
@@ -87,7 +87,7 @@ class EtxSpatMqttDepositorTest {
   private MapRefPointCollector mapDataCollector;
 
   private MeterRegistry registry;
-  private EtxSpatMqttDepositor depositor;
+  private SpatMqttDepositor depositor;
   private ObjectMapper objectMapper;
   private String sampleSpatJson;
   private MockedStatic<EtxMqttTopicBuilder> mockedTopicBuilder;
@@ -96,17 +96,14 @@ class EtxSpatMqttDepositorTest {
 
   @BeforeEach
   void setUp() throws IOException, URISyntaxException {
-    // Use SimpleMeterRegistry instead of mocking
     registry = new SimpleMeterRegistry();
 
-    // Configure MecDepositProperties metrics
     MecDepositMetrics metrics = new MecDepositMetrics();
     metrics.setKafkaTopic("test-metrics-topic");
     metrics.setEnabled(true);
     when(mecDepositProperties.getMetrics()).thenReturn(metrics);
 
-    // Configure stale message threshold
-    int staleMessageThreshold = 5000; // 5 seconds
+    int staleMessageThreshold = 5000;
     when(etxProperties.resolveStaleMessageThresholdMs()).thenReturn(staleMessageThreshold);
     when(etxProperties.isMqttDepositorEnabled(any(), anyString())).thenReturn(true);
     when(etxProperties.passesSpatIntersectionFilter(any(), any(SPAT.class))).thenReturn(true);
@@ -118,33 +115,28 @@ class EtxSpatMqttDepositorTest {
     when(mqttProperties.getVendor()).thenReturn("test-vendor");
     when(mqttProperties.getMessageFormat()).thenReturn(EtxMqttMessageFormat.J2735);
 
-    depositor = new EtxSpatMqttDepositor(mecDepositProperties, etxProperties, mqttProperties,
+    depositor = new SpatMqttDepositor(mecDepositProperties, etxProperties, mqttProperties,
         mqttService, registry, kafkaTemplate);
     objectMapper = new ObjectMapper();
 
-    // Load sample Spat JSON from resources
     sampleSpatJson = new String(Files.readAllBytes(Paths.get(
         getClass().getClassLoader().getResource("sample_messages/sample-ode-spat.json").toURI())));
 
     mockedTopicBuilder = Mockito.mockStatic(EtxMqttTopicBuilder.class);
 
-    // Create mocked static for EtxUtil
     mockedEtxUtil = Mockito.mockStatic(EtxUtil.class);
 
-    // Mock the readConfigFile method to return a valid config with session ID
     RegistrationConfiguration mockConfig = new RegistrationConfiguration();
     EtxMqttClientInfo mockSessionInfo = new EtxMqttClientInfo();
     mockSessionInfo.setSessionId("test-session-0000");
     mockConfig.setEtxSessionID(mockSessionInfo);
     mockedEtxUtil.when(() -> EtxUtil.readConfigFile(any(String.class))).thenReturn(mockConfig);
 
-    // More specific mock setup
     mockedTopicBuilder.when(() -> EtxMqttTopicBuilder.getSpatTopicList(any(SPAT.class),
         eq(mapDataCollector), anyString(), anyInt(), any(EtxMqttMessageFormat.class),
         eq(EtxClientType.SOFTWARE), eq(EtxClientSubType.APPLICATION)))
         .thenReturn(Set.of("test-topic"));
 
-    // Inject the mocked mapDataCollector using reflection
     ReflectionTestUtils.setField(depositor, "mapDataCollector", mapDataCollector);
   }
 
@@ -174,14 +166,12 @@ class EtxSpatMqttDepositorTest {
 
     depositor.spatDepositListener(message);
 
-
     verify(mqttService).publishAsn1Bytes(eq("test-topic"), any(byte[].class), eq(false));
     verify(kafkaTemplate).send(eq("test-metrics-topic"), anyString());
   }
 
   @Test
   void testSpatDepositListenerWithGeoRoutedFormat() throws JsonProcessingException {
-    // Arrange
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
     String message = createSpatTestMessage(currentTime);
@@ -189,21 +179,19 @@ class EtxSpatMqttDepositorTest {
 
     depositor.spatDepositListener(message);
 
-
     verify(mqttService).publishAsn1Bytes(anyString(), any(byte[].class), eq(false));
     verify(kafkaTemplate).send(eq("test-metrics-topic"), anyString());
   }
 
   @Test
   void testSpatDepositListener_StaleMessage() throws JsonProcessingException {
-    String staleTimestamp = "2020-01-01T00:00:00.000000Z"; // Stale timestamp
+    String staleTimestamp = "2020-01-01T00:00:00.000000Z";
     String message = createSpatTestMessage(staleTimestamp);
 
     depositor.spatDepositListener(message);
 
     verify(mqttService, never()).publishAsn1Bytes(anyString(), any(byte[].class), eq(false));
 
-    // Verify stale message counter was incremented
     double staleCount =
         registry.get("mec-deposit.etx.mqtt.stale").tag("message.type", "SPAT").counter().count();
     assert (staleCount > 0);
@@ -211,7 +199,6 @@ class EtxSpatMqttDepositorTest {
 
   @Test
   void testSpatDepositListener_HandlesException() throws JsonProcessingException {
-    // Simulate an exception during MQTT publish
     doThrow(new RuntimeException("MQTT publish failed")).when(mqttService)
         .publishAsn1Bytes(anyString(), any(byte[].class), eq(false));
 
@@ -221,12 +208,10 @@ class EtxSpatMqttDepositorTest {
 
     depositor.spatDepositListener(message);
 
-    // Verify error metrics were published to Kafka
     verify(kafkaTemplate).send(eq("test-metrics-topic"),
         argThat(metricsJson -> metricsJson.contains("\"success\":false")
             && metricsJson.contains("\"errorMessage\":\"MQTT publish failed\"")));
 
-    // Verify error counter was incremented
     double errorCount =
         registry.get("mec-deposit.etx.mqtt.error").tag("message.type", "SPAT").counter().count();
     assert (errorCount > 0);
@@ -235,7 +220,7 @@ class EtxSpatMqttDepositorTest {
   @Test
   void testSpatDepositListener_IntersectionFilter_Enabled_AllowedIntersection()
       throws JsonProcessingException {
-    EtxSpatMqttDepositor d = depositorWithSpatFilter(true, List.of(9709L), null);
+    SpatMqttDepositor d = depositorWithSpatFilter(true, List.of(9709L), null);
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
     String message = createSpatTestMessage(currentTime);
@@ -249,7 +234,7 @@ class EtxSpatMqttDepositorTest {
   @Test
   void testSpatDepositListener_IntersectionFilter_Enabled_DisallowedIntersection()
       throws JsonProcessingException {
-    EtxSpatMqttDepositor d = depositorWithSpatFilter(true, List.of(1111L), null);
+    SpatMqttDepositor d = depositorWithSpatFilter(true, List.of(1111L), null);
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
     String message = createSpatTestMessage(currentTime);
@@ -262,7 +247,7 @@ class EtxSpatMqttDepositorTest {
   @Test
   void testSpatDepositListener_IntersectionFilter_BlockedIntersection()
       throws JsonProcessingException {
-    EtxSpatMqttDepositor d = depositorWithSpatFilter(true, null, List.of(9709L));
+    SpatMqttDepositor d = depositorWithSpatFilter(true, null, List.of(9709L));
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
     String message = createSpatTestMessage(currentTime);
@@ -275,7 +260,7 @@ class EtxSpatMqttDepositorTest {
   @Test
   void testSpatDepositListener_IntersectionFilter_NonBlockedIntersection()
       throws JsonProcessingException {
-    EtxSpatMqttDepositor d = depositorWithSpatFilter(true, null, List.of(1234L));
+    SpatMqttDepositor d = depositorWithSpatFilter(true, null, List.of(1234L));
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
     String message = createSpatTestMessage(currentTime);
@@ -289,7 +274,7 @@ class EtxSpatMqttDepositorTest {
   @Test
   void testSpatDepositListener_IntersectionFilter_BlockedTakesPrecedenceOverAllowed()
       throws JsonProcessingException {
-    EtxSpatMqttDepositor d = depositorWithSpatFilter(true, List.of(9709L), List.of(9709L));
+    SpatMqttDepositor d = depositorWithSpatFilter(true, List.of(9709L), List.of(9709L));
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
     String message = createSpatTestMessage(currentTime);
@@ -302,7 +287,7 @@ class EtxSpatMqttDepositorTest {
   @Test
   void testSpatDepositListener_IntersectionFilter_EmptyAllowlistAllowsNonBlocked()
       throws JsonProcessingException {
-    EtxSpatMqttDepositor d = depositorWithSpatFilter(true, List.of(), List.of(1234L));
+    SpatMqttDepositor d = depositorWithSpatFilter(true, List.of(), List.of(1234L));
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT));
     String message = createSpatTestMessage(currentTime);
@@ -313,7 +298,7 @@ class EtxSpatMqttDepositorTest {
     verify(kafkaTemplate).send(eq("test-metrics-topic"), anyString());
   }
 
-  private EtxSpatMqttDepositor depositorWithSpatFilter(boolean filterEnabled,
+  private SpatMqttDepositor depositorWithSpatFilter(boolean filterEnabled,
       List<Long> allowedIntersectionIds, List<Long> blockedIntersectionIds) {
     SpatIntersectionFilterProperties filt = SpatIntersectionFilterProperties.builder()
         .enabled(filterEnabled).allowedIntersectionIds(allowedIntersectionIds)
@@ -327,10 +312,9 @@ class EtxSpatMqttDepositorTest {
     MqttBrokers mb = MqttBrokers.builder().etx(etxProf).build();
     EtxProperties realEtx = EtxProperties.builder().mqttBrokers(mb)
         .clientType(EtxClientType.SOFTWARE).clientSubType(EtxClientSubType.APPLICATION).build();
-    EtxSpatMqttDepositor d = new EtxSpatMqttDepositor(mecDepositProperties, realEtx, mqttProperties,
+    SpatMqttDepositor d = new SpatMqttDepositor(mecDepositProperties, realEtx, mqttProperties,
         mqttService, registry, kafkaTemplate);
     ReflectionTestUtils.setField(d, "mapDataCollector", mapDataCollector);
     return d;
   }
-
 }

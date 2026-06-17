@@ -22,10 +22,10 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.utils.DateJsonMapper;
 
 /**
- * Abstract base class for ETX depositors.
+ * Abstract base class for depositors.
  */
 @Slf4j
-public abstract class AbstractEtxDepositor {
+public abstract class AbstractDepositor {
   protected final ObjectMapper mapper;
   protected final Timer processingTimer;
   protected final Counter staleMessageCounter;
@@ -36,7 +36,7 @@ public abstract class AbstractEtxDepositor {
   protected final int staleMessageThreshold;
   protected final KafkaTemplate<String, String> kafkaTemplate;
 
-  protected AbstractEtxDepositor(MecDepositProperties mecDepositProperties,
+  protected AbstractDepositor(MecDepositProperties mecDepositProperties,
       EtxProperties etxProperties, EtxMessageType messageType, MeterRegistry registry,
       String metricsPrefix, KafkaTemplate<String, String> kafkaTemplate) {
     this.mecDepositProperties = mecDepositProperties;
@@ -129,7 +129,6 @@ public abstract class AbstractEtxDepositor {
 
     long nowMillis = Instant.now().toEpochMilli();
 
-    // Publish failure metrics with the attempted topic if available
     publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
         .messageType(messageType).odeReceivedAt(odeReceivedAtMillis).mecDepositedAt(nowMillis)
         .success(false).errorMessage(errorMessage).topics(topics != null ? topics : null)
@@ -172,7 +171,6 @@ public abstract class AbstractEtxDepositor {
       return;
     }
 
-    // Convert ISO timestamp string to epoch millis
     long odeReceivedAtMillis = Instant.parse(odeReceivedAt).toEpochMilli();
     long depositedAtMillis = depositedAt.toInstant(ZoneOffset.UTC).toEpochMilli();
     long latencyMs = depositedAtMillis - odeReceivedAtMillis;
@@ -180,7 +178,6 @@ public abstract class AbstractEtxDepositor {
       latencyMs = 0;
     }
 
-    // Publish success metrics
     publishMetrics(EtxDepositMetrics.builder().depositorType(getDepositorType())
         .messageType(detectedMessageType).odeReceivedAt(odeReceivedAtMillis)
         .mecDepositedAt(depositedAtMillis).latencyMs(latencyMs).success(true).topics(topics)
@@ -190,4 +187,3 @@ public abstract class AbstractEtxDepositor {
     recordLatency(odeReceivedAt, depositedAt);
   }
 }
-

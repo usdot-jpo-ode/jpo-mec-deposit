@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit.services.etx.depositors.mqtt;
+package us.dot.its.jpo.ode.mec.deposit.services.depositors.mqtt;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
@@ -10,14 +10,12 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import com.fasterxml.jackson.core.JsonProcessingException;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -42,13 +40,13 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
-import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
+import us.dot.its.jpo.ode.mec.deposit.services.etx.mqtt.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
 import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class EtxBsmMqttDepositorTest {
+class SdsmMqttDepositorTest {
 
   @Mock
   private MecDepositProperties mecDepositProperties;
@@ -72,25 +70,22 @@ class EtxBsmMqttDepositorTest {
   private Counter counter;
 
   private MeterRegistry registry;
-  private EtxBsmMqttDepositor depositor;
+  private SdsmMqttDepositor depositor;
   private ObjectMapper objectMapper;
-  private String sampleBsmJson;
+  private String sampleSdsmJson;
 
   private MockedStatic<EtxMqttTopicBuilder> mockedTopicBuilder;
 
   @BeforeEach
-  void setUp() throws IOException, URISyntaxException {
-    // Use SimpleMeterRegistry instead of mocking
+  void setUp() throws Exception {
     registry = new SimpleMeterRegistry();
 
-    // Configure MecDepositProperties metrics
     MecDepositMetrics metrics = new MecDepositMetrics();
     metrics.setKafkaTopic("test-metrics-topic");
     metrics.setEnabled(true);
     when(mecDepositProperties.getMetrics()).thenReturn(metrics);
 
-    // Configure stale message threshold
-    int staleMessageThreshold = 5000; // 5 seconds
+    int staleMessageThreshold = 5000;
     when(etxProperties.resolveStaleMessageThresholdMs()).thenReturn(staleMessageThreshold);
     when(etxProperties.isMqttDepositorEnabled(any(), anyString())).thenReturn(true);
     when(etxProperties.nmiMqttTopicPrecision()).thenReturn(7);
@@ -101,15 +96,13 @@ class EtxBsmMqttDepositorTest {
     when(mqttProperties.getVendor()).thenReturn("test-vendor");
     when(mqttProperties.getMessageFormat()).thenReturn(EtxMqttMessageFormat.J2735);
 
-    depositor = new EtxBsmMqttDepositor(mecDepositProperties, etxProperties, mqttProperties,
+    depositor = new SdsmMqttDepositor(mecDepositProperties, etxProperties, mqttProperties,
         mqttService, registry, kafkaTemplate);
     objectMapper = new ObjectMapper();
 
-    // Load sample BSM JSON from resources
-    sampleBsmJson = new String(Files.readAllBytes(Paths.get(
-        getClass().getClassLoader().getResource("sample_messages/sample-ode-bsm.json").toURI())));
+    sampleSdsmJson = new String(Files.readAllBytes(Paths.get(
+        getClass().getClassLoader().getResource("sample_messages/sample-ode-sdsm.json").toURI())));
 
-    // Add static method mocking
     mockedTopicBuilder = Mockito.mockStatic(EtxMqttTopicBuilder.class);
     mockedTopicBuilder.when(() -> EtxMqttTopicBuilder.buildRegionalTopic(any(EtxMessageType.class),
         anyDouble(), anyDouble(), anyInt(), anyString(), any(EtxMqttMessageFormat.class),
@@ -124,82 +117,73 @@ class EtxBsmMqttDepositorTest {
   }
 
   @Test
-  void testBsmDepositListener() throws JsonProcessingException {
-    // Arrange
-    OdeMessageFrameData bsmData = objectMapper.readValue(sampleBsmJson, OdeMessageFrameData.class);
+  void testSdsmDepositListener() throws Exception {
+    OdeMessageFrameData sdsmData =
+        objectMapper.readValue(sampleSdsmJson, OdeMessageFrameData.class);
     String currentTime =
         LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
-    bsmData.getMetadata().setOdeReceivedAt(currentTime);
-    String message = objectMapper.writeValueAsString(bsmData);
+    sdsmData.getMetadata().setOdeReceivedAt(currentTime);
+    String message = objectMapper.writeValueAsString(sdsmData);
 
-    depositor.bsmDepositListener(message);
+    depositor.sdsmDepositListener(message);
 
     verify(mqttService).publishAsn1Bytes(eq("test-topic"), any(byte[].class), eq(false));
     verify(kafkaTemplate).send(eq("test-metrics-topic"), anyString());
   }
 
   @Test
-  void testBsmDepositListenerWithGeoRoutedFormat() throws JsonProcessingException {
-    // Arrange
+  void testSdsmDepositListenerWithGeoRoutedFormat() throws Exception {
     String currentTime = LocalDateTime.now(ZoneOffset.UTC)
         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
-    OdeMessageFrameData bsmData = objectMapper.readValue(sampleBsmJson, OdeMessageFrameData.class);
-    bsmData.getMetadata().setOdeReceivedAt(currentTime);
-    String message = objectMapper.writeValueAsString(bsmData);
+    OdeMessageFrameData sdsmData =
+        objectMapper.readValue(sampleSdsmJson, OdeMessageFrameData.class);
+    sdsmData.getMetadata().setOdeReceivedAt(currentTime);
+    String message = objectMapper.writeValueAsString(sdsmData);
 
     when(mqttProperties.getMessageFormat()).thenReturn(EtxMqttMessageFormat.J2735_GR);
 
-    depositor.bsmDepositListener(message);
+    depositor.sdsmDepositListener(message);
 
-    // Assert
     verify(mqttService).publishAsn1Bytes(eq("test-topic"), any(byte[].class), eq(false));
     verify(kafkaTemplate).send(eq("test-metrics-topic"), anyString());
   }
 
   @Test
-  void testBsmDepositListener_StaleMessage() throws JsonProcessingException {
-    // Arrange
-    OdeMessageFrameData bsmData = objectMapper.readValue(sampleBsmJson, OdeMessageFrameData.class);
-    bsmData.getMetadata().setOdeReceivedAt("2020-01-01T00:00:00.000Z"); // Stale timestamp
-    String message = objectMapper.writeValueAsString(bsmData);
+  void testSdsmDepositListener_StaleMessage() throws Exception {
+    OdeMessageFrameData sdsmData =
+        objectMapper.readValue(sampleSdsmJson, OdeMessageFrameData.class);
+    sdsmData.getMetadata().setOdeReceivedAt("2020-01-01T00:00:00.000Z");
+    String message = objectMapper.writeValueAsString(sdsmData);
 
-    // Act
-    depositor.bsmDepositListener(message);
+    depositor.sdsmDepositListener(message);
 
-    // Assert
     verify(mqttService, never()).publishAsn1Bytes(anyString(), any(byte[].class), eq(false));
 
-    // Verify stale message counter was incremented
     double staleCount =
-        registry.get("mec-deposit.etx.mqtt.stale").tag("message.type", "BSM").counter().count();
+        registry.get("mec-deposit.etx.mqtt.stale").tag("message.type", "SDSM").counter().count();
     assert (staleCount > 0);
   }
 
   @Test
-  void testBsmDepositListener_HandlesException() throws JsonProcessingException {
-    // Arrange
-    OdeMessageFrameData bsmData = objectMapper.readValue(sampleBsmJson, OdeMessageFrameData.class);
+  void testSdsmDepositListener_HandlesException() throws Exception {
+    OdeMessageFrameData sdsmData =
+        objectMapper.readValue(sampleSdsmJson, OdeMessageFrameData.class);
     String currentTime = LocalDateTime.now(ZoneOffset.UTC)
         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"));
-    bsmData.getMetadata().setOdeReceivedAt(currentTime);
-    String message = objectMapper.writeValueAsString(bsmData);
+    sdsmData.getMetadata().setOdeReceivedAt(currentTime);
+    String message = objectMapper.writeValueAsString(sdsmData);
 
-    // Simulate an exception during MQTT publish
     doThrow(new RuntimeException("MQTT publish failed")).when(mqttService)
         .publishAsn1Bytes(anyString(), any(byte[].class), eq(false));
 
-    // Act
-    depositor.bsmDepositListener(message);
+    depositor.sdsmDepositListener(message);
 
-    // Assert
-    // Verify error metrics were published to Kafka
     verify(kafkaTemplate).send(eq("test-metrics-topic"),
         argThat(metricsJson -> metricsJson.contains("\"success\":false")
             && metricsJson.contains("\"errorMessage\":\"MQTT publish failed\"")));
 
-    // Verify error counter was incremented
     double errorCount =
-        registry.get("mec-deposit.etx.mqtt.error").tag("message.type", "BSM").counter().count();
+        registry.get("mec-deposit.etx.mqtt.error").tag("message.type", "SDSM").counter().count();
     assert (errorCount > 0);
   }
 }

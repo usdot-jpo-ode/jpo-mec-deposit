@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit.services.etx;
+package us.dot.its.jpo.ode.mec.deposit.services.etx.mqtt;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit.services.etx.depositors.api;
+package us.dot.its.jpo.ode.mec.deposit.services.depositors.api;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -8,7 +8,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -17,33 +20,30 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.kafka.core.KafkaTemplate;
-import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
-import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
-import us.dot.its.jpo.ode.model.OdeMessageFrameData;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.kafka.core.KafkaTemplate;
+import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties.MecDepositMetrics;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.ApiDepositorProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.DepositorProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.EtxMqttBrokerProfile;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.MqttBrokerDepositors;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.MqttBrokers;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.ApiDepositorProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.DepositorProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class EtxTimApiDepositorTest {
+class MapApiDepositorTest {
 
   @Mock
   private MecDepositProperties mecDepositProperties;
@@ -67,21 +67,16 @@ class EtxTimApiDepositorTest {
   private Counter counter;
 
   private MeterRegistry registry;
-  private EtxTimApiDepositor depositor;
+  private MapApiDepositor depositor;
   private ObjectMapper objectMapper;
-  private String sampleTimJson;
-  private String sampleTimAsn1;
+  private String sampleMapJson;
 
   @BeforeEach
   void setUp() throws IOException, URISyntaxException {
-    // Use SimpleMeterRegistry instead of mocking
     registry = new SimpleMeterRegistry();
     MockitoAnnotations.openMocks(this);
     objectMapper = new ObjectMapper();
-    // objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    // objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 
-    // Configure MecDepositProperties metrics
     MecDepositMetrics metrics = new MecDepositMetrics();
     metrics.setKafkaTopic("test-metrics-topic");
     metrics.setEnabled(true);
@@ -89,14 +84,11 @@ class EtxTimApiDepositorTest {
 
     when(tokenManager.getValidToken()).thenReturn("mock-token");
 
-    // Configure properties using builders
     ApiDepositorProperties apiDepositorProperties = ApiDepositorProperties.builder().build();
-
     DepositorProperties depositorProperties =
         DepositorProperties.builder().api(apiDepositorProperties).build();
-
     MqttBrokerDepositors mbd =
-        MqttBrokerDepositors.builder().staleMessageThreshold(5000).tim(depositorProperties).build();
+        MqttBrokerDepositors.builder().staleMessageThreshold(5000).map(depositorProperties).build();
     EtxMqttBrokerProfile etxProfile = EtxMqttBrokerProfile.builder().depositors(mbd).build();
     MqttBrokers brokers = MqttBrokers.builder().etx(etxProfile).build();
     when(etxProperties.getMqttBrokers()).thenReturn(brokers);
@@ -104,62 +96,45 @@ class EtxTimApiDepositorTest {
     when(etxProperties.getClientType()).thenReturn(EtxClientType.SOFTWARE);
     when(etxProperties.getClientSubType()).thenReturn(EtxClientSubType.APPLICATION);
 
-    depositor = new EtxTimApiDepositor(mecDepositProperties, etxProperties, etxApiClient,
+    depositor = new MapApiDepositor(mecDepositProperties, etxProperties, etxApiClient,
         tokenManager, registry, kafkaTemplate);
 
-    // Load sample TIM JSON from resources
-    sampleTimJson = new String(Files.readAllBytes(Paths.get(
-        getClass().getClassLoader().getResource("sample_messages/sample-ode-tim.json").toURI())));
-
-    OdeMessageFrameData odeTimData =
-        objectMapper.readValue(sampleTimJson, OdeMessageFrameData.class);
-    sampleTimAsn1 = odeTimData.getMetadata().getAsn1();
-  }
-
-  private String createTimTestMessage(String timestamp) throws JsonProcessingException {
-    OdeMessageFrameData timData = objectMapper.readValue(sampleTimJson, OdeMessageFrameData.class);
-    timData.getMetadata().setOdeReceivedAt(timestamp);
-    return objectMapper.writeValueAsString(timData);
+    sampleMapJson = new String(Files.readAllBytes(Paths.get(
+        getClass().getClassLoader().getResource("sample_messages/sample-ode-map.json").toURI())));
   }
 
   @Test
-  void testTimDepositListener_Success() throws JsonProcessingException {
-    // Prepare test data
+  void testMapDepositListener_Success() throws JsonProcessingException {
+    OdeMessageFrameData mapData = objectMapper.readValue(sampleMapJson, OdeMessageFrameData.class);
     String currentTimestamp =
         LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
-    String message = createTimTestMessage(currentTimestamp);
+    mapData.getMetadata().setOdeReceivedAt(currentTimestamp);
 
-    // Execute
-    depositor.timDepositListener(message);
+    depositor.mapDepositListener(objectMapper.writeValueAsString(mapData));
 
-    // Verify
-    verify(etxApiClient).deposit(eq("mock-token"), eq(sampleTimAsn1));
+    verify(etxApiClient).deposit(eq("mock-token"), eq(mapData.getMetadata().getAsn1()));
     verify(kafkaTemplate).send(anyString(), argThat(metrics -> metrics.contains("\"success\":true")
-        && metrics.contains("\"messageType\":\"TIM\"")));
+        && metrics.contains("\"messageType\":\"MAP\"")));
   }
 
   @Test
-  void testTimDepositListener_Error() throws JsonProcessingException {
-    // Prepare test data
+  void testMapDepositListener_Error() throws JsonProcessingException {
+    OdeMessageFrameData mapData = objectMapper.readValue(sampleMapJson, OdeMessageFrameData.class);
     String currentTimestamp =
         LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
-    String message = createTimTestMessage(currentTimestamp);
+    mapData.getMetadata().setOdeReceivedAt(currentTimestamp);
 
-    // Simulate API error
     doThrow(new RuntimeException("API Error")).when(etxApiClient).deposit(anyString(), anyString());
 
-    // Execute
-    depositor.timDepositListener(message);
+    depositor.mapDepositListener(objectMapper.writeValueAsString(mapData));
 
-    // Verify error handling
     verify(kafkaTemplate).send(anyString(),
         argThat(metrics -> metrics.contains("\"success\":false")
-            && metrics.contains("\"messageType\":\"TIM\"")
+            && metrics.contains("\"messageType\":\"MAP\"")
             && metrics.contains("\"errorMessage\":\"API Error\"")));
 
-    // Verify error counter was incremented
     double errorCount =
-        registry.get("mec-deposit.etx.api.error").tag("message.type", "TIM").counter().count();
+        registry.get("mec-deposit.etx.api.error").tag("message.type", "MAP").counter().count();
     assert (errorCount > 0);
   }
 }

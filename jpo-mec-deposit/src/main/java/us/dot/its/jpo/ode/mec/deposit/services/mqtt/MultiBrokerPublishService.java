@@ -2,9 +2,7 @@ package us.dot.its.jpo.ode.mec.deposit.services.mqtt;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
-import java.util.Collections;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,14 +11,16 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.BrokerPublishPayload;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttBrokerType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttBrokerTarget;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttFanoutPublishResult;
 
 /**
  * Coordinates multi-broker MQTT fanout publishing with per-target isolation.
+ *
+ * <p>This service is broker-agnostic. The set of active targets is resolved externally (see
+ * {@code MqttBrokerConfiguration#mqttActiveTargets}) and injected here, keeping ETX-specific
+ * routing logic out of this class.
  */
 @Service
 @Slf4j
@@ -31,33 +31,18 @@ public class MultiBrokerPublishService {
 
   /**
    * Creates a broker fanout service.
+   *
+   * @param brokerPublishers all registered broker publisher beans
+   * @param activeTargets    the pre-resolved set of targets that should receive publishes
+   * @param meterRegistry    metrics registry
    */
-  public MultiBrokerPublishService(List<BrokerPublisher> brokerPublishers, EtxMqttProperties mqttProperties,
-      MeterRegistry meterRegistry) {
+  public MultiBrokerPublishService(List<BrokerPublisher> brokerPublishers,
+      Set<MqttBrokerTarget> activeTargets, MeterRegistry meterRegistry) {
     for (BrokerPublisher publisher : brokerPublishers) {
       publishers.put(publisher.target(), publisher);
     }
+    this.activeTargets = activeTargets;
     this.meterRegistry = meterRegistry;
-    Set<MqttBrokerTarget> configured;
-    if (mqttProperties.isDualPublishEnabled()) {
-      configured = mqttProperties.getDualPublishTargets().stream().collect(Collectors.toSet());
-    } else {
-      EtxMqttBrokerType brokerType =
-          mqttProperties.getBrokerType() != null ? mqttProperties.getBrokerType() : EtxMqttBrokerType.ETX;
-      configured = Set.of( switch (brokerType) {
-        case NMI -> MqttBrokerTarget.NMI;
-        case AV -> MqttBrokerTarget.AV;
-        case MB -> MqttBrokerTarget.MB;
-        default -> MqttBrokerTarget.ETX;
-      });
-    }
-    EnumSet<MqttBrokerTarget> resolved = configured.stream()
-        .filter(publishers::containsKey)
-        .collect(Collectors.toCollection(() -> EnumSet.noneOf(MqttBrokerTarget.class)));
-    if (resolved.isEmpty() && !publishers.isEmpty()) {
-      resolved.addAll(publishers.keySet());
-    }
-    this.activeTargets = Collections.unmodifiableSet(resolved);
   }
 
   /**

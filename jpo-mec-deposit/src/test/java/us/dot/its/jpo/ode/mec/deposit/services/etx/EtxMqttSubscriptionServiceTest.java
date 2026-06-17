@@ -24,6 +24,7 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
 import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerApiProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttClientInfo;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
+import us.dot.its.jpo.ode.mec.deposit.services.etx.mqtt.EtxMqttSubscriptionService;
 
 @ExtendWith(MockitoExtension.class)
 class EtxMqttSubscriptionServiceTest {

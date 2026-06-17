@@ -1,4 +1,4 @@
-package us.dot.its.jpo.ode.mec.deposit.services.etx.depositors.mqtt;
+package us.dot.its.jpo.ode.mec.deposit.services.depositors.mqtt;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -41,13 +41,13 @@ import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
-import us.dot.its.jpo.ode.mec.deposit.services.etx.EtxMqttPublishService;
+import us.dot.its.jpo.ode.mec.deposit.services.etx.mqtt.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.utils.mqtt.EtxMqttTopicBuilder;
 import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class EtxMapMqttDepositorTest {
+class MapMqttDepositorTest {
 
   @Mock
   private MecDepositProperties mecDepositProperties;
@@ -71,7 +71,7 @@ class EtxMapMqttDepositorTest {
   private Counter counter;
 
   private MeterRegistry registry;
-  private EtxMapMqttDepositor depositor;
+  private MapMqttDepositor depositor;
   private ObjectMapper objectMapper;
   private String sampleMapJson;
   private MockedStatic<EtxMqttTopicBuilder> mockedTopicBuilder;
@@ -95,7 +95,7 @@ class EtxMapMqttDepositorTest {
     when(mqttProperties.getVendor()).thenReturn("test-vendor");
     when(mqttProperties.getMessageFormat()).thenReturn(EtxMqttMessageFormat.J2735);
 
-    depositor = new EtxMapMqttDepositor(mecDepositProperties, etxProperties, mqttProperties,
+    depositor = new MapMqttDepositor(mecDepositProperties, etxProperties, mqttProperties,
         mqttService, registry, kafkaTemplate);
     objectMapper = new ObjectMapper();
 
@@ -103,8 +103,8 @@ class EtxMapMqttDepositorTest {
         getClass().getClassLoader().getResource("sample_messages/sample-ode-map.json").toURI())));
 
     mockedTopicBuilder = Mockito.mockStatic(EtxMqttTopicBuilder.class);
-    mockedTopicBuilder.when(() -> EtxMqttTopicBuilder.getMapTopicList(any(MapData.class), anyString(),
-        anyInt(), any(EtxMqttMessageFormat.class), eq(EtxClientType.SOFTWARE),
+    mockedTopicBuilder.when(() -> EtxMqttTopicBuilder.getMapTopicList(any(MapData.class),
+        anyString(), anyInt(), any(EtxMqttMessageFormat.class), eq(EtxClientType.SOFTWARE),
         eq(EtxClientSubType.APPLICATION))).thenReturn(Set.of("test-topic"));
   }
 
@@ -118,7 +118,8 @@ class EtxMapMqttDepositorTest {
   @Test
   void testMapDepositListener() throws JsonProcessingException {
     OdeMessageFrameData mapData = objectMapper.readValue(sampleMapJson, OdeMessageFrameData.class);
-    String currentTime = LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
+    String currentTime =
+        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
     mapData.getMetadata().setOdeReceivedAt(currentTime);
     String message = objectMapper.writeValueAsString(mapData);
 
@@ -142,7 +143,8 @@ class EtxMapMqttDepositorTest {
   @Test
   void testMapDepositListener_HandlesException() throws JsonProcessingException {
     OdeMessageFrameData mapData = objectMapper.readValue(sampleMapJson, OdeMessageFrameData.class);
-    String currentTime = LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
+    String currentTime =
+        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
     mapData.getMetadata().setOdeReceivedAt(currentTime);
     String message = objectMapper.writeValueAsString(mapData);
 

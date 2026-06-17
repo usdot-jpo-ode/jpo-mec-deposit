@@ -13,9 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
-import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.BrokerPublishPayload;
-import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttBrokerType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttBrokerTarget;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttFanoutPublishResult;
 
@@ -29,14 +27,10 @@ class MultiBrokerPublishServiceTest {
     when(nmiPublisher.target()).thenReturn(MqttBrokerTarget.NMI);
     doThrow(new RuntimeException("NMI down")).when(nmiPublisher).publish(any(), anyBoolean());
 
-    EtxMqttProperties properties = new EtxMqttProperties();
-    properties.setDualPublishEnabled(true);
-    properties.setDualPublishTargets(List.of(MqttBrokerTarget.ETX, MqttBrokerTarget.NMI));
-    properties.setBrokerType(EtxMqttBrokerType.ETX);
-
-    MultiBrokerPublishService service =
-        new MultiBrokerPublishService(List.of(etxPublisher, nmiPublisher), properties,
-            new SimpleMeterRegistry());
+    MultiBrokerPublishService service = new MultiBrokerPublishService(
+        List.of(etxPublisher, nmiPublisher),
+        Set.of(MqttBrokerTarget.ETX, MqttBrokerTarget.NMI),
+        new SimpleMeterRegistry());
 
     Map<MqttBrokerTarget, BrokerPublishPayload> payloads = Map.of(
         MqttBrokerTarget.ETX, BrokerPublishPayload.builder().target(MqttBrokerTarget.ETX)
@@ -52,16 +46,14 @@ class MultiBrokerPublishServiceTest {
   }
 
   @Test
-  void singleNmiPublisherWhenBrokerTypeEtx_targetsNmiFromFallback() {
+  void singleNmiPublisher_targetsNmi() {
     BrokerPublisher nmiPublisher = mock(BrokerPublisher.class);
     when(nmiPublisher.target()).thenReturn(MqttBrokerTarget.NMI);
 
-    EtxMqttProperties properties = new EtxMqttProperties();
-    properties.setDualPublishEnabled(false);
-    properties.setBrokerType(EtxMqttBrokerType.ETX);
-
-    MultiBrokerPublishService service =
-        new MultiBrokerPublishService(List.of(nmiPublisher), properties, new SimpleMeterRegistry());
+    MultiBrokerPublishService service = new MultiBrokerPublishService(
+        List.of(nmiPublisher),
+        Set.of(MqttBrokerTarget.NMI),
+        new SimpleMeterRegistry());
 
     assertTrue(service.isTargetActive(MqttBrokerTarget.NMI));
     Map<MqttBrokerTarget, BrokerPublishPayload> payloads =
@@ -75,16 +67,14 @@ class MultiBrokerPublishServiceTest {
   }
 
   @Test
-  void singleAvPublisherWhenBrokerTypeAv_targetsAv() {
+  void singleAvPublisher_targetsAv() {
     BrokerPublisher avPublisher = mock(BrokerPublisher.class);
     when(avPublisher.target()).thenReturn(MqttBrokerTarget.AV);
 
-    EtxMqttProperties properties = new EtxMqttProperties();
-    properties.setDualPublishEnabled(false);
-    properties.setBrokerType(EtxMqttBrokerType.AV);
-
-    MultiBrokerPublishService service =
-        new MultiBrokerPublishService(List.of(avPublisher), properties, new SimpleMeterRegistry());
+    MultiBrokerPublishService service = new MultiBrokerPublishService(
+        List.of(avPublisher),
+        Set.of(MqttBrokerTarget.AV),
+        new SimpleMeterRegistry());
 
     assertTrue(service.isTargetActive(MqttBrokerTarget.AV));
     Map<MqttBrokerTarget, BrokerPublishPayload> payloads =
