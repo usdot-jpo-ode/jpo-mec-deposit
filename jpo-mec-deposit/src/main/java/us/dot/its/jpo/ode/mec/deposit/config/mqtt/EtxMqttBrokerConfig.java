@@ -20,9 +20,9 @@ import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.messaging.MessageChannel;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerApiProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
-import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.PartnerApiProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.PartnerClient;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.PartnerTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
 
 /**
@@ -33,18 +33,18 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfigurati
 @ConditionalOnProperty(value = {"mec-deposit.etx.enabled"}, havingValue = "true")
 public class EtxMqttBrokerConfig {
   private final EtxMqttProperties mqttProperties;
-  private final EtxPartnerApiProperties partnerApiProperties;
-  private final EtxTokenManager tokenManager;
-  private final EtxPartnerClient etxApi;
+  private final PartnerApiProperties partnerApiProperties;
+  private final PartnerTokenManager tokenManager;
+  private final PartnerClient etxApi;
   private RegistrationConfiguration etxConfig;
 
   /**
    * Constructs the MQTT configuration with required properties.
    *
-   * @param tokenManager The ETX token manager param etxApi The ETX API
+   * @param tokenManager The API token manager param
    */
-  public EtxMqttBrokerConfig(EtxTokenManager tokenManager, EtxPartnerClient etxApi,
-      EtxMqttProperties mqttProperties, EtxPartnerApiProperties partnerApi) {
+  public EtxMqttBrokerConfig(PartnerTokenManager tokenManager, PartnerClient etxApi,
+      EtxMqttProperties mqttProperties, PartnerApiProperties partnerApi) {
     this.tokenManager = tokenManager;
     this.etxApi = etxApi;
     this.mqttProperties = mqttProperties;
@@ -111,7 +111,8 @@ public class EtxMqttBrokerConfig {
   public ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager() {
     RegistrationConfiguration etxConfig = null;
     if (mqttProperties.isUseRegistration()) {
-      etxConfig = EtxUtil.readConfigFile(partnerApiProperties.getCertificatePath() + "/config.json");
+      etxConfig =
+          EtxUtil.readConfigFile(partnerApiProperties.getCertificatePath() + "/config.json");
     }
 
     String configuredBrokerUri = mqttProperties.getBrokerUri();
@@ -145,8 +146,10 @@ public class EtxMqttBrokerConfig {
 
     String mqttClientId = mqttProperties.getClientId();
     if (mqttClientId == null || mqttClientId.isBlank()) {
-      mqttClientId = etxConfig != null && etxConfig.getDeviceID() != null && !etxConfig.getDeviceID()
-          .isBlank() ? etxConfig.getDeviceID() : "jpo-mec-deposit-" + UUID.randomUUID();
+      mqttClientId =
+          etxConfig != null && etxConfig.getDeviceID() != null && !etxConfig.getDeviceID().isBlank()
+              ? etxConfig.getDeviceID()
+              : "jpo-mec-deposit-" + UUID.randomUUID();
     }
 
     Mqttv3ClientManager clientManager = new Mqttv3ClientManager(options, mqttClientId);
@@ -174,7 +177,7 @@ public class EtxMqttBrokerConfig {
   @Bean
   public IntegrationFlow mqttInFlow(
       ClientManager<IMqttAsyncClient, MqttConnectOptions> clientManager,
-      EtxPartnerApiProperties partnerApi) {
+      PartnerApiProperties partnerApi) {
     String configuredClientId = mqttProperties.getClientId();
     String logClientId = configuredClientId;
     if ((logClientId == null || logClientId.isBlank()) && mqttProperties.isUseRegistration()) {
@@ -213,10 +216,10 @@ public class EtxMqttBrokerConfig {
   /**
    * Creates and configures the MQTT outbound message flow.
    *
-   * <p>The {@code mqttOutboundChannel} bean is injected by reference (not by string name) so the
-   * DSL uses the pre-existing {@link ExecutorChannel} instead of creating a new
-   * {@code DirectChannel} that would override it and make all publishes synchronous on the calling
-   * thread.
+   * <p>
+   * The {@code mqttOutboundChannel} bean is injected by reference (not by string name) so the DSL
+   * uses the pre-existing {@link ExecutorChannel} instead of creating a new {@code DirectChannel}
+   * that would override it and make all publishes synchronous on the calling thread.
    *
    * @param mqttOutboundChannel The executor-backed outbound channel
    * @param mqttOutboundMessageHandler The async MQTT outbound message handler
@@ -225,8 +228,6 @@ public class EtxMqttBrokerConfig {
   @Bean
   public IntegrationFlow mqttOutFlow(MessageChannel mqttOutboundChannel,
       MqttPahoMessageHandler mqttOutboundMessageHandler) {
-    return IntegrationFlow.from(mqttOutboundChannel)
-        .handle(mqttOutboundMessageHandler)
-        .get();
+    return IntegrationFlow.from(mqttOutboundChannel).handle(mqttOutboundMessageHandler).get();
   }
 }

@@ -15,7 +15,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.stereotype.Service;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerApiProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.PartnerApiProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttClientInfo;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
@@ -28,7 +28,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfigurati
 @ConditionalOnProperty(value = {"mec-deposit.etx.enabled"}, havingValue = "true")
 public class EtxMqttPublishService {
   private final MessageChannel mqttOutboundChannel;
-  private final EtxPartnerApiProperties partnerApiProperties;
+  private final PartnerApiProperties partnerApiProperties;
   private final AtomicInteger messageCount = new AtomicInteger(0);
   private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
   private final int maxMessagesPerSecond;
@@ -47,7 +47,7 @@ public class EtxMqttPublishService {
    * @param registry Metrics registry for monitoring
    */
   public EtxMqttPublishService(MessageChannel mqttOutboundChannel,
-      EtxPartnerApiProperties partnerApiProperties, EtxMqttProperties mqttProperties,
+      PartnerApiProperties partnerApiProperties, EtxMqttProperties mqttProperties,
       MeterRegistry registry) {
     this.mqttOutboundChannel = mqttOutboundChannel;
     this.partnerApiProperties = partnerApiProperties;

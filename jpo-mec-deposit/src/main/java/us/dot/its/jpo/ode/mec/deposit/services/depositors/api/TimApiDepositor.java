@@ -11,8 +11,8 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
-import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.PartnerClient;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.PartnerTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.services.base.AbstractApiDepositor;
 import us.dot.its.jpo.ode.model.OdeTimData;
@@ -39,7 +39,7 @@ public class TimApiDepositor extends AbstractApiDepositor {
    * @param kafkaTemplate Template for Kafka operations
    */
   public TimApiDepositor(MecDepositProperties mecDepositProperties, EtxProperties etxProperties,
-      EtxPartnerClient etxApi, EtxTokenManager tokenManager, MeterRegistry meterRegistry,
+      PartnerClient etxApi, PartnerTokenManager tokenManager, MeterRegistry meterRegistry,
       KafkaTemplate<String, String> kafkaTemplate) {
     super(mecDepositProperties, etxProperties, etxApi, tokenManager, meterRegistry, kafkaTemplate,
         EtxMessageType.TIM);

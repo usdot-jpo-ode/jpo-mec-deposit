@@ -35,8 +35,8 @@ import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.DepositorProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.EtxMqttBrokerProfile;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.MqttBrokerDepositors;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.MqttBrokers;
-import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
-import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.PartnerClient;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.PartnerTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.model.OdeMessageFrameData;
@@ -52,10 +52,10 @@ class MapApiDepositorTest {
   private EtxProperties etxProperties;
 
   @Mock
-  private EtxPartnerClient etxApiClient;
+  private PartnerClient etxApiClient;
 
   @Mock
-  private EtxTokenManager tokenManager;
+  private PartnerTokenManager tokenManager;
 
   @Mock
   private KafkaTemplate<String, String> kafkaTemplate;

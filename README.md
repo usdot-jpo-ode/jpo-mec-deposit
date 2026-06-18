@@ -162,7 +162,7 @@ The ETX MEC Deposit is a feature that allows the depositor to deposit messages t
 
 The ETX MQTT Deposit is a feature that allows the depositor to deposit messages to an ETX MQTT broker. This is done by setting the `ETX_MQTT_ENABLED` environment variable to `True` and providing the necessary ETX MQTT configuration. Please refer to the [sample.env](./sample.env) file for the necessary environment variables.
 
-Regional JSON depositors consume ODE topics such as BSM (`topic.OdeBsmJson`), PSM (`topic.OdePsmJson`), SPAT, TIM, MAP, and SDSM, and can fan out to **ETX**, **NMI**, and **AV** when those brokers are enabled. Shared defaults use `ETX_DEPOSITORS_*` keys (for example `ETX_DEPOSITORS_PSM_MQTT_ENABLED` and `ETX_DEPOSITORS_PSM_MQTT_KAFKA_TOPIC`); optional per-broker overrides follow the `ETX_MQTT_BROKERS_ETX_DEPOSITORS_*`, `NMI_MQTT_BROKERS_NMI_DEPOSITORS_*`, and `AV_MQTT_BROKERS_AV_DEPOSITORS_*` patterns. The [docker-compose.yml](./docker-compose.yml) `mec-deposit` service passes these variables through to the container environment.
+Regional JSON depositors consume ODE topics such as BSM (`topic.OdeBsmJson`), PSM (`topic.OdePsmJson`), SPAT, TIM, MAP, and SDSM, and can fan out to **ETX**, **NMI**, and **AV** when those brokers are enabled. Shared defaults use `DEPOSITORS_*` keys (for example `DEPOSITORS_PSM_MQTT_ENABLED` and `DEPOSITORS_PSM_MQTT_KAFKA_TOPIC`); optional per-broker overrides follow the `ETX_MQTT_BROKERS_ETX_DEPOSITORS_*`, `NMI_MQTT_BROKERS_NMI_DEPOSITORS_*`, and `AV_MQTT_BROKERS_AV_DEPOSITORS_*` patterns. The [docker-compose.yml](./docker-compose.yml) `mec-deposit` service passes these variables through to the container environment.
 
 When `ETX_MQTT_MESSAGE_FORMAT` is `j2735_gr`, **ETX** receives a `GeoRoutedMsg` protobuf for regional depositors; **NMI** and **AV** still receive the **raw** ASN.1 bytes from the ODE metadata (same split as the geohash publisher for NMI/AV).
 
@@ -394,10 +394,10 @@ The GeoHash MQTT Publisher is enabled by setting the following environment varia
 ETX_ENABLED="True"
 
 # Enable GeoHash MQTT Publisher
-ETX_DEPOSITORS_GEOHASH_MQTT_ENABLED="True"
+DEPOSITORS_GEOHASH_MQTT_ENABLED="True"
 
 # Kafka topic for GeoHashRoutedMsg messages
-ETX_DEPOSITORS_GEOHASH_MQTT_KAFKA_TOPIC="topic.GeoHashRoutedMsg"
+DEPOSITORS_GEOHASH_MQTT_KAFKA_TOPIC="topic.GeoHashRoutedMsg"
 ```
 
 **Additional Configuration Properties:**
@@ -410,7 +410,7 @@ ETX_DEPOSITORS_GEOHASH_MQTT_KAFKA_TOPIC="topic.GeoHashRoutedMsg"
 
 **Conditional Activation:**
 
-The publisher bean is created when geohash MQTT is enabled on **at least one** of the ETX, NMI, or AV broker profiles (`mec-deposit.etx.mqtt-brokers.*.depositors.geohash.mqtt.enabled`, bound from `ETX_DEPOSITORS_GEOHASH_MQTT_ENABLED` and optional per-broker overrides). Publishing to a given broker still requires that broker’s client to be configured and enabled (for example ETX registration/TLS settings for ETX, or `NMI_MQTT_ENABLED` / `AV_MQTT_ENABLED` for those targets).
+The publisher bean is created when geohash MQTT is enabled on **at least one** of the ETX, NMI, or AV broker profiles (`mec-deposit.etx.mqtt-brokers.*.depositors.geohash.mqtt.enabled`, bound from `DEPOSITORS_GEOHASH_MQTT_ENABLED` and optional per-broker overrides). Publishing to a given broker still requires that broker’s client to be configured and enabled (for example ETX registration/TLS settings for ETX, or `NMI_MQTT_ENABLED` / `AV_MQTT_ENABLED` for those targets).
 
 **Kafka Consumer Group:**
 

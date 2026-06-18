@@ -39,8 +39,8 @@ import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties.MecDepositMetrics;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
-import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.PartnerClient;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.PartnerTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
@@ -83,10 +83,10 @@ class TimMqttDepositorTest {
   private MapRefPointCollector mapDataCollector;
 
   @Mock
-  private EtxPartnerClient partnerClient;
+  private PartnerClient partnerClient;
 
   @Mock
-  private EtxTokenManager tokenManager;
+  private PartnerTokenManager tokenManager;
 
   private MeterRegistry registry;
   private TimMqttDepositor depositor;

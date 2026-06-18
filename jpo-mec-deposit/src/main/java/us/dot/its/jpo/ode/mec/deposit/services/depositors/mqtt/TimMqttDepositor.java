@@ -21,8 +21,8 @@ import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
 import us.dot.its.jpo.ode.mec.deposit.config.condition.ConditionalOnAnyMqttBrokerMqttDepositor;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerClient;
-import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxTokenManager;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.PartnerClient;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.PartnerTokenManager;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxMessageType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.BrokerPublishPayload;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttBrokerTarget;
@@ -46,9 +46,9 @@ import us.dot.its.jpo.ode.model.OdeMessageFrameData;
 public class TimMqttDepositor extends AbstractMqttDepositor {
   private final MultiBrokerPublishService multiBrokerPublishService;
   @Nullable
-  private final EtxPartnerClient partnerClient;
+  private final PartnerClient partnerClient;
   @Nullable
-  private final EtxTokenManager tokenManager;
+  private final PartnerTokenManager tokenManager;
 
   /**
    * Primary Spring constructor.
@@ -57,8 +57,8 @@ public class TimMqttDepositor extends AbstractMqttDepositor {
   public TimMqttDepositor(MecDepositProperties mecDepositProperties, EtxProperties etxProperties,
       EtxMqttProperties mqttProperties, @Nullable EtxMqttPublishService mqttService,
       MeterRegistry registry, MultiBrokerPublishService multiBrokerPublishService,
-      KafkaTemplate<String, String> kafkaTemplate, @Nullable EtxPartnerClient partnerClient,
-      @Nullable EtxTokenManager tokenManager) {
+      KafkaTemplate<String, String> kafkaTemplate, @Nullable PartnerClient partnerClient,
+      @Nullable PartnerTokenManager tokenManager) {
     super(mecDepositProperties, etxProperties, mqttProperties, EtxMessageType.TIM, mqttService,
         registry, kafkaTemplate);
     this.multiBrokerPublishService = multiBrokerPublishService;

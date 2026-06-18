@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.context.annotation.Configuration;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerApiProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.PartnerApiProperties;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttBrokerTarget;
@@ -33,7 +33,7 @@ public class EtxProperties {
   private boolean enabled;
   private EtxClientType clientType;
   private EtxClientSubType clientSubType;
-  private EtxPartnerApiProperties partnerApi;
+  private PartnerApiProperties partnerApi;
   @NestedConfigurationProperty
   private MqttBrokers mqttBrokers;
 
