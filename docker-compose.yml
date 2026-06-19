@@ -17,7 +17,7 @@ services:
     image: jpo_mec_deposit:latest
     restart: ${RESTART_POLICY}
     ports:
-      - "8082:8082"
+      - "8080:8080"
     deploy:
       resources:
         limits:
