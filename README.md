@@ -162,9 +162,9 @@ The ETX MEC Deposit is a feature that allows the depositor to deposit messages t
 
 The ETX MQTT Deposit is a feature that allows the depositor to deposit messages to an ETX MQTT broker. This is done by setting the `ETX_MQTT_ENABLED` environment variable to `True` and providing the necessary ETX MQTT configuration. Please refer to the [sample.env](./sample.env) file for the necessary environment variables.
 
-Regional JSON depositors consume ODE topics such as BSM (`topic.OdeBsmJson`), PSM (`topic.OdePsmJson`), SPAT, TIM, MAP, and SDSM, and can fan out to **ETX**, **NMI**, and **AV** when those brokers are enabled. Shared defaults use `DEPOSITORS_*` keys (for example `DEPOSITORS_PSM_MQTT_ENABLED` and `DEPOSITORS_PSM_MQTT_KAFKA_TOPIC`); optional per-broker overrides follow the `ETX_MQTT_BROKERS_ETX_DEPOSITORS_*`, `NMI_MQTT_BROKERS_NMI_DEPOSITORS_*`, and `AV_MQTT_BROKERS_AV_DEPOSITORS_*` patterns. The [docker-compose.yml](./docker-compose.yml) `mec-deposit` service passes these variables through to the container environment.
+Regional JSON depositors consume ODE topics such as BSM (`topic.OdeBsmJson`), PSM (`topic.OdePsmJson`), SPAT, TIM, MAP, and SDSM, and can fan out to **ETX**, **NMI**, **AV**, and **MB** when those brokers are enabled. Shared defaults use `DEPOSITORS_*` keys (for example `DEPOSITORS_PSM_MQTT_ENABLED` and `DEPOSITORS_PSM_MQTT_KAFKA_TOPIC`); optional per-broker overrides follow the `ETX_MQTT_BROKERS_ETX_DEPOSITORS_*`, `NMI_MQTT_BROKERS_NMI_DEPOSITORS_*`, `AV_MQTT_BROKERS_AV_DEPOSITORS_*`, and `MB_MQTT_BROKERS_MB_DEPOSITORS_*` patterns. The [docker-compose.yml](./docker-compose.yml) `mec-deposit` service passes these variables through to the container environment.
 
-When `ETX_MQTT_MESSAGE_FORMAT` is `j2735_gr`, **ETX** receives a `GeoRoutedMsg` protobuf for regional depositors; **NMI** and **AV** still receive the **raw** ASN.1 bytes from the ODE metadata (same split as the geohash publisher for NMI/AV).
+When `ETX_MQTT_MESSAGE_FORMAT` is `j2735_gr`, **ETX** receives a `GeoRoutedMsg` protobuf for regional depositors; **NMI**, **AV**, and **MB** still receive the **raw** ASN.1 bytes from the ODE metadata (same split as the geohash publisher for NMI/AV/MB).
 
 For TrafficAuth/NMI MQTT publishing, use non-TLS MQTT and disable ETX registration-based connection:
 
@@ -176,12 +176,13 @@ For TrafficAuth/NMI MQTT publishing, use non-TLS MQTT and disable ETX registrati
 
 When using the geohash MQTT depositor with `ETX_MQTT_BROKER_TYPE="NMI"`, topics follow the NMI topic structure: `v1/g32/{g1}/{g2}/{g3}/{g4}/{g5}/{g6}/{g7}/{dsrcMsgID}` and publish the original signed payload bytes (signature preserved) instead of ETX wrapped payload definitions. The same `v1/g32/...` pattern is used when publishing to the AV MQTT broker.
 
-To publish to ETX, NMI, and AV in the same application instance, enable multi-broker fanout:
+To publish to ETX, NMI, AV, and MB in the same application instance, enable multi-broker fanout:
 
 - `ETX_MQTT_MULTI_BROKER_ENABLED="True"`
-- `ETX_MQTT_MULTI_BROKER_TARGETS="ETX,NMI,AV"` (or a subset such as `ETX,NMI`)
+- `ETX_MQTT_MULTI_BROKER_TARGETS="ETX,NMI,AV,MB"` (or any subset such as `ETX,NMI` or `ETX,MB`)
 - `NMI_MQTT_ENABLED="True"` when including NMI
 - `AV_MQTT_ENABLED="True"` when including AV
+- `MB_MQTT_ENABLED="True"` when including MB
 
 ### ETX + NMI deployment profile templates
 
@@ -198,14 +199,15 @@ Use distinct consumer groups per deployment (for example, `jpo-mec-deposit-etx` 
 
 Multi-broker mode records broker-tagged publish counters:
 
-- `mec-deposit.mqtt.publish{broker="etx|nmi|av",outcome="success|failure"}`
+- `mec-deposit.mqtt.publish{broker="etx|nmi|av|mb",outcome="success|failure"}`
 - `mec-deposit.nmi.mqtt.circuit.skipped` (NMI circuit-breaker skips)
+- `mec-deposit.av.mqtt.circuit.skipped` (AV circuit-breaker skips)
 
 Recommended rollout guardrails:
 
 - Canary enable dual mode on a single instance first.
-- Alert if NMI failure counter exceeds ETX success over a 5-minute window.
-- Roll back by setting `ETX_MQTT_MULTI_BROKER_ENABLED="False"` (or disable `NMI_MQTT_ENABLED` / `AV_MQTT_ENABLED`).
+- Alert if NMI or AV failure counter exceeds ETX success over a 5-minute window.
+- Roll back by setting `ETX_MQTT_MULTI_BROKER_ENABLED="False"` (or disable `NMI_MQTT_ENABLED` / `AV_MQTT_ENABLED` / `MB_MQTT_ENABLED` individually).
 
 #### ETX API Deposit
 
@@ -337,7 +339,7 @@ For more detailed information about the V2X App API, including setup, configurat
 
 ### Overview
 
-The GeoHash MQTT Publisher (`EtxGeohashMqttPublisher`) consumes `GeoHashRoutedMsg` protobuf messages from Kafka and publishes to MQTT. When **NMI** or **AV** targets are active, it publishes the **inner ASN.1 bytes** to NMI/AV topics (`v1/g32/...` with a DSRC message ID suffix). When **ETX** is active, it publishes an **ETX-specific wire form**: raw ASN.1 if `j2735`, or a serialized `GeoHashRoutedMsg` (timestamp + geohash + inner bytes) when the ETX MQTT message format is `j2735_gr`—matching the split used by regional JSON depositors (NMI/AV always receive raw bytes from the decoded frame).
+The GeoHash MQTT Publisher (`GeohashMqttPublisher`) consumes `GeoHashRoutedMsg` protobuf messages from Kafka and publishes to MQTT. When **NMI**, **AV**, or **MB** targets are active, it publishes the **inner ASN.1 bytes** to their respective topics (`v1/g32/...` with a DSRC message ID suffix for NMI/AV/MB). When **ETX** is active, it publishes an **ETX-specific wire form**: raw ASN.1 if `j2735`, or a serialized `GeoHashRoutedMsg` (timestamp + geohash + inner bytes) when the ETX MQTT message format is `j2735_gr`—matching the split used by regional JSON depositors (NMI/AV/MB always receive raw bytes from the decoded frame).
 
 ### Architecture
 
@@ -410,7 +412,7 @@ DEPOSITORS_GEOHASH_MQTT_KAFKA_TOPIC="topic.GeoHashRoutedMsg"
 
 **Conditional Activation:**
 
-The publisher bean is created when geohash MQTT is enabled on **at least one** of the ETX, NMI, or AV broker profiles (`mec-deposit.etx.mqtt-brokers.*.depositors.geohash.mqtt.enabled`, bound from `DEPOSITORS_GEOHASH_MQTT_ENABLED` and optional per-broker overrides). Publishing to a given broker still requires that broker’s client to be configured and enabled (for example ETX registration/TLS settings for ETX, or `NMI_MQTT_ENABLED` / `AV_MQTT_ENABLED` for those targets).
+The publisher bean is created when geohash MQTT is enabled on **at least one** of the ETX, NMI, AV, or MB broker profiles (`mec-deposit.etx.mqtt-brokers.*.depositors.geohash.mqtt.enabled`, bound from `DEPOSITORS_GEOHASH_MQTT_ENABLED` and optional per-broker overrides). Publishing to a given broker still requires that broker’s client to be configured and enabled (for example ETX registration/TLS settings for ETX, or `NMI_MQTT_ENABLED` / `AV_MQTT_ENABLED` / `MB_MQTT_ENABLED` for those targets).
 
 **Kafka Consumer Group:**
 

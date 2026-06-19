@@ -210,12 +210,11 @@ class PartnerClientTest {
   @Test
   void previewGeofence_WithValidToken_ReturnsResponse() {
     when(mockPartnerApiProperties.getBaseUri()).thenReturn("https://api.example.com");
-    GeofencePreviewResponse expected = GeofencePreviewResponse.builder()
-        .geohashes(java.util.List.of("dpsb2yq")).build();
-    when(mockRestTemplate.exchange(
-        eq("https://api.example.com/prd/v2/deposit/geofence/preview"), eq(HttpMethod.POST),
-        any(HttpEntity.class), eq(GeofencePreviewResponse.class)))
-        .thenReturn(ResponseEntity.ok(expected));
+    GeofencePreviewResponse expected =
+        GeofencePreviewResponse.builder().geohashes(java.util.List.of("dpsb2yq")).build();
+    when(mockRestTemplate.exchange(eq("https://api.example.com/prd/v2/deposit/geofence/preview"),
+        eq(HttpMethod.POST), any(HttpEntity.class), eq(GeofencePreviewResponse.class)))
+            .thenReturn(ResponseEntity.ok(expected));
 
     GeofencePreviewResponse result = etxApi.previewGeofence("token", "abc123");
 
@@ -252,7 +251,6 @@ class PartnerClientTest {
   @Test
   void registerClientPartner_WithRegistrationFailure_ReturnsNull() {
     // Arrange
-    String token = "valid-token";
     String certPath = "src/test/resources/certs";
     when(mockPartnerApiProperties.getCertificatePath()).thenReturn(certPath);
     when(mockPartnerApiProperties.isCacheRegistration()).thenReturn(false);
@@ -260,6 +258,7 @@ class PartnerClientTest {
     when(mockRestTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class),
         eq(ClientRegistrationResponse.class))).thenReturn(null);
 
+    String token = "valid-token";
     // Act & Assert
     assertThrows(RuntimeException.class, () -> etxApi.registerClientPartner(token));
   }

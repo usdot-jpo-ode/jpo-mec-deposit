@@ -96,9 +96,6 @@ public class GeohashMqttPublisher extends AbstractMqttDepositor {
 
       asn1Hex = Hex.toHexString(originalMessageBytes);
 
-      EtxMqttNamespace namespace =
-          retain ? EtxMqttNamespace.REGIONAL_STATIC : EtxMqttNamespace.REGIONAL;
-
       final GeoHash geohashObject = GeoHash.fromGeohashString(geohash);
       EtxMessageType detectedMessageType =
           MessageTypeDetector.detectMessageType(originalMessageBytes);
@@ -131,6 +128,8 @@ public class GeohashMqttPublisher extends AbstractMqttDepositor {
       byte[] etxPayload = EtxMqttProtobufBuilder.toEtxMqttWirePayload(originalMessageBytes,
           mqttProperties.getMessageFormat(), depositedInstant, latitude, longitude);
       Map<MqttBrokerTarget, BrokerPublishPayload> payloads = new EnumMap<>(MqttBrokerTarget.class);
+      EtxMqttNamespace namespace =
+          retain ? EtxMqttNamespace.REGIONAL_STATIC : EtxMqttNamespace.REGIONAL;
       String etxTopic = EtxMqttTopicBuilder.buildTopicFromGeohash(namespace, geohash,
           detectedMessageType, mqttProperties.getPrecision(), mqttProperties.getVendor(),
           mqttProperties.getMessageFormat(), etxProperties.getClientType(),
