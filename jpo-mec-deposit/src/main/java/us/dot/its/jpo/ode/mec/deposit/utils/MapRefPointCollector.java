@@ -25,7 +25,7 @@ public class MapRefPointCollector {
    *
    * @param message The JSON MAP message
    */
-  @KafkaListener(topics = "${mec-deposit.etx.depositors.map.mqtt.kafka-topic}",
+  @KafkaListener(topics = "${mec-deposit.etx.mqtt-brokers.etx.depositors.map.mqtt.kafka-topic}",
       groupId = "${spring.kafka.consumer.group-id}-map-collector",
       concurrency = "${spring.kafka.listener.concurrency:1}",
       properties = {"auto.offset.reset=earliest"})
@@ -39,7 +39,7 @@ public class MapRefPointCollector {
         IntersectionGeometry intersection = intersections.get(i);
         String intersectionId = intersection.getId().getId().toString();
         Position3D refPoint = intersection.getRefPoint();
-        log.debug("Received MAP message: {} with refPoint: {}", intersectionId, refPoint);
+        // log.debug("Received MAP message: {} with refPoint: {}", intersectionId, refPoint);
         map.put(intersectionId, refPoint);
       }
 

@@ -1,15 +1,14 @@
 package us.dot.its.jpo.ode.mec.deposit.etx.mqtt;
 
+import java.util.List;
 import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttMessageFormat;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttBrokerTarget;
 
 /**
- * Configuration properties for ETX MQTT connection and messaging settings.
+ * ETX MQTT connection and messaging settings (bound under
+ * {@code mec-deposit.etx.mqtt-brokers.etx.mqtt}).
  */
-@Configuration
-@ConfigurationProperties(prefix = "mec-deposit.etx.mqtt")
 @Data
 public class EtxMqttProperties {
   private int qos;
@@ -23,4 +22,13 @@ public class EtxMqttProperties {
   private EtxMqttMessageFormat messageFormat;
   private String[] subscriptions;
   private int registrationRefreshFailureThreshold;
+  private boolean useTls = true;
+  private boolean useRegistration = true;
+  private boolean requireSessionId = true;
+  private String brokerUri;
+  private String clientId;
+  private MqttBrokerTarget brokerType = MqttBrokerTarget.ETX;
+  private boolean multiBrokerEnabled = false;
+  private List<MqttBrokerTarget> multiBrokerTargets =
+      List.of(MqttBrokerTarget.ETX, MqttBrokerTarget.NMI, MqttBrokerTarget.AV);
 }

@@ -11,7 +11,7 @@
     </parent>
     <groupId>us.dot.its.jpo.ode.mec.deposit</groupId>
     <artifactId>jpo-mec-deposit</artifactId>
-    <version>1.0.0</version>
+    <version>2.0.0</version>
     <name>jpo-mec-deposit</name>
     <description>JPO ODE MEC Deposit</description>
     <url />
@@ -28,7 +28,7 @@
     <properties>
         <java.version>21</java.version>
         <protobuf.version>4.28.3</protobuf.version>
-        <jpo-ode.version>5.1.0</jpo-ode.version>
+        <jpo-ode.version>6.0.0</jpo-ode.version>
         <springdoc.version>2.3.0</springdoc.version>
         <swagger-ui.version>5.3.1</swagger-ui.version>
         <checkstyle-maven-plugin.version>3.6.0</checkstyle-maven-plugin.version>
@@ -90,6 +90,11 @@
             <version>3.16.0</version>
         </dependency>
         <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <version>1.16.5</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
         </dependency>
@@ -130,6 +135,11 @@
         <dependency>
             <groupId>usdot.jpo.ode</groupId>
             <artifactId>jpo-ode-core</artifactId>
+            <version>${jpo-ode.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>usdot.jpo.ode</groupId>
+            <artifactId>jpo-ode-svcs</artifactId>
             <version>${jpo-ode.version}</version>
         </dependency>
         <dependency>
@@ -213,6 +223,34 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-protobuf-wkt</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.google.protobuf</groupId>
+                                    <artifactId>protobuf-java</artifactId>
+                                    <version>${protobuf.version}</version>
+                                    <type>jar</type>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>
+                                        ${project.build.directory}/protobuf-wkt
+                                    </outputDirectory>
+                                    <includes>**/*.proto</includes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>0.6.1</version>
@@ -231,6 +269,9 @@
                     <clearOutputDirectory>false</clearOutputDirectory>
                     <additionalProtoPathElements>
                         <additionalProtoPathElement>${project.basedir}/src/main/proto</additionalProtoPathElement>
+                        <additionalProtoPathElement>
+                            ${project.build.directory}/protobuf-wkt
+                        </additionalProtoPathElement>
                     </additionalProtoPathElements>
                     <protocArtifact>
                         com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}</protocArtifact>

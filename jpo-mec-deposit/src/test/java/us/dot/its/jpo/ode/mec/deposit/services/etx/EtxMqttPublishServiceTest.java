@@ -24,9 +24,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
-import us.dot.its.jpo.ode.mec.deposit.etx.partner.EtxPartnerApiProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.PartnerApiProperties;
 import us.dot.its.jpo.ode.mec.deposit.etx.EtxUtil;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.partner.RegistrationConfiguration;
+import us.dot.its.jpo.ode.mec.deposit.services.etx.mqtt.EtxMqttPublishService;
 import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.EtxMqttClientInfo;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,7 +40,7 @@ class EtxMqttPublishServiceTest {
   private EtxMqttProperties mqttProperties;
 
   @Mock
-  private EtxPartnerApiProperties partnerApiProperties;
+  private PartnerApiProperties partnerApiProperties;
 
   private MeterRegistry meterRegistry;
   private EtxMqttPublishService service;
@@ -49,6 +50,7 @@ class EtxMqttPublishServiceTest {
   void setUp() {
     meterRegistry = new SimpleMeterRegistry();
     when(mqttProperties.getMaxMessagesPerSecond()).thenReturn(100);
+    when(mqttProperties.isRequireSessionId()).thenReturn(true);
     // Mock partnerApiProperties to return a valid certificate path
     when(partnerApiProperties.getCertificatePath()).thenReturn("src/test/resources/certs");
 
@@ -64,6 +66,8 @@ class EtxMqttPublishServiceTest {
 
     service = new EtxMqttPublishService(mqttOutboundChannel, partnerApiProperties, mqttProperties,
         meterRegistry);
+    // @PostConstruct does not run in plain unit tests; load session ID from mocked config
+    service.init();
   }
 
   @AfterEach
@@ -85,7 +89,7 @@ class EtxMqttPublishServiceTest {
 
     // Assert
     ArgumentCaptor<Message<?>> messageCaptor = ArgumentCaptor.forClass(Message.class);
-    verify(mqttOutboundChannel).send(messageCaptor.capture(), eq(1000L));
+    verify(mqttOutboundChannel).send(messageCaptor.capture(), eq(500L));
 
     Message<?> capturedMessage = messageCaptor.getValue();
     assertArrayEquals(testBytes, (byte[]) capturedMessage.getPayload());

@@ -1,6 +1,7 @@
 package us.dot.its.jpo.ode.mec.deposit.utils.mqtt;
 
 import ch.hsr.geohash.GeoHash;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,8 @@ import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrameList;
 import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.TravelerDataFrame;
 import us.dot.its.jpo.asn.j2735.r2024.TravelerInformation.GeographicalPath;
 import us.dot.its.jpo.asn.j2735.r2024.Common.Position3D;
+import us.dot.its.jpo.asn.j2735.r2024.MapData.IntersectionGeometry;
+import us.dot.its.jpo.asn.j2735.r2024.MapData.MapData;
 import us.dot.its.jpo.asn.j2735.r2024.SPAT.IntersectionState;
 import us.dot.its.jpo.asn.j2735.r2024.SPAT.SPAT;
 
@@ -155,6 +158,26 @@ public class EtxMqttTopicBuilder {
   }
 
   /**
+   * Generates ETX MQTT topics for TIM from Partner API geofence preview geohashes.
+   */
+  public static Set<String> getTimTopicListFromGeohashes(Collection<String> geohashes,
+      String mqttVendorId, int precision, EtxMqttMessageFormat messageFormat,
+      EtxClientType clientType, EtxClientSubType clientSubType) {
+    Set<String> topicSet = new HashSet<>();
+    if (geohashes == null) {
+      return topicSet;
+    }
+    for (String geohash : geohashes) {
+      if (geohash == null || geohash.isBlank()) {
+        continue;
+      }
+      topicSet.add(buildTopicFromGeohash(EtxMqttNamespace.REGIONAL, geohash.trim(),
+          EtxMessageType.TIM, precision, mqttVendorId, messageFormat, clientType, clientSubType));
+    }
+    return topicSet;
+  }
+
+  /**
    * Generates a set of MQTT topics for SPAT (Signal Phase and Timing) messages. Creates topics
    * based on the intersection locations referenced in the SPAT message.
    *
@@ -185,6 +208,29 @@ public class EtxMqttTopicBuilder {
       String topic = buildRegionalTopic(EtxMessageType.SPAT, latitude, longitude, precision,
           mqttVendorId, messageFormat, clientType, clientSubType);
 
+      topicSet.add(topic);
+    }
+    return topicSet;
+  }
+
+  /**
+   * Generates a set of MQTT topics for MAP messages using intersection reference points.
+   */
+  public static Set<String> getMapTopicList(MapData mapMsg, String mqttVendorId, int precision,
+      EtxMqttMessageFormat messageFormat, EtxClientType clientType, EtxClientSubType clientSubType) {
+    Set<String> topicSet = new HashSet<>();
+    if (mapMsg == null || mapMsg.getIntersections() == null) {
+      return topicSet;
+    }
+    for (IntersectionGeometry intersection : mapMsg.getIntersections()) {
+      Position3D refPoint = intersection.getRefPoint();
+      if (refPoint == null) {
+        continue;
+      }
+      double latitude = PositionConversionUtil.convertRefPointToLat(refPoint);
+      double longitude = PositionConversionUtil.convertRefPointToLon(refPoint);
+      String topic = buildRegionalTopic(EtxMessageType.MAP, latitude, longitude, precision,
+          mqttVendorId, messageFormat, clientType, clientSubType);
       topicSet.add(topic);
     }
     return topicSet;
@@ -228,4 +274,5 @@ public class EtxMqttTopicBuilder {
           messageFormat.getValue(), messageType.getValue(), clientType, clientSubType);
     }
   }
+
 }

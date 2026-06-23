@@ -1,0 +1,55 @@
+{
+  "metadata": {
+    "logFileName": "",
+    "maxDurationTime": 0,
+    "odePacketID": "",
+    "odeReceivedAt": "2023-09-21T15:30:14.926500Z",
+    "odeTimStartDateTime": "",
+    "originIp": "192.168.16.1",
+    "payloadType": "us.dot.its.jpo.ode.model.OdePsmPayload",
+    "psmSource": "RSU",
+    "receivedMessageDetails": {
+      "rxSource": "NA"
+    },
+    "recordGeneratedAt": "",
+    "recordGeneratedBy": "UNKNOWN",
+    "recordType": "psmTx",
+    "sanitized": false,
+    "schemaVersion": 8,
+    "securityResultCode": "success",
+    "serialId": {
+      "bundleId": 0,
+      "bundleSize": 1,
+      "recordId": 0,
+      "serialNumber": 0,
+      "streamId": "06cc1c17-e331-4806-a8ee-456b98c6517b"
+    },
+    "asn1": "011d0000201a0000021bd86891de75f84da101c13f042e2214141fff00022c2000270000000163b2cc7986010000"
+  },
+  "payload": {
+    "data": {
+      "messageId": 32,
+      "value": {
+        "PersonalSafetyMessage": {
+          "basicType": "aPEDESTRIAN",
+          "secMark": 3564,
+          "msgCnt": 26,
+          "id": "24779D7E",
+          "position": {
+            "lat": 405659938,
+            "long": -1050317754,
+            "elevation": 14409
+          },
+          "accuracy": {
+            "semiMajor": 186,
+            "semiMinor": 241,
+            "orientation": 65535
+          },
+          "speed": 14,
+          "heading": 8898
+        }
+      }
+    },
+    "dataType": "us.dot.its.jpo.asn.j2735.r2024.PersonalSafetyMessage.PersonalSafetyMessageMessageFrame"
+  }
+}

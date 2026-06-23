@@ -5,7 +5,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
-import us.dot.its.jpo.ode.mec.deposit.config.mqtt.EtxMqttConfig;
+import us.dot.its.jpo.ode.mec.deposit.config.mqtt.EtxMqttBrokerConfig;
 import us.dot.its.jpo.ode.mec.deposit.etx.mqtt.EtxMqttProperties;
 
 /**
@@ -20,7 +20,7 @@ public class EtxRegistrationRefreshService {
   private final AtomicInteger consecutiveFailures = new AtomicInteger(0);
   private final ReentrantLock refreshLock = new ReentrantLock();
   private final int failureThreshold;
-  private final EtxMqttConfig etxMqttConfig;
+  private final EtxMqttBrokerConfig etxMqttConfig;
   private volatile long lastRefreshAttempt = 0;
   private static final long MIN_REFRESH_INTERVAL_MS = 60000;
 
@@ -31,7 +31,7 @@ public class EtxRegistrationRefreshService {
    * @param etxMqttConfig ETX MQTT configuration for triggering refresh
    */
   public EtxRegistrationRefreshService(EtxMqttProperties mqttProperties,
-      EtxMqttConfig etxMqttConfig) {
+      EtxMqttBrokerConfig etxMqttConfig) {
     this.etxMqttConfig = etxMqttConfig;
     // Default threshold: 10 consecutive failures, configurable via properties
     this.failureThreshold = mqttProperties.getRegistrationRefreshFailureThreshold() > 0

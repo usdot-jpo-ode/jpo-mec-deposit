@@ -25,42 +25,102 @@ mec-deposit:
       network-type: "non-VZ"
       cache-registration: false
       certificate-path: "etx/"
-    mqtt:
-      qos: 0
-      max-inflight: 10
-      connection-timeout: 30
-      keep-alive-interval: 60
-      completion-timeout: 5000
-      max-messages-per-second: 50
-      # stale message threshold in milliseconds
-      stale-message-threshold: 250
-      vendor: "default-mqtt-vendor"
-      message-format: "j2735"
-      subscriptions:
-        - "vzimp/1/ClientInfo"
-    depositors:
-      bsm:
+    mqtt-brokers:
+      etx:
+        mqtt:
+          qos: 0
+          max-inflight: 10
+          connection-timeout: 30
+          keep-alive-interval: 60
+          completion-timeout: 5000
+          max-messages-per-second: 50
+          vendor: "default-mqtt-vendor"
+          message-format: "j2735"
+          use-tls: true
+          use-registration: true
+          require-session-id: true
+          broker-uri: ""
+          client-id: ""
+          broker-type: "ETX"
+          multi-broker-enabled: false
+          multi-broker-targets: "ETX,NMI"
+          subscriptions:
+            - "vzimp/1/ClientInfo"
+        depositors:
+          stale-message-threshold: 250
+          bsm:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeBsmJson"
+          psm:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdePsmJson"
+          spat:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeSpatJson"
+          tim:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeTimJson"
+            api:
+              enabled: false
+              kafka-topic: "topic.OdeTimJsonTMCFiltered"
+          map:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeMapJson"
+            api:
+              enabled: false
+              kafka-topic: "topic.OdeMapJson"
+          sdsm:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeSdsmJson"
+          geohash:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.GeoHashRoutedMsg"
+      nmi:
         mqtt:
           enabled: false
-          kafka-topic: "topic.OdeBsmJson"
-      spat:
-        mqtt:
-          enabled: false
-          kafka-topic: "topic.OdeSpatJson"
-      tim:
-        mqtt:
-          enabled: false
-          kafka-topic: "topic.OdeTimJson"
-        api:
-          enabled: false
-          kafka-topic: "topic.OdeTimJsonTMCFiltered"
-      map:
-        mqtt:
-          enabled: false
-          kafka-topic: "topic.OdeMapJson"
-        api:
-          enabled: false
-          kafka-topic: "topic.OdeMapJson"
+          broker-uri: "mqtt://localhost:1883"
+          client-id: "jpo-mec-deposit-nmi"
+          qos: 0
+          max-messages-per-second: 100
+          precision: 7
+          circuit-breaker-failure-threshold: 10
+        depositors:
+          stale-message-threshold: 250
+          bsm:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeBsmJson"
+          psm:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdePsmJson"
+          spat:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeSpatJson"
+          tim:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeTimJson"
+          map:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeMapJson"
+          sdsm:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeSdsmJson"
+          geohash:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.GeoHashRoutedMsg"
 # microservice actuator
 management:
   endpoints:
