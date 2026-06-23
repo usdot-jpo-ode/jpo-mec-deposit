@@ -1,8 +1,6 @@
-JPO MEC Deposit Release Notes
-----------------------------
+## JPO MEC Deposit Release Notes
 
-Version 2.0.0
-----------------------------------------
+## Version 2.0.0
 
 ### **Summary**
 
@@ -25,12 +23,11 @@ Multi-broker MQTT fanout support and depositor layer refactor. The main updates 
 
 ## **Pull Requests**
 
-- [PR#](https://github.com/usdot-jpo-ode/jpo-mec-deposit/pull/): Multi-broker MQTT fanout and depositor refactor
+- [PR#](https://github.com/usdot-jpo-ode/jpo-mec-deposit/pull/11): Multi-broker MQTT fanout and depositor refactor
 
-----------------------------------------
+---
 
-Version 1.0.0
-----------------------------------------
+## Version 1.0.0
 
 ### **Summary**
 
@@ -46,10 +43,9 @@ First public release of JPO-MEC-DEPOSIT. The main updates in this version includ
 - [PR6](https://github.com/usdot-jpo-ode/jpo-mec-deposit/pull/6): SDSM Depositor
 - [PR7](https://github.com/usdot-jpo-ode/jpo-mec-deposit/pull/7): JPO ODE GitHub artifacts and schema updates.
 
-----------------------------------------
+---
 
-Version 0.1.0
-----------------------------------------
+## Version 0.1.0
 
 ### **Summary**
 
