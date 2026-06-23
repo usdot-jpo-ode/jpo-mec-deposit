@@ -17,7 +17,7 @@ services:
     image: jpo_mec_deposit:latest
     restart: ${RESTART_POLICY}
     ports:
-      - "8080:8080"
+      - "8082:8082"
     deploy:
       resources:
         limits:
@@ -38,8 +38,7 @@ services:
       - LOGGING_LEVEL=${LOGGING_LEVEL}
       - METRICS_ENABLED=${METRICS_ENABLED}
       - METRICS_KAFKA_TOPIC=${METRICS_KAFKA_TOPIC}
-      - MQTT_SIGNATURE_VALIDATION_ENABLED=${MQTT_SIGNATURE_VALIDATION_ENABLED}
-      - MQTT_SIGNATURE_VALIDATION_API_URL=${MQTT_SIGNATURE_VALIDATION_API_URL}
+
       - ETX_ENABLED=${ETX_ENABLED}
       - ETX_CERT_PATH=${ETX_CERT_PATH}
       - ETX_REGISTRATION_VENDOR=${ETX_REGISTRATION_VENDOR}
