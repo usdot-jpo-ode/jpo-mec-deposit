@@ -1,0 +1,161 @@
+#General Properties
+#==================
+groupId: ^project.groupId^
+artifactId: ^project.artifactId^
+version: ^project.version^
+server.port: 8082
+
+# MEC Deposit Metrics
+mec-deposit:
+  metrics:
+    enabled: true
+    kafka-topic: topic.MecDepositMetrics
+  etx:
+    enabled: false
+    client-type: "Software"
+    client-sub-type: "Application"
+    partner-api:
+      vendor: "registration-vendor"
+      base-uri: "http://localhost:8080"
+      username: "test-user"
+      password: "test-password"
+      # used for the partner api registration to determine the MEC location
+      mec-latitude: "00.0000"
+      mec-longitude: "00.0000"
+      network-type: "non-VZ"
+      cache-registration: false
+      certificate-path: "etx/"
+    mqtt-brokers:
+      etx:
+        mqtt:
+          qos: 0
+          max-inflight: 10
+          connection-timeout: 30
+          keep-alive-interval: 60
+          completion-timeout: 5000
+          max-messages-per-second: 50
+          vendor: "default-mqtt-vendor"
+          message-format: "j2735"
+          use-tls: true
+          use-registration: true
+          require-session-id: true
+          broker-uri: ""
+          client-id: ""
+          broker-type: "ETX"
+          multi-broker-enabled: false
+          multi-broker-targets: "ETX,NMI"
+          subscriptions:
+            - "vzimp/1/ClientInfo"
+        depositors:
+          stale-message-threshold: 250
+          bsm:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeBsmJson"
+          psm:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdePsmJson"
+          spat:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeSpatJson"
+          tim:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeTimJson"
+            api:
+              enabled: false
+              kafka-topic: "topic.OdeTimJsonTMCFiltered"
+          map:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeMapJson"
+            api:
+              enabled: false
+              kafka-topic: "topic.OdeMapJson"
+          sdsm:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeSdsmJson"
+          geohash:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.GeoHashRoutedMsg"
+      nmi:
+        mqtt:
+          enabled: false
+          broker-uri: "mqtt://localhost:1883"
+          client-id: "jpo-mec-deposit-nmi"
+          qos: 0
+          max-messages-per-second: 100
+          precision: 7
+          circuit-breaker-failure-threshold: 10
+        depositors:
+          stale-message-threshold: 250
+          bsm:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeBsmJson"
+          psm:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdePsmJson"
+          spat:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeSpatJson"
+          tim:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeTimJson"
+          map:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeMapJson"
+          sdsm:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.OdeSdsmJson"
+          geohash:
+            mqtt:
+              enabled: false
+              kafka-topic: "topic.GeoHashRoutedMsg"
+# microservice actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  server:
+    port: 8082
+
+logging:
+  level:
+    root: INFO
+    org.springframework.kafka: info
+    org.springframework.web: WARN
+    guru.springframework.controllers: WARN
+    org.springframework.integration.mqtt: INFO
+    us.dot.its.jpo.ode.mec.deposit: INFO
+    org.apache.kafka: WARN
+
+# Spring boot properties
+spring:
+  kafka:
+    bootstrap-servers: localhost:19092
+    consumer:
+      group-id: test-group
+      fetch-min-size: 1
+      fetch-max-wait: 50
+      max-poll-records: 500
+      auto-offset-reset: latest
+      enable-auto-commit: true
+      auto-commit-interval: 100
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: BATCH
+      poll-timeout: 1
+      idle-event-interval: 1
+      idle-between-polls: 0

@@ -1,0 +1,24 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "run-ode-docker",
+      "type": "docker-compose",
+      "dockerCompose": {
+        "up": {
+          "detached": true,
+          "build": true,
+          "profiles": [
+            "ode_full",
+            "kafka_full"
+          ],
+          "removeOrphans": true
+        },
+        "files": [
+          "${workspaceFolder}/docker-compose.yml"
+        ],
+        "envFile": "${workspaceFolder}/.env"
+      }
+    }
+  ]
+}

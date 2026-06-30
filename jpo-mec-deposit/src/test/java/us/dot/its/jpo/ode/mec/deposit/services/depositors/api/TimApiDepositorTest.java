@@ -1,0 +1,149 @@
+package us.dot.its.jpo.ode.mec.deposit.services.depositors.api;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.kafka.core.KafkaTemplate;
+import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties;
+import us.dot.its.jpo.ode.mec.deposit.MecDepositProperties.MecDepositMetrics;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.ApiDepositorProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.DepositorProperties;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.EtxMqttBrokerProfile;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.MqttBrokerDepositors;
+import us.dot.its.jpo.ode.mec.deposit.etx.EtxProperties.MqttBrokers;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.PartnerClient;
+import us.dot.its.jpo.ode.mec.deposit.etx.partner.PartnerTokenManager;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientSubType;
+import us.dot.its.jpo.ode.mec.deposit.models.etx.EtxClientType;
+import us.dot.its.jpo.ode.model.OdeMessageFrameData;
+
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class TimApiDepositorTest {
+
+  @Mock
+  private MecDepositProperties mecDepositProperties;
+
+  @Mock
+  private EtxProperties etxProperties;
+
+  @Mock
+  private PartnerClient etxApiClient;
+
+  @Mock
+  private PartnerTokenManager tokenManager;
+
+  @Mock
+  private KafkaTemplate<String, String> kafkaTemplate;
+
+  @Mock
+  private Timer timer;
+
+  @Mock
+  private Counter counter;
+
+  private MeterRegistry registry;
+  private TimApiDepositor depositor;
+  private ObjectMapper objectMapper;
+  private String sampleTimJson;
+  private String sampleTimAsn1;
+
+  @BeforeEach
+  void setUp() throws IOException, URISyntaxException {
+    registry = new SimpleMeterRegistry();
+    MockitoAnnotations.openMocks(this);
+    objectMapper = new ObjectMapper();
+
+    MecDepositMetrics metrics = new MecDepositMetrics();
+    metrics.setKafkaTopic("test-metrics-topic");
+    metrics.setEnabled(true);
+    when(mecDepositProperties.getMetrics()).thenReturn(metrics);
+
+    when(tokenManager.getValidToken()).thenReturn("mock-token");
+
+    ApiDepositorProperties apiDepositorProperties = ApiDepositorProperties.builder().build();
+    DepositorProperties depositorProperties =
+        DepositorProperties.builder().api(apiDepositorProperties).build();
+    MqttBrokerDepositors mbd =
+        MqttBrokerDepositors.builder().staleMessageThreshold(5000).tim(depositorProperties).build();
+    EtxMqttBrokerProfile etxProfile = EtxMqttBrokerProfile.builder().depositors(mbd).build();
+    MqttBrokers brokers = MqttBrokers.builder().etx(etxProfile).build();
+    when(etxProperties.getMqttBrokers()).thenReturn(brokers);
+    when(etxProperties.resolveStaleMessageThresholdMs()).thenReturn(5000);
+    when(etxProperties.getClientType()).thenReturn(EtxClientType.SOFTWARE);
+    when(etxProperties.getClientSubType()).thenReturn(EtxClientSubType.APPLICATION);
+
+    depositor = new TimApiDepositor(mecDepositProperties, etxProperties, etxApiClient,
+        tokenManager, registry, kafkaTemplate);
+
+    sampleTimJson = new String(Files.readAllBytes(Paths.get(
+        getClass().getClassLoader().getResource("sample_messages/sample-ode-tim.json").toURI())));
+
+    OdeMessageFrameData odeTimData =
+        objectMapper.readValue(sampleTimJson, OdeMessageFrameData.class);
+    sampleTimAsn1 = odeTimData.getMetadata().getAsn1();
+  }
+
+  private String createTimTestMessage(String timestamp) throws JsonProcessingException {
+    OdeMessageFrameData timData = objectMapper.readValue(sampleTimJson, OdeMessageFrameData.class);
+    timData.getMetadata().setOdeReceivedAt(timestamp);
+    return objectMapper.writeValueAsString(timData);
+  }
+
+  @Test
+  void testTimDepositListener_Success() throws JsonProcessingException {
+    String currentTimestamp =
+        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
+    String message = createTimTestMessage(currentTimestamp);
+
+    depositor.timDepositListener(message);
+
+    verify(etxApiClient).deposit(eq("mock-token"), eq(sampleTimAsn1));
+    verify(kafkaTemplate).send(anyString(), argThat(metrics -> metrics.contains("\"success\":true")
+        && metrics.contains("\"messageType\":\"TIM\"")));
+  }
+
+  @Test
+  void testTimDepositListener_Error() throws JsonProcessingException {
+    String currentTimestamp =
+        LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneOffset.UTC).toInstant().toString();
+    String message = createTimTestMessage(currentTimestamp);
+
+    doThrow(new RuntimeException("API Error")).when(etxApiClient).deposit(anyString(), anyString());
+
+    depositor.timDepositListener(message);
+
+    verify(kafkaTemplate).send(anyString(),
+        argThat(metrics -> metrics.contains("\"success\":false")
+            && metrics.contains("\"messageType\":\"TIM\"")
+            && metrics.contains("\"errorMessage\":\"API Error\"")));
+
+    double errorCount =
+        registry.get("mec-deposit.etx.api.error").tag("message.type", "TIM").counter().count();
+    assert (errorCount > 0);
+  }
+}

@@ -1,0 +1,90 @@
+name: CI
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  push:
+    branches: [develop, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ${{ github.event.repository.name }}
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: "21"
+          distribution: "temurin"
+      - name: Cache Maven packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-${{ hashFiles('**/settings.xml') }}-java-21
+          restore-keys: |
+            ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-java-21
+            ${{ runner.os }}-maven-java-21
+            ${{ runner.os }}-maven
+      - name: Build and Run Tests
+        env:
+          MAVEN_GITHUB_TOKEN: ${{ secrets.MAVEN_GITHUB_TOKEN }}
+          MAVEN_GITHUB_ORG: ${{ github.repository_owner }}
+        run: |
+          cd $GITHUB_WORKSPACE/jpo-mec-deposit
+          mvn -e clean verify -s ./settings.xml
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v6
+        with:
+          name: jpo-mec-deposit
+          path: jpo-mec-deposit/target
+          if-no-files-found: error
+
+  sonar:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ${{ github.event.repository.name }}
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: "21"
+          distribution: "temurin"
+      - name: Cache Maven packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-${{ hashFiles('**/settings.xml') }}-java-21
+          restore-keys: |
+            ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}-java-21
+            ${{ runner.os }}-maven-java-21
+            ${{ runner.os }}-maven
+      - name: Download code coverage results
+        uses: actions/download-artifact@v7
+        with:
+          name: jpo-mec-deposit
+          path: jpo-mec-deposit/target
+      - name: Run Sonar Analysis
+        env:
+          MAVEN_GITHUB_TOKEN: ${{ secrets.MAVEN_GITHUB_TOKEN }}
+          MAVEN_GITHUB_ORG: ${{ github.repository_owner }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          cd $GITHUB_WORKSPACE/jpo-mec-deposit
+          mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -s ./settings.xml \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.organization=usdot-jpo-ode \
+            -Dsonar.projectKey=jpo-mec-deposit \
+            -Dsonar.projectName=jpo-mec-deposit \
+            -Dsonar.sources=src/main/java \
+            -Dsonar.tests=src/test/java \
+            -Dsonar.java.binaries=target/classes \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+            -Dsonar.token=$SONAR_TOKEN
