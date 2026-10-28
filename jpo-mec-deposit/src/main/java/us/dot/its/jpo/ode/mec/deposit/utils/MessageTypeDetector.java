@@ -93,6 +93,18 @@ public class MessageTypeDetector {
         return "41";
       case MAP:
         return "18";
+      case RTCM:
+        return "28";
+      case SRM:
+        return "29";
+      case SSM:
+        return "30";
+      case TAM:
+        return "37";
+      case TUM:
+        return "38";
+      case TUMAck:
+        return "39";
       default:
         return null;
     }

@@ -7,7 +7,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * Enumeration representing the different message types for ETX (Edge Traffic Exchange) messages.
  */
 public enum EtxMessageType {
-  BSM("BSM"), PSM("PSM"), RSA("RSA"), TIM("TIM"), MAP("MAP"), SPAT("SPAT"), SDSM("SDSM");
+  BSM("BSM"), PSM("PSM"), RSA("RSA"), TIM("TIM"), MAP("MAP"), SPAT("SPAT"), SDSM("SDSM"), RTCM(
+      "RTCM"), SRM("SRM"), SSM("SSM"), TAM("TAM"), TUM("TUM"), TUMAck("TUMAck");
 
   private String value;
 

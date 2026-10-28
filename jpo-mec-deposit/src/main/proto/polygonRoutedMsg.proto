@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+option java_package = "us.dot.its.jpo.ode.rtk_asn1_bridge.models";
+option java_outer_classname = "PolygonRoutedMsg";
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+package polygonRoutedMsg;
+
+// Type of Message to streamline routing
+enum MsgType {
+  BSM = 0;
+  MAP = 1;
+  SPAT = 2;
+  TIM = 3;
+  PSM = 4;
+  SRM = 5;
+  SSM = 6;
+  SDSM = 7;
+  RTCM = 8;
+  TAM = 9;
+  TUM = 10;
+  TUMAck = 11;
+}
+
+// Geographic coordinate in WGS84.
+message Coordinate {
+  double latitude = 1;
+  double longitude = 2;
+}
+
+// Polygon represented by an ordered list of vertices.
+// The first and last vertices should be identical to close the ring.
+message Polygon {
+  repeated Coordinate vertices = 1;
+}
+
+// Message containing ASN.1 data and its associated spatial and temporal data.
+message PolygonMessage {
+  // Raw ASN.1 encoded data.
+  // Store the decoded hex string as bytes, not as ASCII hex characters.
+  bytes msgBytes = 1;
+
+  // Timestamp associated with the message.
+  google.protobuf.Timestamp time = 2;
+
+  // Geographic polygon associated with the message.
+  Polygon polygon = 3;
+
+  // A representative coordinate for the message. The intent is that this coordinate 
+  // can be used to easily describe where the message is for the purpose of 
+  // database queries, partitioning or routing.
+  Coordinate coordinate = 4;
+
+
+  // What type of ASN.1 is encoded in the msgBytes field.
+  MsgType msgType = 5;
+}

@@ -92,6 +92,10 @@ mec-deposit:
             mqtt:
               enabled: ${ETX_MQTT_BROKERS_ETX_DEPOSITORS_GEOHASH_MQTT_ENABLED:${DEPOSITORS_GEOHASH_MQTT_ENABLED:false}}
               kafka-topic: ${DEPOSITORS_GEOHASH_MQTT_KAFKA_TOPIC:topic.GeoHashRoutedMsg}
+          polygon:
+            mqtt:
+              enabled: ${ETX_MQTT_BROKERS_ETX_DEPOSITORS_POLYGON_MQTT_ENABLED:${DEPOSITORS_POLYGON_MQTT_ENABLED:false}}
+              kafka-topic: ${DEPOSITORS_POLYGON_MQTT_KAFKA_TOPIC:topic.MecDeposit}
       nmi:
         mqtt:
           enabled: ${NMI_MQTT_ENABLED:false}
@@ -135,6 +139,10 @@ mec-deposit:
             mqtt:
               enabled: ${NMI_MQTT_BROKERS_NMI_DEPOSITORS_GEOHASH_MQTT_ENABLED:${DEPOSITORS_GEOHASH_MQTT_ENABLED:false}}
               kafka-topic: ${DEPOSITORS_GEOHASH_MQTT_KAFKA_TOPIC:topic.GeoHashRoutedMsg}
+          polygon:
+            mqtt:
+              enabled: ${NMI_MQTT_BROKERS_NMI_DEPOSITORS_POLYGON_MQTT_ENABLED:${DEPOSITORS_POLYGON_MQTT_ENABLED:false}}
+              kafka-topic: ${DEPOSITORS_POLYGON_MQTT_KAFKA_TOPIC:topic.MecDeposit}
       av:
         mqtt:
           enabled: ${AV_MQTT_ENABLED:false}
@@ -178,6 +186,10 @@ mec-deposit:
             mqtt:
               enabled: ${AV_MQTT_BROKERS_AV_DEPOSITORS_GEOHASH_MQTT_ENABLED:${DEPOSITORS_GEOHASH_MQTT_ENABLED:false}}
               kafka-topic: ${DEPOSITORS_GEOHASH_MQTT_KAFKA_TOPIC:topic.GeoHashRoutedMsg}
+          polygon:
+            mqtt:
+              enabled: ${AV_MQTT_BROKERS_AV_DEPOSITORS_POLYGON_MQTT_ENABLED:${DEPOSITORS_POLYGON_MQTT_ENABLED:false}}
+              kafka-topic: ${DEPOSITORS_POLYGON_MQTT_KAFKA_TOPIC:topic.MecDeposit}
       mb:
         mqtt:
           enabled: ${MB_MQTT_ENABLED:false}
@@ -223,6 +235,10 @@ mec-deposit:
             mqtt:
               enabled: ${MB_MQTT_BROKERS_MB_DEPOSITORS_GEOHASH_MQTT_ENABLED:${DEPOSITORS_GEOHASH_MQTT_ENABLED:false}}
               kafka-topic: ${DEPOSITORS_GEOHASH_MQTT_KAFKA_TOPIC:topic.GeoHashRoutedMsg}
+          polygon:
+            mqtt:
+              enabled: ${MB_MQTT_BROKERS_MB_DEPOSITORS_POLYGON_MQTT_ENABLED:${DEPOSITORS_POLYGON_MQTT_ENABLED:false}}
+              kafka-topic: ${DEPOSITORS_POLYGON_MQTT_KAFKA_TOPIC:topic.MecDeposit}
 
 # microservice actuator
 management:

@@ -122,6 +122,7 @@ public class EtxProperties {
     private DepositorProperties map;
     private DepositorProperties sdsm;
     private DepositorProperties geohash;
+    private DepositorProperties polygon;
   }
 
   /**
@@ -335,6 +336,7 @@ public class EtxProperties {
       case "map" -> d.getMap();
       case "sdsm" -> d.getSdsm();
       case "geohash" -> d.getGeohash();
+      case "polygon" -> d.getPolygon();
       default -> null;
     };
   }

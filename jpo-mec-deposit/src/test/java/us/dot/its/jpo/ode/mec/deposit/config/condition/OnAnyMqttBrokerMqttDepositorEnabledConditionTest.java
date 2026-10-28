@@ -57,4 +57,25 @@ class OnAnyMqttBrokerMqttDepositorEnabledConditionTest {
 
     assertFalse(condition.matches(context, metadata));
   }
+
+    @Test
+    void matchesWhenPolygonEnabledForMbBroker() {
+        when(context.getEnvironment()).thenReturn(environment);
+        when(metadata.getAnnotationAttributes(ConditionalOnAnyMqttBrokerMqttDepositor.class.getName()))
+                .thenReturn(java.util.Map.of("value", "polygon"));
+        when(
+                environment.getProperty("mec-deposit.etx.mqtt-brokers.etx.depositors.polygon.mqtt.enabled"))
+                        .thenReturn("false");
+        when(
+                environment.getProperty("mec-deposit.etx.mqtt-brokers.nmi.depositors.polygon.mqtt.enabled"))
+                        .thenReturn("false");
+        when(
+                environment.getProperty("mec-deposit.etx.mqtt-brokers.av.depositors.polygon.mqtt.enabled"))
+                        .thenReturn("false");
+        when(
+                environment.getProperty("mec-deposit.etx.mqtt-brokers.mb.depositors.polygon.mqtt.enabled"))
+                        .thenReturn("true");
+
+        assertTrue(condition.matches(context, metadata));
+    }
 }
