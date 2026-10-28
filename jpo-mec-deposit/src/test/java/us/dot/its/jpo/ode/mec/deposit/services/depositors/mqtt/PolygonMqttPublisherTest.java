@@ -35,6 +35,7 @@ import us.dot.its.jpo.ode.mec.deposit.models.etx.mqtt.MqttBrokerTarget;
 import us.dot.its.jpo.ode.mec.deposit.services.etx.mqtt.EtxMqttPublishService;
 import us.dot.its.jpo.ode.rtk_asn1_bridge.models.Coordinate;
 import us.dot.its.jpo.ode.rtk_asn1_bridge.models.MsgType;
+import us.dot.its.jpo.ode.rtk_asn1_bridge.models.Polygon;
 import us.dot.its.jpo.ode.rtk_asn1_bridge.models.PolygonMessage;
 
 @ExtendWith(MockitoExtension.class)
@@ -81,6 +82,7 @@ class PolygonMqttPublisherTest {
     when(etxProperties.getClientType()).thenReturn(EtxClientType.SOFTWARE);
     when(etxProperties.getClientSubType()).thenReturn(EtxClientSubType.APPLICATION);
     when(etxProperties.mqttTopicPrecision(any())).thenReturn(7);
+    when(etxProperties.resolveStaleMessageThresholdMs()).thenReturn(5_000);
 
     when(mqttProperties.getPrecision()).thenReturn(7);
     when(mqttProperties.getVendor()).thenReturn("test-vendor");
@@ -92,15 +94,24 @@ class PolygonMqttPublisherTest {
         mqttService, registry, kafkaTemplate);
   }
 
-  private byte[] buildInputPolygonMessage(byte[] innerBytes, MsgType msgType, Coordinate coordinate) {
-    return PolygonMessage.newBuilder().setMsgBytes(ByteString.copyFrom(innerBytes)).setMsgType(msgType)
+  private byte[] buildInputPolygonMessage(byte[] innerBytes, MsgType msgType,
+      Coordinate coordinate) {
+    Polygon polygon = Polygon.newBuilder()
+        .addVertices(Coordinate.newBuilder().setLatitude(38.8895).setLongitude(-77.0352).build())
+        .addVertices(Coordinate.newBuilder().setLatitude(38.8897).setLongitude(-77.0348).build())
+        .addVertices(Coordinate.newBuilder().setLatitude(38.8893).setLongitude(-77.0346).build())
+        .build();
+
+    return PolygonMessage.newBuilder().setMsgBytes(ByteString.copyFrom(innerBytes))
+        .setMsgType(msgType)
         .setTime(Timestamp.newBuilder().setSeconds(Instant.now().getEpochSecond()).build())
-        .setCoordinate(coordinate).build().toByteArray();
+        .setCoordinate(coordinate).setPolygon(polygon).build().toByteArray();
   }
 
   @Test
   void j2735Format_publishesRawAsn1BytesUnchanged() {
-    Coordinate coordinate = Coordinate.newBuilder().setLatitude(38.8895).setLongitude(-77.0352).build();
+    Coordinate coordinate =
+        Coordinate.newBuilder().setLatitude(38.8895).setLongitude(-77.0352).build();
     byte[] kafkaPayload = buildInputPolygonMessage(SAMPLE_BSM_BYTES, MsgType.BSM, coordinate);
     ArgumentCaptor<byte[]> payloadCaptor = ArgumentCaptor.forClass(byte[].class);
 
@@ -112,7 +123,8 @@ class PolygonMqttPublisherTest {
 
   @Test
   void validPolygonMessage_buildsRegionalTopic() {
-    Coordinate coordinate = Coordinate.newBuilder().setLatitude(38.8895).setLongitude(-77.0352).build();
+    Coordinate coordinate =
+        Coordinate.newBuilder().setLatitude(38.8895).setLongitude(-77.0352).build();
     byte[] kafkaPayload = buildInputPolygonMessage(SAMPLE_BSM_BYTES, MsgType.BSM, coordinate);
     ArgumentCaptor<String> topicCaptor = ArgumentCaptor.forClass(String.class);
 
@@ -134,10 +146,8 @@ class PolygonMqttPublisherTest {
   @Test
   void noRepresentativeCoordinateAndNoVertices_noMqttPublish() {
     byte[] kafkaPayload = PolygonMessage.newBuilder()
-        .setMsgBytes(ByteString.copyFrom(SAMPLE_BSM_BYTES))
-        .setMsgType(MsgType.BSM)
-        .setTime(Timestamp.newBuilder().setSeconds(Instant.now().getEpochSecond()).build())
-        .build()
+        .setMsgBytes(ByteString.copyFrom(SAMPLE_BSM_BYTES)).setMsgType(MsgType.BSM)
+        .setTime(Timestamp.newBuilder().setSeconds(Instant.now().getEpochSecond()).build()).build()
         .toByteArray();
 
     publisher.polygonPublishListener(kafkaPayload);
