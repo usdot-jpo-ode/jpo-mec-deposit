@@ -172,15 +172,16 @@ public class PolygonMqttPublisher extends AbstractMqttDepositor {
           originalMessageBytes);
 
       topicSet = MultiBrokerPublishService.unionPayloadTopics(payloads);
-      // MqttFanoutPublishResult fanout = multiBrokerPublishService.publish(payloads, retain);
-      // Set<String> metricTopics =
-      // fanout.publishedTopics().isEmpty() ? topicSet : fanout.publishedTopics();
 
-      // log.debug("Sending polygon payload with {} geohash topics (detected type: {})",
-      // geohashes.size(), detectedMessageType);
-      // handleProcessingSuccess(metricTopics, messageTime.toString(), depositedAt, asn1Hex,
-      // fanout.mqttBrokerTargets().isEmpty() ? null : fanout.mqttBrokerTargets(),
-      // detectedMessageType);
+      MqttFanoutPublishResult fanout = multiBrokerPublishService.publish(payloads, retain);
+      Set<String> metricTopics =
+          fanout.publishedTopics().isEmpty() ? topicSet : fanout.publishedTopics();
+
+      log.debug("Sending polygon payload with {} geohash topics (detected type: {})",
+          geohashes.size(), detectedMessageType);
+      handleProcessingSuccess(metricTopics, messageTime.toString(), depositedAt, asn1Hex,
+          fanout.mqttBrokerTargets().isEmpty() ? null : fanout.mqttBrokerTargets(),
+          detectedMessageType);
     } catch (Exception e) {
       handleProcessingError(e, topicSet, depositedAt.toInstant(ZoneOffset.UTC).toEpochMilli(),
           asn1Hex);
